@@ -15,7 +15,7 @@ ${BIN}/main: ${COMPILE}
 ${OBJ}/main.o: ${SRC}/main.c ${INC}/graph.h ${INC}/set.h
 	gcc -Iinclude -c $< -o $@
 
-${OBJ}/graph.o: ${SRC}/graph.c ${INC}/graph.h ${INC}/heap.h
+${OBJ}/graph.o: ${SRC}/graph.c ${INC}/graph.h ${INC}/heap.h ${INC}/llist.h
 	gcc -Iinclude -c $< -o $@
 
 ${OBJ}/heap.o: ${SRC}/heap.c ${INC}/heap.h ${INC}/fibheap.h
