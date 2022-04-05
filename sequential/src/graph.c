@@ -1,4 +1,5 @@
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 
@@ -62,5 +63,41 @@ int shortest_path(graph* g, int v1, int v2) {
     }
 
     pq->destroy(pq); // O(1) because the priority q is empty at this point.
+
+}
+
+void to_graphviz(graph* g, char* filename) {
+
+    FILE* fp = fopen(filename, "w");
+
+    for(int i=0; i<g->V; i++) {
+
+        if(g->data[i] != NULL) {
+            fprintf(fp, "%d [label=\"%d\"];\n", g->data[i], g->data[i]);
+        }
+
+    }
+
+    for(int i=0; i<g->V; i++) {
+
+        if(g->data[i] != NULL) {
+
+            llist* curr = g->lst[i];
+
+            while(curr != NULL) {
+
+                if(g->data[curr->data] != NULL) {
+                    fprintf(fp, "%d -> %d [label=\"d\"]", i, curr->data, curr->weight);
+                }
+                
+                curr = curr->next;
+
+            }
+
+        }
+
+    }
+
+    fclose(fp);
 
 }
