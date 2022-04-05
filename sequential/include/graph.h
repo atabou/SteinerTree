@@ -3,7 +3,7 @@
 
     #define GRAPH_H
 
-    #include "list.h"
+    #include "llist.h"
 
     typedef struct graph graph;
 
