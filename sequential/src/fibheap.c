@@ -1,51 +1,101 @@
 
+#include <stdbool.h>
 #include <stdlib.h>
 
+#include "heap.h"
 #include "fibheap.h"
 
 typedef struct fibnode fibnode;
+typedef struct fibheap fibheap;
+
+void    fibheap_insert(heap* h, int n, int key);
+int     fibheap_find_min(heap* h);
+int     fibheap_extract_min(heap* h);
+heap*   fibheap_union(heap* h1, heap* h2);
+void    fibheap_decrease_key(heap* h, int n, int key);
+void    fibheap_delete(heap* h, int n);
+void    destroy_fibheap(heap* h);
 
 struct fibnode {
 
     int         id; // id of the node
     int         key; // key of the node
-    
+    bool        marked; // Specifies if the node is marked.
+
     fibnode*    prev; // next node in the level
     fibnode*    next; // previous node in the level
 
+    fibnode*    parent; // parent of this fibnode
+
     int         rank; // number of children of the node
-    fibnode**   children; // set of childrens
+    fibnode*    children; // set of childrens
     
 };
 
 struct fibheap {
 
-    fibnode*    root; // root of the fib heap (min element) 
+    fibnode*    root; // root of the fib heap (min element).
     int         rank; // max rank of any node in the fib heap.
-    fibnode**   marked; // set of marked nodes
-    int         marks; // number of marked nodes
+    
+    fibnode**   hash; // hash table linking the ids to the respective fibnode.
+    int         hsize; // size of the hash table.
 
 };
 
-fibheap* make_fibheap() {
+heap* make_fibheap() {
+
+    heap* h = (heap*) malloc(sizeof(heap));
 
     fibheap* fib = (fibheap*) malloc(sizeof(fibheap));
 
     fib->root   = NULL;
     fib->rank   = 0;
-    fib->marked = NULL;
-    fib->marks  = 0;
+    fib->hash   = NULL;
+    fib->hsize  = 0;
+
+    h->data = h;
+
+    h->insert = fibheap_insert;
+    h->find_min = fibheap_find_min;
+    h->extract_min = fibheap_extract_min;
+    h->heap_union = fibheap_union;
+    h->decrease_key = fibheap_decrease_key;
+    h->delete_node = fibheap_delete;
+    h->destroy = destroy_fibheap;
 
     return fib;
 
 }
 
-void fibheap_insert(fibheap* fib, int n, int key) {
+void detach_heap(fibnode* n) {
+
+    n->next->prev = n->prev;
+    n->prev->next = n->next;
+
+    n->next = NULL;
+    n->prev = NULL;
+
+}
+
+void attach_strand(fibnode* base, fibnode* start, fibnode* end) {
+
+    start->prev = base;
+    end->next = base->next;
+
+    base->next->prev = end;
+    base->next = start;
+
+}
+
+void fibheap_insert(heap* h, int n, int key) {
+
+    fibheap* fib = (fibheap*) h->data;
 
     fibnode* fn = (fibnode*) malloc(sizeof(fibnode));
 
     fn->id          = n;
     fn->key         = key;
+    fn->parent      = NULL;
     fn->children    = NULL;
     fn->rank        = 0; 
 
@@ -58,13 +108,9 @@ void fibheap_insert(fibheap* fib, int n, int key) {
 
     } else {
 
-        fn->next = fib->root->next;
-        fn->prev = fib->root;
+        attach_strand(fib->root, fn, fn);
 
-        fn->next->prev = fn;
-        fn->prev->next = fn;  
-
-        if(fib->root->key > key) {
+        if(key < fib->root->key) {
 
             fib->root = fn;
 
@@ -72,15 +118,198 @@ void fibheap_insert(fibheap* fib, int n, int key) {
 
     }
 
+    if(fib->hsize == 0) {
+
+        fib->hash = (fibnode**) malloc(sizeof(fibnode*) * (n+1));
+
+        for(int i=0; i < n+1; i++) {
+            fib->hash[i] = NULL;
+        }
+
+        fib->hash[n] = fn;
+        fib->hsize = n+1;
+    
+    } else if(fib->hsize - 1 < n) {
+
+        realloc(fib->hash, sizeof(fibnode*) * (n+1));
+        
+        for(int i=fib->hsize; i<n+1; i++) {
+            fib->hash[i] = NULL;
+        }
+
+        fib->hash[n] = fn;
+        fib->hsize = n+1;
+
+    } else {
+
+        fib->hash[n] = fn;
+
+    }
+
 }
 
-int fibheap_find_min(fibheap* fib) {
+int fibheap_find_min(heap* h) {
 
-    return fib->root->id;
+    return ((fibheap*) h->data)->root->id;
 
 }
 
-int fibheap_extract_min(fibheap* fib) {
+void detach_root(fibheap* fib) {
+
+    if(fib->root == fib->root->next) {
+
+        fib->root->next = NULL;
+        fib->root->prev = NULL;
+
+        fib->root = NULL;
+        fib->rank = 0;
+
+    } else {
+
+        fibnode* ptr = fib->root->next;
+
+        detach_heap(fib->root);
+
+        fib->root = ptr;
+
+    }
+    
+
+}
+
+void update_minimum_and_rank(fibheap* fib) {
+
+    if(fib->root != NULL) {
+
+        fibnode* curr = fib->root->next;
+        
+        while(curr != fib->root) {
+
+            if(curr->key < fib->root->key) {
+                fib->root = curr;
+            }
+
+            if(curr->rank > fib->rank) {
+                fib->rank = curr->rank;
+            }
+
+            curr = curr->next;
+
+        }
+
+    }
+
+}
+
+void upgrade_children(fibnode* target) {
+
+    if(target != NULL && target->children != NULL) {
+
+        target->children->next->prev = target->next;
+        target->next = target->children->next;
+
+        target->children->next = target;
+        target->next = target->children;
+
+        target->children = NULL;
+
+    }
+
+}
+
+void downgrade_heap(fibheap* fib, fibnode** degrees, fibnode* parent, fibnode* child) {
+
+    // Detach child
+
+    detach_heap(child);
+
+    // Attach child to parent childrens
+
+    if(parent->rank == 0) {
+
+        child->next = child;
+        child->prev = child;
+
+        parent->children = child;
+
+    } else {
+
+        attach_strand(parent->children, child, child);
+
+    }
+
+    parent->rank = parent->rank + 1;
+    child->parent = parent;
+
+    if(fib->rank < parent->rank) {
+
+        realloc(degrees, sizeof(fibnode*) * parent->rank);
+        degrees[parent->rank - 1] = parent;
+        fib->rank = parent->rank;
+    
+    }
+
+}
+
+void consolidate (fibheap* fib) {
+
+    // Initialize a hashtable.
+
+    fibnode** degrees = (fibnode**) malloc(sizeof(fibnode*) * fib->rank);
+
+    for(int i=0; i<fib->rank; i++) {
+        degrees[i] = NULL;
+    }
+
+    // Consolidate until no heaps with the same degree exist.
+
+    int consolidated = 0;
+
+    while(!consolidated) {
+
+        consolidated = 1;
+
+        fibnode* curr = fib->root; // TODO: this will never enter the loop
+        
+        while(curr != fib->root) {
+
+            if(degrees[curr->rank] == NULL) {
+
+                degrees[curr->rank] = curr;
+
+            } else if(curr != degrees[curr->rank]) {
+
+                fibnode* found = degrees[curr->rank];
+                degrees[curr->rank] = NULL;
+
+                if(found->key < curr->key) {
+
+                    downgrade_heap(fib, degrees, found, curr);
+
+                } else {
+
+                    downgrade_heap(fib, degrees, curr, found);
+
+                }
+
+                consolidated = 0;
+                break;
+
+            }
+
+            curr = curr->next;
+
+        }
+
+    }
+
+    free(degrees);
+
+}
+
+int fibheap_extract_min(heap* h) {
+
+    fibheap* fib = (fibheap*) h->data;
 
     int minimum = -1;
 
@@ -90,160 +319,21 @@ int fibheap_extract_min(fibheap* fib) {
 
         if(extract->children != NULL) {
 
-            extract->children[extract->rank - 1]->next = extract->next;
-            extract->next->prev = extract->children[extract->rank - 1];
-
-            extract->next = extract->children[0];
-            extract->children[0]->prev = extract;
-
-            for(int i=0; i<extract->rank; i++) {
-                extract->children[i] = NULL;
-            }
-
-            free(extract->children);
+            upgrade_children(extract);
 
         }
 
-        extract->next->prev = extract->prev;
-        extract->prev->next = extract->next;
+        detach_root(fib);
 
-        if(extract->next == extract) {
+        // update rank(H) to new maximum and root to new minimum.
+        
+        update_minimum_and_rank(fib);
 
-            fib->root = NULL;
-            fib->rank = 0;
-            fib->marked = NULL;
-            fib->marks = 0;
+        // Consolidate the heap.
 
-        } else {
+        consolidate(fib);
 
-            fib->root = extract->next;
-            fib->rank = fib->root->rank;
-
-            // update rank(H) to new maximum and root to new minimum.
-            fibnode* curr = fib->root;
-            while(curr != extract->next) {
-
-                if(curr->key < fib->root->key) {
-                    fib->root = curr;
-                }
-
-                if(curr->rank > fib->rank) {
-                    fib->rank = curr->rank;
-                }
-
-                curr = curr->next;
-
-            }
-
-            // Consolidate.
-
-            fibnode** degrees = (fibnode**) malloc(sizeof(fibnode*) * fib->rank);
-
-            for(int i=0; i<fib->rank; i++) {
-                degrees[i] = NULL;
-            }
-
-            int consolidated = 0;
-
-            while(!consolidated) {
-
-                consolidated = 1;
-
-                fibnode* curr = fib->root; // TODO this will never enter the loop
-                
-                while(curr != fib->root) {
-
-                    if(degrees[curr->rank] == NULL) {
-
-                        degrees[curr->rank] = curr;
-
-                    } else {
-
-                        int k = curr->rank;
-                        fibnode* found = degrees[k];
-
-                        if(found->key > curr->key) {
-
-                            curr->next->prev = curr->prev;
-                            curr->prev->next = curr->next;
-
-                            if(found->children == NULL) {
-                                
-                                found->children = (fibnode**) malloc(sizeof(fibnode*));
-
-                                curr->next = curr;
-                                curr->prev = curr;
-                            
-                            } else {
-                            
-                                realloc(found->children, sizeof(fibnode**) * (found->rank + 1));
-
-                                curr->next = found->children[0];
-                                curr->prev = found->children[found->rank - 1];
-
-                            }
-
-                            found->children[found->rank] = curr;
-                            found->rank = found->rank + 1;
-
-                            if(fib->rank < found->rank) {
-                                realloc(degrees, found->rank * sizeof(fibnode*));
-                                degrees[found->rank - 1] = NULL;
-                            }
-
-                        } else {
-
-                            found->next->prev = found->prev;
-                            found->prev->next = found->next;
-
-                            if(curr->children == NULL) {
-                                
-                                curr->children = (fibnode**) malloc(sizeof(fibnode*));
-
-                                found->next = found;
-                                found->prev = found;
-                            
-                            } else {
-                            
-                                realloc(found->children, sizeof(fibnode**) * (curr->rank + 1));
-
-                                found->next = curr->children[0];
-                                found->prev = curr->children[curr->rank - 1];
-
-                            }
-
-                            curr->children[curr->rank] = curr;
-                            curr->rank = curr->rank + 1;
-
-                            if(fib->rank < curr->rank) {
-
-                                realloc(degrees, curr->rank * sizeof(fibnode*));
-                                degrees[curr->rank - 1] = NULL;
-
-                            }
-
-                        }
-
-                        degrees[k] = NULL;
-                        curr = fib->root;
-                        consolidated = 0;
-
-                        break;
-
-                    }
-
-                    curr = curr->next;
-
-                }
-
-            }
-
-            free(degrees);
-
-
-
-        }
-
+        fib->hash[extract->id] = NULL;
         minimum = extract->id;
 
         extract->next = NULL;
@@ -257,10 +347,126 @@ int fibheap_extract_min(fibheap* fib) {
 
 }
 
-fibheap*    fibheap_union(fibheap* fib1, fibheap* fib2);
+void cut(fibheap* fib, fibnode* x) {
 
-int         fibheap_decrease_key(fibheap* fib, int n, int key);
+    fibnode* p = x->parent;
 
-int         fibheap_delete(fibheap* fib, int n);
+    // Remove the node from the parent and children's list.
 
-void        destroy_fibheap(fibheap* fib);
+    if(x == p->children) {
+
+        p->children = p->children->next;
+
+        if(x == p->children) {
+            
+            p->children = NULL;
+        
+        }
+
+    }
+
+    detach_heap(x);
+    p->rank = p->rank - 1;
+
+    // Insert the decreased key at the top level
+
+    attach_strand(fib->root, x, x);
+
+    // Unmark the decreased node.
+
+    x->marked = false;
+
+}
+
+void cascade(fibheap* fib, fibnode* p) {
+
+    if(p->parent != NULL) {
+
+        if(p->marked == false) {
+
+            p->marked = true;
+        
+        } else {
+
+            cut(fib, p);
+            cascade(fib, p->parent);
+        
+        }
+
+    }
+
+}
+
+void fibheap_decrease_key(heap* h, int n, int key) {
+
+    fibheap* fib = (fibheap*) h->data;
+
+    if(n < fib->hsize) {
+
+        fibnode* decreased = fib->hash[n];
+        fibnode* parent = decreased->parent;
+        decreased->key = key;
+
+        if(decreased->key < fib->root->key) {
+            fib->root = decreased;
+        }
+
+        if(parent != NULL && decreased->key < parent->key) {
+
+            cut(fib, decreased);
+            cascade(fib, parent);
+
+        }
+        
+    
+    }
+
+}
+
+heap* fibheap_union(heap* h1, heap* h2) {
+
+    return NULL;
+
+}
+
+void fibheap_delete(heap* h, int n) {
+    return;
+}
+
+void destroy_fibheap(heap* h) {
+
+    fibheap* fib = (fibheap*) h->data;
+
+    for(int i=0; i<fib->hsize; i++) {
+
+        if(fib->hash[i] != NULL) {
+
+            fib->hash[i]->parent = NULL;
+            fib->hash[i]->children = NULL;
+            fib->hash[i]->prev = NULL;
+            fib->hash[i]->next = NULL;
+
+            free(fib->hash[i]);
+
+        }
+
+    }
+
+    fib->root = NULL;
+    fib->hsize = 0;
+    free(fib->hash);
+    fib->hash = NULL;
+    fib->hsize = 0;
+
+    free(h->data);
+    h->data = NULL;
+
+    h->insert = NULL;
+    h->find_min = NULL;
+    h->extract_min = NULL;
+    h->heap_union = NULL;
+    h->decrease_key = NULL;
+    h->delete_node = NULL;
+    h->destroy = NULL;
+
+}
