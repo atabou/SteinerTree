@@ -75,7 +75,7 @@ graph* make_randomly_connected_graph(int V) {
 
             int tmp = used[x];
             used[x] = used[y];
-            used[y] = used[x];
+            used[y] = tmp;
 
         }
 
@@ -159,28 +159,32 @@ void to_graphviz(graph* g, char* filename) {
 
     FILE* fp = fopen(filename, "w");
 
+    fprintf(fp, "digraph G {\n\n");
+
     for(int i=0; i<g->V; i++) {
 
-        fprintf(fp, "%d [label=\"%d\"];\n", g->data[i], g->data[i]);
+        fprintf(fp, "\t%d [label=\"%d\"];\n", i, i);
 
     }
 
+    fprintf(fp, "\n");
+
     for(int i=0; i<g->V; i++) {
 
-        if(g->data[i] != NULL) {
+        llist* curr = g->lst[i];
 
-            llist* curr = g->lst[i];
+        while(curr != NULL) {
 
-            while(curr != NULL) {
-
-                fprintf(fp, "%d -> %d [label=\"d\"]", i, curr->data, curr->weight);                
-                curr = curr->next;
-
-            }
+            fprintf(fp, "\t%d -> %d [label=\"%d\"];\n", i, curr->data, curr->weight);  
+            curr = curr->next;
 
         }
 
     }
+
+    fprintf(fp, "\n}");
+
+
 
     fclose(fp);
 
