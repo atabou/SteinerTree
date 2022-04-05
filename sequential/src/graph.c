@@ -1,7 +1,9 @@
 
+#include <stdlib.h>
 #include <limits.h>
 
 #include "graph.h"
+#include "heap.h"
 
 int shortest_path(graph* g, int v1, int v2) {
 
@@ -27,5 +29,38 @@ int shortest_path(graph* g, int v1, int v2) {
 
     // Initialize minheap.
 
+    heap* pq = make_heap(FIBONACCI);
+
+    for(int i=g->V-1; i >= 0; i--) {
+        pq->insert(pq, i, distances[i]);
+    }
+
+    // Calculates shortest path
+
+    while( !pq->empty(pq) ) {
+
+        int u = pq->extract_min(pq);
+
+        llist* curr = g->lst[u];
+
+        while(curr != NULL) {
+
+            int v = curr->data;
+
+            if(distances[v] > distances[u] + curr->weight) {
+
+                distances[v] = distances[u] + curr->weight;
+                pq->decrease_key(pq, v, distances[v]);
+                parents[v] = u;
+
+            }
+
+            curr = curr->next;
+
+        }
+
+    }
+
+    pq->destroy(pq); // O(1) because the priority q is empty at this point.
 
 }
