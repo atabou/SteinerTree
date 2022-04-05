@@ -3,7 +3,7 @@
 
     #define FIBHEAP_H
 
-    heap*    make_fibheap();
+    heap* make_fibheap();
     
 
 #endif

@@ -63,7 +63,7 @@ heap* make_fibheap() {
     h->delete_node = fibheap_delete;
     h->destroy = destroy_fibheap;
 
-    return fib;
+    return h;
 
 }
 
