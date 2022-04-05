@@ -31,6 +31,8 @@ int main(int argc, char** argv) {
     
     graph* g = make_randomly_connected_graph(V);
 
+    to_graphviz(g, "test.dot");
+
     destroy_graph(g);
     
     return 0;
