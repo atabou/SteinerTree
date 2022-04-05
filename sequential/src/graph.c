@@ -72,9 +72,7 @@ void to_graphviz(graph* g, char* filename) {
 
     for(int i=0; i<g->V; i++) {
 
-        if(g->data[i] != NULL) {
-            fprintf(fp, "%d [label=\"%d\"];\n", g->data[i], g->data[i]);
-        }
+        fprintf(fp, "%d [label=\"%d\"];\n", g->data[i], g->data[i]);
 
     }
 
@@ -86,10 +84,7 @@ void to_graphviz(graph* g, char* filename) {
 
             while(curr != NULL) {
 
-                if(g->data[curr->data] != NULL) {
-                    fprintf(fp, "%d -> %d [label=\"d\"]", i, curr->data, curr->weight);
-                }
-                
+                fprintf(fp, "%d -> %d [label=\"d\"]", i, curr->data, curr->weight);                
                 curr = curr->next;
 
             }
