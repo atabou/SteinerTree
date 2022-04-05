@@ -1,6 +1,7 @@
 
+#include <math.h>
+
 #include "set.h"
-#include "math.h"
 
 int** powerset(int* set, int n) {
 
