@@ -2,13 +2,14 @@
 SRC=./src
 INC=./include
 OBJ=./obj
+LNK=-lm
 BIN=./bin
 
 COMPILE=${OBJ}/main.o ${OBJ}/graph.o ${OBJ}/heap.o ${OBJ}/fibheap.o ${OBJ}/set.o
 
 
 ${BIN}/main: ${COMPILE}
-	gcc -I${INC} -o ${BIN}/main ${COMPILE}
+	gcc -I${INC} -o ${BIN}/main ${COMPILE} ${LNK}
 
 
 ${OBJ}/main.o: ${SRC}/main.c ${INC}/graph.h ${INC}/set.h
