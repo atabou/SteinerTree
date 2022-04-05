@@ -9,7 +9,7 @@ typedef struct fibnode fibnode;
 typedef struct fibheap fibheap;
 
 void    fibheap_insert(heap* h, int n, int key);
-int fibheap_empty(heap* h);
+int     fibheap_empty(heap* h);
 int     fibheap_find_min(heap* h);
 int     fibheap_extract_min(heap* h);
 heap*   fibheap_union(heap* h1, heap* h2);
@@ -59,7 +59,7 @@ heap* make_fibheap(int capacity) {
         fib->hash[i] = NULL;
     }
 
-    h->data = h;
+    h->data = fib;
 
     h->insert = fibheap_insert;
     h->empty = fibheap_empty;
@@ -108,7 +108,7 @@ void fibheap_insert(heap* h, int id, int key) {
         fn->children    = NULL;
         fn->rank        = 0; 
 
-        if(fib->root = NULL) {
+        if(fib->root == NULL) {
 
             fib->root = fn;
 
@@ -195,17 +195,8 @@ void update_minimum_and_rank(fibheap* fib) {
 
 void upgrade_children(fibnode* target) {
 
-    if(target != NULL && target->children != NULL) {
-
-        target->children->next->prev = target->next;
-        target->next = target->children->next;
-
-        target->children->next = target;
-        target->next = target->children;
-
-        target->children = NULL;
-
-    }
+    attach_strand(target, target->children, target->children->next);
+    target->children = NULL;
 
 }
 

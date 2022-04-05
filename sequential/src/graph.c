@@ -184,8 +184,6 @@ void to_graphviz(graph* g, char* filename) {
 
     fprintf(fp, "\n}");
 
-
-
     fclose(fp);
 
 }

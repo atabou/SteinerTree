@@ -27,11 +27,12 @@ graph* steiner_tree(graph* g, int* terminals, int n) {
 
 int main(int argc, char** argv) {
 
-    int V = 10;
+    int V = 1000;
     
     graph* g = make_randomly_connected_graph(V);
 
     to_graphviz(g, "test.dot");
+    shortest_path(g, 1, 2);
 
     destroy_graph(g);
     
