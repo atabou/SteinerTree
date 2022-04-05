@@ -235,7 +235,7 @@ void downgrade_heap(fibheap* fib, fibnode** degrees, fibnode* parent, fibnode* c
 
     if(fib->rank < parent->rank) {
 
-        realloc(degrees, sizeof(fibnode*) * parent->rank);
+        degrees = realloc(degrees, sizeof(fibnode*) * parent->rank);
         degrees[parent->rank - 1] = parent;
         fib->rank = parent->rank;
     
