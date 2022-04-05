@@ -9,6 +9,7 @@ typedef struct fibnode fibnode;
 typedef struct fibheap fibheap;
 
 void    fibheap_insert(heap* h, int n, int key);
+int fibheap_empty(heap* h);
 int     fibheap_find_min(heap* h);
 int     fibheap_extract_min(heap* h);
 heap*   fibheap_union(heap* h1, heap* h2);
@@ -42,7 +43,7 @@ struct fibheap {
 
 };
 
-heap* make_fibheap() {
+heap* make_fibheap(int capacity) {
 
     heap* h = (heap*) malloc(sizeof(heap));
 
@@ -50,12 +51,18 @@ heap* make_fibheap() {
 
     fib->root   = NULL;
     fib->rank   = 0;
-    fib->hash   = NULL;
-    fib->hsize  = 0;
+
+    fib->hash   = (fibnode**) malloc(sizeof(fibnode*) * capacity);
+    fib->hsize  = capacity;
+
+    for(int i=0; i<fib->hsize; i++) {
+        fib->hash[i] = NULL;
+    }
 
     h->data = h;
 
     h->insert = fibheap_insert;
+    h->empty = fibheap_empty;
     h->find_min = fibheap_find_min;
     h->extract_min = fibheap_extract_min;
     h->heap_union = fibheap_union;
@@ -87,70 +94,55 @@ void attach_strand(fibnode* base, fibnode* start, fibnode* end) {
 
 }
 
-void fibheap_insert(heap* h, int n, int key) {
+void fibheap_insert(heap* h, int id, int key) {
 
     fibheap* fib = (fibheap*) h->data;
 
-    fibnode* fn = (fibnode*) malloc(sizeof(fibnode));
+    if(fib->hash[id] == NULL) {
 
-    fn->id          = n;
-    fn->key         = key;
-    fn->parent      = NULL;
-    fn->children    = NULL;
-    fn->rank        = 0; 
+        fibnode* fn = (fibnode*) malloc(sizeof(fibnode));
 
-    if(fib->root = NULL) {
+        fn->id          = id;
+        fn->key         = key;
+        fn->parent      = NULL;
+        fn->children    = NULL;
+        fn->rank        = 0; 
 
-        fib->root = fn;
-
-        fib->root->next = fib->root;
-        fib->root->prev = fib->root;
-
-    } else {
-
-        attach_strand(fib->root, fn, fn);
-
-        if(key < fib->root->key) {
+        if(fib->root = NULL) {
 
             fib->root = fn;
 
-        }        
+            fib->root->next = fib->root;
+            fib->root->prev = fib->root;
 
-    }
+        } else {
 
-    if(fib->hsize == 0) {
+            attach_strand(fib->root, fn, fn);
 
-        fib->hash = (fibnode**) malloc(sizeof(fibnode*) * (n+1));
+            if(key < fib->root->key) {
 
-        for(int i=0; i < n+1; i++) {
-            fib->hash[i] = NULL;
+                fib->root = fn;
+
+            }        
+
         }
 
-        fib->hash[n] = fn;
-        fib->hsize = n+1;
-    
-    } else if(fib->hsize - 1 < n) {
-
-        realloc(fib->hash, sizeof(fibnode*) * (n+1));
-        
-        for(int i=fib->hsize; i<n+1; i++) {
-            fib->hash[i] = NULL;
-        }
-
-        fib->hash[n] = fn;
-        fib->hsize = n+1;
-
-    } else {
-
-        fib->hash[n] = fn;
+        fib->hash[id] = fn;
 
     }
 
 }
 
-int fibheap_find_min(heap* h) {
+int fibheap_empty(heap* h) {
 
-    return ((fibheap*) h->data)->root->id;
+    return (((fibheap*) h->data)->root == NULL) ? 1 : 0;
+
+}
+
+int fibheap_find_min(heap* h) {
+    
+    fibheap* fib = (fibheap*) h->data;
+    return (fib->root == NULL) ? -1 : fib->root->id;
 
 }
 
@@ -437,19 +429,24 @@ void destroy_fibheap(heap* h) {
 
     fibheap* fib = (fibheap*) h->data;
 
-    for(int i=0; i<fib->hsize; i++) {
+    if(fib->root != NULL) {
 
-        if(fib->hash[i] != NULL) {
+        for(int i=0; i<fib->hsize; i++) {
 
-            fib->hash[i]->parent = NULL;
-            fib->hash[i]->children = NULL;
-            fib->hash[i]->prev = NULL;
-            fib->hash[i]->next = NULL;
+            if(fib->hash[i] != NULL) {
 
-            free(fib->hash[i]);
+                fib->hash[i]->parent = NULL;
+                fib->hash[i]->children = NULL;
+                fib->hash[i]->prev = NULL;
+                fib->hash[i]->next = NULL;
+
+                free(fib->hash[i]);
+
+            }
 
         }
 
+        
     }
 
     fib->root = NULL;

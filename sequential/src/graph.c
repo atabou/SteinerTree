@@ -29,9 +29,9 @@ int shortest_path(graph* g, int v1, int v2) {
 
     // Initialize minheap.
 
-    heap* pq = make_heap(FIBONACCI);
+    heap* pq = make_heap(FIBONACCI, g->V);
 
-    for(int i=g->V-1; i >= 0; i--) {
+    for(int i=0; i < g->V; i++) {
         pq->insert(pq, i, distances[i]);
     }
 
