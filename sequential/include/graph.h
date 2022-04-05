@@ -3,18 +3,22 @@
 
     #define GRAPH_H
 
-    #include "llist.h"
-
     typedef struct graph graph;
 
-    struct graph {
+    /**
+     * @brief Initializes a graph with V vertex.
+     * 
+     * @param V
+     * @return graph* 
+     */
+    graph* make_graph(int V);
 
-        int     V;
-        void**  data;
-        int*    deg;
-        llist** lst;
-
-    };
+    /**
+     * @brief Randomly connects all nodes randomly.
+     * 
+     * @param V an unconnected graph.
+     */
+    graph* make_randomly_connected_graph(int V);
 
     /**
      * @brief Implementation of Dijkstra's shortest path algorithm with a fibonacci heap.
@@ -35,5 +39,7 @@
      * @param filename the name of the file to print in.
      */
     void to_graphviz(graph* g, char* filename);
+
+    void destroy_graph(graph* g);
 
 #endif

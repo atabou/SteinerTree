@@ -13,4 +13,8 @@
 
     };
 
+    llist* llist_add(llist* lst, int v, int w);
+
+    void destroy_llist(llist* lst);
+
 #endif
