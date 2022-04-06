@@ -6,6 +6,7 @@
 #include "llist.h"
 #include "graph.h"
 #include "heap.h"
+#include "pair.h"
 
 struct graph {
 
@@ -253,12 +254,12 @@ graph* make_randomly_connected_graph(int max_id) {
 
 }
 
-int shortest_path(graph* g, int v1, int v2) {
+pair* shortest_path(graph* g, int v1, int v2) {
 
     // Check boundary conditions
 
     if(v1 < 0 || v2 < 0 || v1 >= g->nVertices || v2 >= g->nVertices) {
-        return -1;
+        return NULL;
     }
 
     int internal1 = g->reverse_hash[v1];
@@ -313,6 +314,32 @@ int shortest_path(graph* g, int v1, int v2) {
     }
 
     pq->destroy(pq); // O(1) because the priority q is empty at this point.
+
+    graph* path = make_graph(g->max_id);
+
+    insert_vertex(path, v2);
+
+    int child  = v2;
+    int vertex = parents[v2];
+
+    while(vertex != -1) {
+
+        insert_vertex(path, vertex);
+
+        insert_edge(g, vertex, child, distances[child] - distances[vertex]);
+        insert_edge(g, child, vertex, distances[child] - distances[vertex]);
+        
+        child = vertex;
+        vertex = parents[vertex];
+
+    }
+
+    pair* result = (pair*) malloc(sizeof(pair));
+
+    result->first = (void*) path;
+    result->second = (void*) distances[v2];
+
+    return result;
 
 }
 

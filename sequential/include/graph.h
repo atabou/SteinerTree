@@ -3,6 +3,8 @@
 
     #define GRAPH_H
 
+    #include "pair.h"
+
     typedef struct graph graph;
 
     /**
@@ -80,9 +82,9 @@
      * @param g 
      * @param v1 
      * @param v2 
-     * @return int 
+     * @return a pair containing first a graph pointer and second an integer.
      */
-    int shortest_path(graph* g, int v1, int v2);
+    pair shortest_path(graph* g, int v1, int v2);
 
     /**
      * @brief Prints to specified file the graphviz representation of the graph.
