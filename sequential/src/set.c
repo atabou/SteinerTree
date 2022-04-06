@@ -1,4 +1,5 @@
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -13,12 +14,15 @@ int** powerset(int* set, int n) {
 
     for(int i=0; i<(int) pow(2, n); i++) {
 
+        count = 0;
+
         for(int j=0; j<n; j++) {
 
-            if(i & (1 << j) > 0) {
+            if(i & (1 << j)) {
 
-                buffer[count] = j;
+                buffer[count] = set[j];
                 count++;
+
             }
 
         }
