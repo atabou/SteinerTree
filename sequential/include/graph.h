@@ -6,19 +6,72 @@
     typedef struct graph graph;
 
     /**
-     * @brief Initializes a graph with V vertex.
+     * @brief Creates an empty graph with a maximum id of max_id.
      * 
-     * @param V
-     * @return graph* 
+     * Complexity: O(max_id)
+     * 
+     * @param max_id the biggest possible id that will be entered in the graph.  
+     * @return graph* An empty graph.
      */
-    graph* make_graph(int V);
+    graph* make_graph(int max_id);
 
     /**
-     * @brief Randomly connects all nodes randomly.
+     * @brief Makes a randomly connected graph with a maximum.
      * 
-     * @param V an unconnected graph.
+     * @param max_id the highest id that will be used to represent vertices in this graph.
      */
-    graph* make_randomly_connected_graph(int V);
+    graph* make_randomly_connected_graph(int max_id);
+
+
+    /**
+     * @brief Inserts a new vertex in the graph (does not take into account collisions).
+     * 
+     * Best-Case: O(1)
+     * Worst-Case: O(V)
+     * Ammortized: O(1)
+     * 
+     * @param g 
+     * @param id 
+     * @return int 
+     */
+    void insert_vertex(graph* g, int id);
+
+    /**
+     * @brief Insert a new edge between two nodes with a given weight. (Does not check for duplicates)
+     * 
+     * Complexity: O(1)
+     * 
+     * @param g the graph to insert the edge in.
+     * @param id1 id of the source node of the edge to insert.
+     * @param id2 id of the destination node of the edge to insert.
+     * @param w weight of the edge to insert. 
+     */
+    void insert_edge(graph* g, int id1, int id2, int w);
+
+    /**
+     * @brief Removes the vertex from the graph and clears all corresponding edges.
+     * 
+     * Complexity: O(V + E)
+     * 
+     * @param g a graph to delete a vertex from.
+     * @param id the id of the vertex to delete.
+     */
+    void remove_vertex(graph* g, int id);
+
+    /**
+     * @brief Removes the edge between the specified ids.
+     * If one of the specied ids does not exists nothing is done.
+     * If the edge does not exist, nothing is done.
+     * 
+     * Complexity: O( deg(V) )
+     * Best-Case: O(1)
+     * Worst-Case: O(V - 1)
+     * 
+     * @param g the graph to delete an edge from.
+     * @param id1 the source id of the vertex to delete.
+     * @param id2 the destination of the vertex to delete.
+     */
+    void remove_edge(graph* g, int id1, int id2);
 
     /**
      * @brief Implementation of Dijkstra's shortest path algorithm with a fibonacci heap.

@@ -27,9 +27,9 @@ graph* steiner_tree(graph* g, int* terminals, int n) {
 
 int main(int argc, char** argv) {
 
-    int V = 1000;
+    int max_id = 10;
     
-    graph* g = make_randomly_connected_graph(V);
+    graph* g = make_randomly_connected_graph(max_id);
 
     to_graphviz(g, "test.dot");
     shortest_path(g, 1, 2);
