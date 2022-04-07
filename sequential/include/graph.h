@@ -84,7 +84,11 @@
      * @param v2 
      * @return a pair containing first a graph pointer and second an integer.
      */
-    pair shortest_path(graph* g, int v1, int v2);
+    pair* shortest_path(graph* g, int v1, int v2);
+
+    int degree(graph* g, int id);
+
+    int dfs(graph* g, int start, int func(graph*, int, void*), void* input);
 
     /**
      * @brief Prints to specified file the graphviz representation of the graph.

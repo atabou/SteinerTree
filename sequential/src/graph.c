@@ -254,6 +254,55 @@ graph* make_randomly_connected_graph(int max_id) {
 
 }
 
+int degree(graph* g, int v) {
+
+    if(v >= 0 && v < g->nVertices) {
+        return g->deg[g->reverse_hash[v]];
+    } else {
+        return -1;
+    }
+
+}
+
+int _dfs(graph* g, int start, int* visited, int func(graph*, int, void*), void* input) {
+
+    int val = -1;
+
+    if(func(g, start, input) == 1) {
+        val = g->hash[start];
+    }
+
+    llist* curr = g->lst[start];
+
+    while(curr != NULL && val != -1) {
+
+        if(visited[curr->data] == 0) {
+
+            visited[curr->data] = 1;
+            int val = _dfs(g, curr->data, visited, func, input);
+
+        }
+
+        curr = curr->next;
+
+    }
+
+    return val;
+
+}
+
+int dfs(graph* g, int start, int func(graph*, int, void*), void* input) {
+
+    int visited[g->nVertices];
+
+    for(int i=0; i<g->nVertices; i++) {
+        visited[i] = 0;
+    }
+
+    return _dfs(g, g->reverse_hash[start], visited, func, input);
+
+}
+
 pair* shortest_path(graph* g, int v1, int v2) {
 
     // Check boundary conditions
