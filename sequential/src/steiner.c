@@ -56,7 +56,7 @@ pair* streiner_tree_dp(graph* g, set_t* terminals, int v) {
 
             pair*  dp_pair = streiner_tree_dp(g, X, w);
 
-            free(X);
+            destroy_set(X);
 
             graph* dp_tree = (graph*) dp_pair->first;
             int    dp_cost =    (int) dp_pair->second;
@@ -76,7 +76,7 @@ pair* streiner_tree_dp(graph* g, set_t* terminals, int v) {
 
                 pair*  dp_pair1 = streiner_tree_dp(g, X, w);
 
-                free(X);
+                destroy_set(X);
 
                 graph* dp_tree1 = (graph*) dp_pair1->first;
                 int    dp_cost1 =    (int) dp_pair1->second;
@@ -87,7 +87,7 @@ pair* streiner_tree_dp(graph* g, set_t* terminals, int v) {
 
                 pair*  dp_pair2 = streiner_tree_dp(g, Y, w);
 
-                free(Y);
+                destroy_set(Y);
 
                 graph* dp_tree2 = (graph*) dp_pair2->first;
                 int    dp_cost2 =    (int) dp_pair2->second;
