@@ -90,3 +90,12 @@ set_t* get_subset(set_t* X, long long mask) {
     return subset;
 
 }
+
+void destroy_set(set_t* set) {
+
+    free(set->elements);
+    set->elements = NULL;
+    
+    free(set);
+
+}

@@ -15,4 +15,6 @@
 
     set_t* get_subset(set_t* X, long long mask);
 
+    void destroy_set(set_t* set);
+
 #endif
