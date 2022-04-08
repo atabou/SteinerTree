@@ -12,4 +12,6 @@
 
     };
 
+    pair* make_pair(void* first, void* second);
+
 #endif
