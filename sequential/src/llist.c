@@ -19,18 +19,17 @@ void destroy_llist(llist* lst) {
 
     if(lst != NULL) {
 
-        while (lst->next != NULL) {
-            
-            llist* del = lst->next;
-            lst->next = lst->next->next;
+        llist* l = lst;
+        
+        while(l != NULL) {
+
+            llist* del = l;
+            l = l->next;
 
             del->next = NULL;
             free(del);
 
         }
-
-        free(lst);
-        lst->next = NULL;
 
     }
     
