@@ -10,19 +10,10 @@
 
 int verify(graph* g, int v, void* input) {
 
-    pair* p = (pair*) input;
-
     int check1 = degree(g, v) >= 3;
+    int check2 = element_exists(v, (set_t*) input);
 
-    int  n = (int) ((pair*) p)->second;
-    int* t = (int*) ((pair*) p)->first;
-
-    int check2 = 0;
-    for(int i=0; i<n; i++) {
-        check2 = check2 || t[i] == v;
-    }
-
-    return check1 && check2;
+    return check1 || check2;
 
 }
 
@@ -35,13 +26,10 @@ pair* streiner_tree_dp(graph* g, set_t* terminals, int v) {
 
     } else {
 
-        pair* dfs_input = make_pair(terminals, set_size(terminals));
-        
-        int w = dfs(g, v, verify, dfs_input);
-        
-        free(dfs_input);
+        int w = dfs(g, v, verify, terminals);
 
         pair*  sp_pair = shortest_path(g, v, w);
+
         graph* sp_path = (graph*) sp_pair->first;
         int    sp_dist =    (int) sp_pair->second;
 
@@ -83,7 +71,7 @@ pair* streiner_tree_dp(graph* g, set_t* terminals, int v) {
 
                 free(dp_pair1);
 
-                set_t* Y = get_subset(terminals, (~mask) & (long long) pow(2, set_size(terminals))); // Constructs the subset terminals - X
+                set_t* Y = get_subset(terminals, (~mask) & ((long long) pow(2, set_size(terminals)) - 1)); // Constructs the subset terminals - X
 
                 pair*  dp_pair2 = streiner_tree_dp(g, Y, w);
 
@@ -95,16 +83,17 @@ pair* streiner_tree_dp(graph* g, set_t* terminals, int v) {
                 free(dp_pair2);
 
                 if(dp_cost1 + dp_cost2 + sp_dist < min_cost) {
-
+                    
                     destroy_graph(min_tree);
 
                     graph* tmp_tree = graph_union(dp_tree1, dp_tree2);
+
                     int    min_cost = dp_cost1 + dp_cost2;
 
                     min_tree = graph_union(tmp_tree, sp_path);
                     min_cost = min_cost + sp_dist;
 
-                    free(tmp_tree);
+                    destroy_graph(tmp_tree);
 
                 }
 
@@ -128,7 +117,9 @@ graph* steiner_tree(graph* g, int* terminals, int n) {
     graph* min_tree = NULL;
     int min_cost = INT_MAX;
 
-    for(int i=1; i<n+1; i++) {
+    to_graphviz(g, "test.dot");
+
+    for(int i=1; i<11; i++) {
 
         pair* p = streiner_tree_dp(g, terminals, i);
 
