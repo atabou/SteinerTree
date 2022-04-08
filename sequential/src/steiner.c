@@ -125,12 +125,27 @@ pair* streiner_tree_dp(graph* g, set_t* terminals, int v) {
 
 graph* steiner_tree(graph* g, int* terminals, int n) {
 
-    // for(int i=0; i<n; i++) {
+    graph* min_tree = NULL;
+    int min_cost = INT_MAX;
 
-    //     pair* steiner = streiner_tree_dp(g, terminals, n, i+1);
+    for(int i=1; i<n+1; i++) {
 
-    //     graph* g = (pair* )
+        pair* p = streiner_tree_dp(g, terminals, i);
 
-    // }
+        graph* steiner = (graph*) p->first;
+        int    cost = (int) p->second;
+
+        if(cost < min_cost) {
+
+            destroy_graph(min_tree);
+
+            min_tree = steiner;
+            min_cost = cost;
+
+        }
+
+    }
+
+    return min_tree;
 
 }
