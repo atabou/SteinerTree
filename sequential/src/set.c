@@ -5,41 +5,82 @@
 
 #include "set.h"
 
-int** powerset(int* set, int n) {
+struct set_t {
 
-    int** pset = (int**) malloc(sizeof(int*) * (int) pow(2, n));
+    int* elements;
+    int size;
 
-    int count=0;
-    int buffer[n];
+};
 
-    for(int i=0; i<(int) pow(2, n); i++) {
+int get_element(set_t* X, int i) {
 
-        count = 0;
+    return X->elements[i];
 
-        for(int j=0; j<n; j++) {
+}
 
-            if(i & (1 << j)) {
+int set_size(set_t* X) {
 
-                buffer[count] = set[j];
-                count++;
+    return X->size;
 
-            }
+}
 
+int element_exists(int element, set_t* X) {
+
+    for(int i=0; i<X->size; i++) {
+
+        if(element == X->elements[i]) {
+            return 1;
         }
-
-        int* subset = (int*) malloc(sizeof(int) * (count + 1));
-        subset[0] = count;
-
-        for(int j=0; j<subset[0]; j++) {
-            subset[j + 1] = buffer[j];
-        }
-
-        pset[i] = subset;
-
-        count = 0;
 
     }
 
-    return pset;
+    return 0;
+
+}
+    
+set_t* remove_element(int element, set_t* X) {
+
+    int* result = (int*) malloc(sizeof(int) * (X->size - 1));
+
+    int flag = 0;
+
+    for(int i=0; i<X->size - 1; i++) {
+
+        if(X->elements[i] == element) {
+            flag = 1;
+        }
+
+        if(flag == 0) {
+            result[i] = X->elements[i];
+        } else {
+            result[i] = X->elements[i+1];
+        }
+
+    }
+
+    return result;
+
+}
+
+set_t* get_subset(set_t* X, long long mask) {
+
+    set_t* subset = (int*) malloc( sizeof(int) * __builtin_popcount(mask) );
+
+    int count = 0;
+    
+    long long submask = mask;
+
+    while(submask != 0) {
+
+        int pos = X->size - __builtin_ctz(mask) - 1; // Get the position of the first 1 in the bit mask and convert it to the relative position in the set.
+        
+        subset->elements[count] = X->elements[pos];
+        count++;
+
+        submask = ((submask >> __builtin_ctz(submask)) & ~(1LL)) << __builtin_ctz(submask); // Removes the first 1 in the bit mask
+
+    }
+
+    return subset;
 
 }

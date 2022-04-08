@@ -3,15 +3,16 @@
 
     #define SET_H
 
-    /**
-     * Calculates the powerset of an input set.
-     * Complexity: O(n*2^n) (can be improved to O(2^n)).
-     * The first number of each subset contains the length of this subset.
-     * 
-     * @param set 
-     * @param n 
-     * @return int** 
-     */
-    int** powerset(int* set, int n);
+    typedef struct set_t set_t;
+
+    int get_element(set_t* X, int i);
+
+    int set_size(set_t* X);
+
+    int element_exists(int element, set_t* X);
+    
+    set_t* remove_element(int element, set_t* X);
+
+    set_t* get_subset(set_t* X, long long mask);
 
 #endif
