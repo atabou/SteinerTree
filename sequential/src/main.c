@@ -8,33 +8,65 @@
 #include "set.h"
 
 
-graph* steiner_tree(graph* g, int* terminals, int n) {
+graph* test_graph() {
 
-    int  t = terminals[0];
-    
-    int* ts = (int*) malloc(sizeof(int) * (n - 1));
-    
-    for(int i=0; i<n-1; i++) {
-        ts[i] = terminals[i+1];
-    }
+    int max_id = 10;
 
-    int** pset = powerset(ts, n - 1);
+    graph* g = make_graph(max_id);
 
-    free(ts);
-    free(pset);
+    insert_vertex(g, 1);
+    insert_vertex(g, 2);
+    insert_vertex(g, 3);
+    insert_vertex(g, 4);
+    insert_vertex(g, 5);
+    insert_vertex(g, 6);
+    insert_vertex(g, 7);
+    insert_vertex(g, 8);
+    insert_vertex(g, 9);
+    insert_vertex(g, 10);
+
+    insert_edge(g, 1, 2, 1);
+    insert_edge(g, 1, 2, 1);
+    insert_edge(g, 1, 3, 1);
+    insert_edge(g, 1, 4, 1);
+    insert_edge(g, 1, 5, 1);
+    insert_edge(g, 2, 6, 1);
+    insert_edge(g, 2, 7, 1);
+    insert_edge(g, 2, 9, 1);
+    insert_edge(g, 3, 6, 1);
+    insert_edge(g, 3, 8, 1);
+    insert_edge(g, 4, 8, 1);
+    insert_edge(g, 4, 10, 1);
+    insert_edge(g, 5, 7, 1);
+    insert_edge(g, 5, 10, 1);
+
+    insert_edge(g, 2, 1, 1);
+    insert_edge(g, 2, 1, 1);
+    insert_edge(g, 3, 1, 1);
+    insert_edge(g, 4, 1, 1);
+    insert_edge(g, 5, 1, 1);
+    insert_edge(g, 6, 2, 1);
+    insert_edge(g, 7, 2, 1);
+    insert_edge(g, 9, 2, 1);
+    insert_edge(g, 6, 3, 1);
+    insert_edge(g, 8, 3, 1);
+    insert_edge(g, 8, 4, 1);
+    insert_edge(g,10, 4, 1);
+    insert_edge(g, 7, 5, 1);
+    insert_edge(g,10, 5, 1);
+
+    return g;
 
 }
 
 int main(int argc, char** argv) {
-
-    int max_id = 10;
     
-    graph* g = make_randomly_connected_graph(max_id);
+    graph* g = test_graph();
 
-    to_graphviz(g, "test.dot");
-    shortest_path(g, 1, 2);
+    // to_graphviz(g, "test.dot");
+    // shortest_path(g, 1, 2);
 
-    destroy_graph(g);
+    // destroy_graph(g);
     
     return 0;
 
