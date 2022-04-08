@@ -26,7 +26,8 @@
 
 
     /**
-     * @brief Inserts a new vertex in the graph (does not take into account collisions).
+     * @brief Inserts a new vertex in the graph.
+     * If the id already exists in the graph nothing is done.
      * 
      * Best-Case: O(1)
      * Worst-Case: O(V)
@@ -41,7 +42,7 @@
     /**
      * @brief Insert a new edge between two nodes with a given weight. (Does not check for duplicates)
      * 
-     * Complexity: O(1)
+     * Complexity: O( deg(V) )
      * 
      * @param g the graph to insert the edge in.
      * @param id1 id of the source node of the edge to insert.
@@ -77,7 +78,7 @@
 
     /**
      * @brief Implementation of Dijkstra's shortest path algorithm with a fibonacci heap.
-     * Complexity: O(E + V log(V))
+     * Complexity: O(max_id + E + V log(V))
      * 
      * @param g 
      * @param v1 
@@ -89,6 +90,20 @@
     int degree(graph* g, int id);
 
     int dfs(graph* g, int start, int func(graph*, int, void*), void* input);
+
+    /**
+     * @brief Merges the graphs together on the specified node.
+     * The objects inputed are destroyed in the process.
+     * If w does not exist in one or more of the graphs the generated graph will not be connected.
+     * 
+     * O(max_id + V + E)
+     * 
+     * @param id The id of the node to merge the graphs.
+     * @param ... comma delimited list of graphs terminated with a null pointer
+     * @return graph* 
+     */
+    graph* graph_union(graph* g1, graph* g2);
+
 
     /**
      * @brief Prints to specified file the graphviz representation of the graph.

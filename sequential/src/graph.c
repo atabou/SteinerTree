@@ -54,32 +54,36 @@ graph* make_graph(int max_id) {
 
 void insert_vertex(graph* g, int id) {
 
-    if(g->capacity == 0) {
+    if(g->reverse_hash[id] == -1) {
 
-        g->hash = (int*) malloc( sizeof(int) );
-        g->deg  = (int*) malloc( sizeof(int) );
-        g->lst  = (llist**) malloc(sizeof(llist*));
-        
-        g->capacity = 1;
+        if(g->capacity == 0) {
+
+            g->hash = (int*) malloc( sizeof(int) );
+            g->deg  = (int*) malloc( sizeof(int) );
+            g->lst  = (llist**) malloc(sizeof(llist*));
+            
+            g->capacity = 1;
+
+        }
+
+        if(g->nVertices >= g->capacity) { // O(V) normally, O(1) ammortized.
+
+            g->hash = (int*) realloc(g->hash, sizeof(int) * 2 * g->capacity);
+            g->deg  = (int*) realloc(g->deg, sizeof(int) * 2 * g->capacity);
+            g->lst  = (llist**) realloc(g->lst, sizeof(llist*) * 2 * g->capacity);
+
+            g->capacity = 2 * g->capacity;
+
+        }
+
+        g->hash[g->nVertices] = id;
+        g->reverse_hash[id]   = g->nVertices;
+        g->deg[g->nVertices]  = 0;
+        g->lst[g->nVertices]  = NULL;
+
+        g->nVertices = g->nVertices + 1;
 
     }
-
-    if(g->nVertices >= g->capacity) { // O(V) normally, O(1) ammortized.
-
-        g->hash = (int*) realloc(g->hash, sizeof(int) * 2 * g->capacity);
-        g->deg  = (int*) realloc(g->deg, sizeof(int) * 2 * g->capacity);
-        g->lst  = (llist**) realloc(g->lst, sizeof(llist*) * 2 * g->capacity);
-
-        g->capacity = 2 * g->capacity;
-
-    }
-
-    g->hash[g->nVertices] = id;
-    g->reverse_hash[id]   = g->nVertices;
-    g->deg[g->nVertices]  = 0;
-    g->lst[g->nVertices]  = NULL;
-
-    g->nVertices = g->nVertices + 1;
 
 }
 
@@ -92,11 +96,22 @@ void insert_edge(graph* g, int id1, int id2, int w) {
 
         if(internal1 != -1 && internal2 != -1) {
 
+            llist* e = g->lst[internal1];
+
+            while(e != NULL) {
+
+                if(e->data == internal2) {
+                    return;
+                }
+
+                e = e->next;
+
+            }
+
             g->lst[internal1] = llist_add(g->lst[internal1], internal2, w);
             g->deg[internal1]++;
 
         }
-
 
     }
 
@@ -389,6 +404,55 @@ pair* shortest_path(graph* g, int v1, int v2) {
     result->second = (void*) distances[v2];
 
     return result;
+
+}
+
+int max(int x, int y) {
+
+    return (x > y) ? x : y;
+
+}
+
+// O(max_id + V + E)
+graph* graph_union(graph* g1, graph* g2) {
+
+    graph* g = make_graph( max(g1->max_id, g2->max_id) );
+
+    for(int i=0; i<g1->nVertices; i++) {
+        insert_vertex(g, g1->hash[i]);
+    }
+
+    for(int i=0; i<g1->nVertices; i++) {
+
+        llist* e = g1->lst[i];
+        
+        while(e != NULL) {
+
+            insert_edge(g, g1->hash[i], g1->hash[e->data], e->weight);
+            e = e->next;
+
+        }
+
+    }
+
+    for(int j=0; j<g2->nVertices; j++) {
+        insert_vertex(g, g2->hash[j]);
+    }
+
+    for(int i=0; i<g2->nVertices; i++) {
+
+        llist* e = g2->lst[i];
+        
+        while(e != NULL) {
+
+            insert_edge(g, g2->hash[i], g2->hash[e->data], e->weight);
+            e = e->next;
+            
+        }
+
+    }
+
+    return g;
 
 }
 
