@@ -5,6 +5,10 @@
 
     typedef struct set_t set_t;
 
+    set_t* make_set();
+
+    void set_insert(set_t* set, int x);
+
     int get_element(set_t* X, int i);
 
     int set_size(set_t* X);

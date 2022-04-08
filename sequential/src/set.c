@@ -12,6 +12,33 @@ struct set_t {
 
 };
 
+set_t* make_set() {
+
+    set_t* s = (set_t*) malloc(sizeof(set_t));
+
+    s->elements = NULL;
+    s->size = 0;
+
+    return s;
+
+}
+
+void set_insert(set_t* set, int x) {
+
+    for(int i=0; i<set->size; i++) {
+
+        if(set->elements[i] == x) {
+            return;
+        }
+
+    }
+
+    set->elements = (set_t*) realloc(set->elements, set->size + 1);
+    set->elements[set->size] = x;
+    set->size++;
+
+}
+
 int get_element(set_t* X, int i) {
 
     return X->elements[i];
