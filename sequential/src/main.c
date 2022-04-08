@@ -88,12 +88,9 @@ int main(int argc, char** argv) {
     set_insert(t, 9);
     set_insert(t, 10);
 
-    pair* p3 = steiner_tree(g, t, 6);
-
-    graph* sp3   = (graph*) p3->first;
-    int    dist3 =    (int) p3->second;
-
-    to_graphviz(sp3, "sp3.dot");
+    graph* steiner = steiner_tree(g, t, 2);
+    
+    to_graphviz(steiner, "st3.dot");
 
     destroy_graph(g);
     
