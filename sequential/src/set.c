@@ -118,6 +118,24 @@ set_t* get_subset(set_t* X, long long mask) {
 
 }
 
+void print_set(set_t* X) {
+
+    printf("{");
+
+    for(int i=0; i<X->size; i++) {
+
+        printf("%d", X->elements[i]);
+
+        if(i < X->size - 1) {
+            printf(", ");
+        }
+
+    }
+
+    printf("}\n");
+
+}
+
 void destroy_set(set_t* set) {
 
     free(set->elements);
