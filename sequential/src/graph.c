@@ -289,30 +289,26 @@ int degree(graph* g, int id) {
 
 }
 
-int _dfs(graph* g, int start, int* visited, int func(graph*, int, void*), void* input) {
+void _dfs(graph* g, int start, int* visited, int func(graph*, int, void*), void* input, int* result) {
 
-    int val = -1;
-
-    if(func(g, start, input) == 1) {
-        val = g->hash[start];
+    if(func(g, g->hash[start], input) == 1) {
+        *result = g->hash[start];
     }
 
     llist* curr = g->lst[start];
 
-    while(curr != NULL && val != -1) {
+    while(curr != NULL) {
 
         if(visited[curr->data] == 0) {
 
             visited[curr->data] = 1;
-            int val = _dfs(g, curr->data, visited, func, input);
+            _dfs(g, curr->data, visited, func, input, result);
 
         }
 
         curr = curr->next;
 
     }
-
-    return val;
 
 }
 
@@ -324,7 +320,11 @@ int dfs(graph* g, int start, int func(graph*, int, void*), void* input) {
         visited[i] = 0;
     }
 
-    return _dfs(g, g->reverse_hash[start], visited, func, input);
+    int result = -1;
+
+    _dfs(g, g->reverse_hash[start], visited, func, input, &result);
+
+    return result;
 
 }
 
@@ -505,7 +505,11 @@ void to_graphviz(graph* g, char* filename) {
 
 void destroy_graph(graph* g) {
 
-    for(int i=0; i<g->capacity; i++) {
+    if(g == NULL) {
+        return;
+    }
+
+    for(int i=0; i<g->nVertices; i++) {
 
         destroy_llist(g->lst[i]);
         g->lst[i] = NULL;
