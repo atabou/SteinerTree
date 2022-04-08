@@ -5,7 +5,7 @@ OBJ=./obj
 LNK=-lm
 BIN=./bin
 
-COMPILE=${OBJ}/main.o ${OBJ}/graph.o ${OBJ}/heap.o ${OBJ}/fibheap.o ${OBJ}/set.o ${OBJ}/llist.o
+COMPILE=${OBJ}/main.o ${OBJ}/steiner.o ${OBJ}/graph.o ${OBJ}/llist.o ${OBJ}/heap.o ${OBJ}/fibheap.o ${OBJ}/set.o ${OBJ}/pair.o
 
 
 ${BIN}/main: ${COMPILE}
@@ -14,7 +14,10 @@ ${BIN}/main: ${COMPILE}
 ${OBJ}/main.o: ${SRC}/main.c ${INC}/graph.h ${INC}/set.h
 	gcc -Iinclude -c $< -o $@
 
-${OBJ}/graph.o: ${SRC}/graph.c ${INC}/graph.h ${INC}/heap.h ${INC}/llist.h
+${OBJ}/steiner.o: ${SRC}/steiner.c ${INC}/steiner.h ${INC}/pair.h ${INC}/graph.h ${INC}/set.h
+	gcc -Iinclude -c $< -o $@
+
+${OBJ}/graph.o: ${SRC}/graph.c ${INC}/graph.h ${INC}/heap.h ${INC}/llist.h ${INC}/pair.h
 	gcc -Iinclude -c $< -o $@
 
 ${OBJ}/llist.o: ${SRC}/llist.c ${INC}/llist.h
@@ -27,6 +30,9 @@ ${OBJ}/fibheap.o: ${SRC}/fibheap.c ${INC}/fibheap.h ${INC}/heap.h
 	gcc -Iinclude -c $< -o $@
 
 ${OBJ}/set.o: ${SRC}/set.c ${INC}/set.h
+	gcc -Iinclude -c $< -o $@
+
+${OBJ}/pair.o: ${SRC}/pair.c ${INC}/pair.h
 	gcc -Iinclude -c $< -o $@
 
 
