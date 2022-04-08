@@ -3,10 +3,10 @@
 #include <math.h>
 #include <stdio.h>
 
-#include "llist.h"
 #include "graph.h"
+#include "pair.h"
+#include "steiner.h"
 #include "set.h"
-
 
 graph* test_graph() {
 
@@ -63,10 +63,39 @@ int main(int argc, char** argv) {
     
     graph* g = test_graph();
 
-    // to_graphviz(g, "test.dot");
-    // shortest_path(g, 1, 2);
+    to_graphviz(g, "test.dot");
+    
+    // pair* p1 = shortest_path(g, 1, 1);
 
-    // destroy_graph(g);
+    // graph* sp1   = (graph*) p1->first;
+    // int    dist1 =    (int) p1->second;
+
+    // to_graphviz(sp1, "sp1.dot");
+
+    // pair* p2 = shortest_path(g, 1, 10);
+
+    // graph* sp2   = (graph*) p2->first;
+    // int    dist2 =    (int) p2->second;
+
+    // to_graphviz(sp2, "sp2.dot");
+
+    set_t* t = make_set();
+
+    set_insert(t, 1);
+    set_insert(t, 6);
+    set_insert(t, 7);
+    set_insert(t, 8);
+    set_insert(t, 9);
+    set_insert(t, 10);
+
+    pair* p3 = steiner_tree(g, t, 6);
+
+    graph* sp3   = (graph*) p3->first;
+    int    dist3 =    (int) p3->second;
+
+    to_graphviz(sp3, "sp3.dot");
+
+    destroy_graph(g);
     
     return 0;
 
