@@ -36,7 +36,7 @@ graph* make_graph(int max_id) {
 
     g->capacity     = 0;
     g->nVertices    = 0;
-    g->max_id       = max_id;
+    g->max_id       = max_id + 1;
 
     g->hash         = NULL;
     g->deg          = NULL;
@@ -54,7 +54,7 @@ graph* make_graph(int max_id) {
 
 void insert_vertex(graph* g, int id) {
 
-    if(g->reverse_hash[id] == -1) {
+    if(id >= 0 && id < g->max_id && g->reverse_hash[id] == -1) {
 
         if(g->capacity == 0) {
 
@@ -64,9 +64,7 @@ void insert_vertex(graph* g, int id) {
             
             g->capacity = 1;
 
-        }
-
-        if(g->nVertices >= g->capacity) { // O(V) normally, O(1) ammortized.
+        } else if(g->nVertices >= g->capacity) { // O(V) normally, O(1) ammortized.
 
             g->hash = (int*) realloc(g->hash, sizeof(int) * 2 * g->capacity);
             g->deg  = (int*) realloc(g->deg, sizeof(int) * 2 * g->capacity);
@@ -89,7 +87,7 @@ void insert_vertex(graph* g, int id) {
 
 void insert_edge(graph* g, int id1, int id2, int w) {
 
-    if(id1 >= 0 && id2 >= 0 && id1 <= g->max_id && id2 <= g->max_id) {
+    if(id1 >= 0 && id2 >= 0 && id1 < g->max_id && id2 < g->max_id) {
 
         int internal1 = g->reverse_hash[id1];
         int internal2 = g->reverse_hash[id2];
@@ -119,7 +117,7 @@ void insert_edge(graph* g, int id1, int id2, int w) {
 
 void remove_vertex(graph* g, int id) {
 
-    if(id > 0 && id <g->max_id) {
+    if(id > 0 && id < g->max_id) {
 
         int internal = g->reverse_hash[id];
 
@@ -173,7 +171,7 @@ void remove_vertex(graph* g, int id) {
 
 void remove_edge(graph* g, int id1, int id2) {
 
-    if(id1 >= 0 && id2 >= 0 && id1 <= g->max_id && id2 <= g->max_id) {
+    if(id1 >= 0 && id2 >= 0 && id1 < g->max_id && id2 < g->max_id) {
 
         int internal1 = g->reverse_hash[id1];
         int internal2 = g->reverse_hash[id2];
@@ -269,13 +267,25 @@ graph* make_randomly_connected_graph(int max_id) {
 
 }
 
-int degree(graph* g, int v) {
+int degree(graph* g, int id) {
 
-    if(v >= 0 && v < g->nVertices) {
-        return g->deg[g->reverse_hash[v]];
-    } else {
-        return -1;
+    if(id >= 0 && id < g->max_id) {
+
+        int k = g->reverse_hash[id];
+
+        if(k != -1) {
+
+            return g->deg[k];
+
+        } else {
+
+            return -1;
+
+        }
+
     }
+
+    
 
 }
 
@@ -322,12 +332,16 @@ pair* shortest_path(graph* g, int v1, int v2) {
 
     // Check boundary conditions
 
-    if(v1 < 0 || v2 < 0 || v1 >= g->nVertices || v2 >= g->nVertices) {
+    if(v1 < 0 || v2 < 0 || v1 >= g->max_id || v2 >= g->max_id) {
         return NULL;
     }
 
     int internal1 = g->reverse_hash[v1];
     int internal2 = g->reverse_hash[v2];
+
+    if(internal1 == -1 || internal2 == -1) {
+        return NULL;
+    }
 
     // Initialize single source shortest path
 
@@ -341,7 +355,7 @@ pair* shortest_path(graph* g, int v1, int v2) {
 
     }
 
-    distances[v1] = 0;
+    distances[internal1] = 0;
 
     // Initialize minheap.
 
@@ -383,16 +397,16 @@ pair* shortest_path(graph* g, int v1, int v2) {
 
     insert_vertex(path, v2);
 
-    int child  = v2;
-    int vertex = parents[v2];
+    int child  = internal2;
+    int vertex = parents[child];
 
     while(vertex != -1) {
 
-        insert_vertex(path, vertex);
+        insert_vertex(path, g->hash[vertex]);
 
-        insert_edge(g, vertex, child, distances[child] - distances[vertex]);
-        insert_edge(g, child, vertex, distances[child] - distances[vertex]);
-        
+        insert_edge(path, g->hash[vertex], g->hash[child], distances[child] - distances[vertex]);
+        insert_edge(path, g->hash[child], g->hash[vertex], distances[child] - distances[vertex]);
+
         child = vertex;
         vertex = parents[vertex];
 
@@ -401,7 +415,7 @@ pair* shortest_path(graph* g, int v1, int v2) {
     pair* result = (pair*) malloc(sizeof(pair));
 
     result->first = (void*) path;
-    result->second = (void*) distances[v2];
+    result->second = (void*) distances[internal2];
 
     return result;
 
