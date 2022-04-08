@@ -40,31 +40,37 @@ int element_exists(int element, set_t* X) {
     
 set_t* remove_element(int element, set_t* X) {
 
-    int* result = (int*) malloc(sizeof(int) * (X->size - 1));
+    set_t* Y = (set_t*) malloc( sizeof(set_t) );
+
+    Y->elements = (int*) malloc(sizeof(int) * (X->size - 1));
+    Y->size = X->size - 1;
 
     int flag = 0;
 
-    for(int i=0; i<X->size - 1; i++) {
+    for(int i=0; i<Y->size; i++) {
 
         if(X->elements[i] == element) {
             flag = 1;
         }
 
         if(flag == 0) {
-            result[i] = X->elements[i];
+            Y->elements[i] = X->elements[i];
         } else {
-            result[i] = X->elements[i+1];
+            Y->elements[i] = X->elements[i+1];
         }
 
     }
 
-    return result;
+    return Y;
 
 }
 
 set_t* get_subset(set_t* X, long long mask) {
 
-    set_t* subset = (int*) malloc( sizeof(int) * __builtin_popcount(mask) );
+    set_t* subset = (set_t*) malloc(sizeof(set_t)); 
+    
+    subset->elements = (int*) malloc( sizeof(int) * __builtin_popcount(mask) );
+    subset->size = __builtin_popcount(mask);
 
     int count = 0;
     
