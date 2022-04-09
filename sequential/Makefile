@@ -4,16 +4,23 @@ INC=./include
 OBJ=./obj
 LNK=-lm
 BIN=./bin
+RED=\033[0;31m
+GREEN=\033[0;32m
+YELLOW=\033[1;33m
+NOCOLOR=\033[0m
 
 COMPILE=${OBJ}/main.o ${OBJ}/steiner.o ${OBJ}/graph.o ${OBJ}/llist.o ${OBJ}/heap.o ${OBJ}/fibheap.o ${OBJ}/set.o ${OBJ}/pair.o
 
 all: | pre-build ${BIN}/main
+	@echo "${GREEN}Compilation done.${NOCOLOR}"
 
 pre-build:
-	mkdir -p "${OBJ}" "${BIN}"
+	@echo "Creating bin and obj folders if they don't exist."
+	@mkdir -p "${OBJ}" "${BIN}"
 
 ${BIN}/main: ${COMPILE}
 	gcc -I${INC} -o ${BIN}/main ${COMPILE} ${LNK}
+	@echo "${YELLOW}Ignore Warnings${NOCOLOR}"
 
 ${OBJ}/main.o: ${SRC}/main.c ${INC}/graph.h ${INC}/set.h
 	gcc -Iinclude -c $< -o $@
@@ -41,4 +48,4 @@ ${OBJ}/pair.o: ${SRC}/pair.c ${INC}/pair.h
 
 
 clean:
-	rm ${OBJ}/* ${BIN}/*
+	rm -rf ${OBJ} ${BIN}
