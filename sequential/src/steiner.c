@@ -17,6 +17,27 @@ int verify(graph* g, int v, void* input) {
 
 }
 
+pair* steiner_bottom_up(graph* g, set_t* terminals) {
+
+    int**    costs =    (int**) malloc(sizeof(int)    * 11);
+    graph*** trees = (graph***) malloc(sizeof(graph**) * 11);
+
+    long long n = (long long) pow(2, set_size(terminals));
+
+    for(int v=1; v<11; v++) {
+
+        costs[v-1] = (int*) malloc(sizeof(int) * n);
+        trees[v-1] = (graph**) malloc(sizeof(graph*) * n);
+
+    }
+
+    // All pairs shortest path
+
+    // Fill array with corresponding sortest paths
+
+    // Start building the array in order by incrementing a mask until 2^|T|
+
+}
 
 pair* streiner_tree_dp(graph* g, set_t* terminals, int v) {
 
@@ -112,7 +133,7 @@ pair* streiner_tree_dp(graph* g, set_t* terminals, int v) {
 
 }
 
-graph* steiner_tree(graph* g, int* terminals, int n) {
+graph* steiner_tree(graph* g, int* terminals) {
 
     graph* min_tree = NULL;
     int min_cost = INT_MAX;

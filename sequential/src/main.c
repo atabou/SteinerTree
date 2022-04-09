@@ -65,20 +65,6 @@ int main(int argc, char** argv) {
 
     to_graphviz(g, "test.dot");
     
-    // pair* p1 = shortest_path(g, 1, 1);
-
-    // graph* sp1   = (graph*) p1->first;
-    // int    dist1 =    (int) p1->second;
-
-    // to_graphviz(sp1, "sp1.dot");
-
-    // pair* p2 = shortest_path(g, 1, 10);
-
-    // graph* sp2   = (graph*) p2->first;
-    // int    dist2 =    (int) p2->second;
-
-    // to_graphviz(sp2, "sp2.dot");
-
     set_t* t = make_set();
 
     set_insert(t, 1);
@@ -88,7 +74,7 @@ int main(int argc, char** argv) {
     set_insert(t, 9);
     set_insert(t, 10);
 
-    graph* steiner = steiner_tree(g, t, 2);
+    graph* steiner = steiner_tree(g, t);
     
     to_graphviz(steiner, "st3.dot");
 

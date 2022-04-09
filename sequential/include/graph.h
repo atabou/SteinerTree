@@ -13,7 +13,7 @@
      * Complexity: O(max_id)
      * 
      * @param max_id the biggest possible id that will be entered in the graph.  
-     * @return graph* An empty graph.
+     * @return graph* an empty graph.
      */
     graph* make_graph(int max_id);
 
@@ -21,6 +21,7 @@
      * @brief Makes a randomly connected graph with a maximum.
      * 
      * @param max_id the highest id that will be used to represent vertices in this graph.
+     * @return graph* a randomly connected graph.
      */
     graph* make_randomly_connected_graph(int max_id);
 
@@ -33,14 +34,14 @@
      * Worst-Case: O(V)
      * Ammortized: O(1)
      * 
-     * @param g 
-     * @param id 
-     * @return int 
+     * @param g the graph to insert a vertex in.
+     * @param id the id of the vertex to insert.
      */
     void insert_vertex(graph* g, int id);
 
     /**
-     * @brief Insert a new edge between two nodes with a given weight. (Does not check for duplicates)
+     * @brief Insert a new edge between two nodes with a given weight.
+     * If an edge between the two vertices already exists nothing is done.
      * 
      * Complexity: O( deg(V) )
      * 
@@ -87,8 +88,30 @@
      */
     pair* shortest_path(graph* g, int v1, int v2);
 
+    /**
+     * @brief Get the degree of the specified vertex.
+     * 
+     * @param g the graph to get to operate on.
+     * @param id the id of the vertex.
+     * @return int the degree of the vertex.
+     */
     int degree(graph* g, int id);
 
+    /**
+     * @brief starts dfs of over the graph g from the specified node start.
+     * Each time a node is encountered the specified function func is run.
+     * If this function returns true, the id of the vertex at which it was invoked is returned, and dfs is stopped. 
+     * The supplied function should take as input:
+     *      - graph*: dfs will input g into this function
+     *      - int: dfs will input the vertex it is currently processing.
+     *      - void*: a void pointer that contains additional input data necessary to run func.
+     * 
+     * @param g the graph to run dfs on.
+     * @param start the vertex to start dfs from.
+     * @param func the search function to run at each vertex.
+     * @param input the additional input for func.
+     * @return int -1 if func never returned true of the id of the first vertex that returned true.
+     */
     int dfs(graph* g, int start, int func(graph*, int, void*), void* input);
 
     /**
@@ -114,6 +137,11 @@
      */
     void to_graphviz(graph* g, char* filename);
 
+    /**
+     * @brief Destroys and frees the graph.
+     * 
+     * @param g the graph to free.
+     */
     void destroy_graph(graph* g);
 
 #endif
