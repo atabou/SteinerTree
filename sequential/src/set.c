@@ -33,7 +33,7 @@ void set_insert(set_t* set, int x) {
 
     }
 
-    set->elements = (set_t*) realloc(set->elements, set->size + 1);
+    set->elements = (int*) realloc(set->elements, set->size + 1);
     set->elements[set->size] = x;
     set->size++;
 

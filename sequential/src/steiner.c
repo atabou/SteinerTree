@@ -127,13 +127,13 @@ pair* streiner_tree_dp(graph* g, set_t* terminals, int v) {
 
         destroy_graph(sp_path);
 
-        return make_pair(min_tree, min_cost);
+        return make_pair(min_tree, (void*) min_cost);
 
     }
 
 }
 
-graph* steiner_tree(graph* g, int* terminals) {
+graph* steiner_tree(graph* g, set_t* terminals) {
 
     graph* min_tree = NULL;
     int min_cost = INT_MAX;
