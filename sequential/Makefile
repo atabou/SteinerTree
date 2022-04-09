@@ -7,6 +7,10 @@ BIN=./bin
 
 COMPILE=${OBJ}/main.o ${OBJ}/steiner.o ${OBJ}/graph.o ${OBJ}/llist.o ${OBJ}/heap.o ${OBJ}/fibheap.o ${OBJ}/set.o ${OBJ}/pair.o
 
+all: | pre-build ${BIN}/main
+
+pre-build:
+	mkdir -p "${OBJ}" "${BIN}"
 
 ${BIN}/main: ${COMPILE}
 	gcc -I${INC} -o ${BIN}/main ${COMPILE} ${LNK}
