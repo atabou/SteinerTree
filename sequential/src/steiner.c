@@ -1,4 +1,5 @@
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <math.h>
@@ -17,37 +18,27 @@ int verify(graph* g, int v, void* input) {
 
 }
 
-pair* steiner_bottom_up(graph* g, set_t* terminals) {
-
-    int**    costs =    (int**) malloc(sizeof(int)    * 11);
-    graph*** trees = (graph***) malloc(sizeof(graph**) * 11);
-
-    long long n = (long long) pow(2, set_size(terminals));
-
-    for(int v=1; v<11; v++) {
-
-        costs[v-1] = (int*) malloc(sizeof(int) * n);
-        trees[v-1] = (graph**) malloc(sizeof(graph*) * n);
-
-    }
-
-    // All pairs shortest path
-
-    // Fill array with corresponding sortest paths
-
-    // Start building the array in order by incrementing a mask until 2^|T|
-
-}
-
 pair* streiner_tree_dp(graph* g, set_t* terminals, int v) {
 
     if(set_size(terminals) == 1) {
 
-        return shortest_path(g, get_element(terminals, 0), v);
+        pair* p = shortest_path(g, v, get_element(terminals, 0));
+
+        // if(get_element(terminals, 0) == 10)
+        //     printf("(%d, %d): %d\n", v, get_element(terminals, 0), (int) p->second);
+
+        return p;
 
     } else {
 
         int w = dfs(g, v, verify, terminals);
+
+        if(v == 1) {
+            printf("start: %d, result: %d - ", v, w);
+            print_set(terminals);
+        }
+
+        // printf("%d\n", w);
 
         pair*  sp_pair = shortest_path(g, v, w);
 
@@ -108,11 +99,10 @@ pair* streiner_tree_dp(graph* g, set_t* terminals, int v) {
                     destroy_graph(min_tree);
 
                     graph* tmp_tree = graph_union(dp_tree1, dp_tree2);
-
-                    int    min_cost = dp_cost1 + dp_cost2;
+                    int tmp_cost = dp_cost1 + dp_cost2;
 
                     min_tree = graph_union(tmp_tree, sp_path);
-                    min_cost = min_cost + sp_dist;
+                    min_cost = tmp_cost + sp_dist;
 
                     destroy_graph(tmp_tree);
 
@@ -127,7 +117,7 @@ pair* streiner_tree_dp(graph* g, set_t* terminals, int v) {
 
         destroy_graph(sp_path);
 
-        return make_pair(min_tree, (void*) min_cost);
+        return make_pair(min_tree, min_cost);
 
     }
 
@@ -135,29 +125,30 @@ pair* streiner_tree_dp(graph* g, set_t* terminals, int v) {
 
 graph* steiner_tree(graph* g, set_t* terminals) {
 
-    graph* min_tree = NULL;
-    int min_cost = INT_MAX;
+    // graph* min_tree = NULL;
+    // int min_cost = INT_MAX;
 
-    to_graphviz(g, "test.dot");
+    // for(int i=1; i<11; i++) {
 
-    for(int i=1; i<11; i++) {
+    //     pair* p = streiner_tree_dp(g, terminals, i);
 
-        pair* p = streiner_tree_dp(g, terminals, i);
+    //     graph* steiner = (graph*) p->first;
+    //     int    cost = (int) p->second;
 
-        graph* steiner = (graph*) p->first;
-        int    cost = (int) p->second;
+    //     if(cost < min_cost) {
 
-        if(cost < min_cost) {
+    //         destroy_graph(min_tree);
 
-            destroy_graph(min_tree);
+    //         min_tree = steiner;
+    //         min_cost = cost;
 
-            min_tree = steiner;
-            min_cost = cost;
+    //     }
 
-        }
+    //     printf("%d\n", cost);
 
-    }
+    // }
 
-    return min_tree;
+    // return min_tree;
+
 
 }

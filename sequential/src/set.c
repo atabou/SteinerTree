@@ -45,6 +45,20 @@ int get_element(set_t* X, int i) {
 
 }
 
+int find_position(set_t* X, int element) {
+
+    for(int i=0; i < X->size; i++) {
+        
+        if (X->elements[i] == element) {
+            return i;
+        }
+    
+    }
+
+    return -1; 
+
+}
+
 int set_size(set_t* X) {
 
     return X->size;
@@ -105,7 +119,7 @@ set_t* get_subset(set_t* X, long long mask) {
 
     while(submask != 0) {
 
-        int pos = X->size - __builtin_ctz(mask) - 1; // Get the position of the first 1 in the bit mask and convert it to the relative position in the set.
+        int pos = X->size - __builtin_ctz(submask) - 1; // Get the position of the first 1 in the bit mask and convert it to the relative position in the set.
         
         subset->elements[count] = X->elements[pos];
         count++;

@@ -55,6 +55,8 @@
      * @return int 
      */
     int element_exists(int element, set_t* X);
+
+    int find_position(set_t* X, int element);
     
     /**
      * @brief Removes a speified element from the set.

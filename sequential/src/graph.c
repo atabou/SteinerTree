@@ -2,11 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <math.h>
 
 #include "llist.h"
 #include "graph.h"
 #include "heap.h"
 #include "pair.h"
+#include "set.h"
 
 struct graph {
 
@@ -289,20 +291,21 @@ int degree(graph* g, int id) {
 
 }
 
-void _dfs(graph* g, int start, int* visited, int func(graph*, int, void*), void* input, int* result) {
+void _dfs_rec(graph* g, int start, int* visited, int func(graph*, int, void*), void* input, int* result) {
 
     if(func(g, g->hash[start], input) == 1) {
-        *result = g->hash[start];
+        *result = start;
+        return;
     }
 
     llist* curr = g->lst[start];
 
-    while(curr != NULL) {
+    while(curr != NULL && *result == -1) {
 
         if(visited[curr->data] == 0) {
 
             visited[curr->data] = 1;
-            _dfs(g, curr->data, visited, func, input, result);
+            _dfs_rec(g, curr->data, visited, func, input, result);
 
         }
 
@@ -312,7 +315,7 @@ void _dfs(graph* g, int start, int* visited, int func(graph*, int, void*), void*
 
 }
 
-int dfs(graph* g, int start, int func(graph*, int, void*), void* input) {
+int _dfs(graph* g, int start, int func(graph*, int, void*), void* input) {
 
     int visited[g->nVertices];
 
@@ -322,31 +325,24 @@ int dfs(graph* g, int start, int func(graph*, int, void*), void* input) {
 
     int result = -1;
 
-    _dfs(g, g->reverse_hash[start], visited, func, input, &result);
+    _dfs_rec(g, start, visited, func, input, &result);
 
     return result;
 
 }
 
-pair* shortest_path(graph* g, int v1, int v2) {
+int dfs(graph* g, int start, int func(graph*, int, void*), void* input) {
 
-    // Check boundary conditions
+    return g->reverse_hash[_dfs(g, g->reverse_hash[start], func, input)];
 
-    if(v1 < 0 || v2 < 0 || v1 >= g->max_id || v2 >= g->max_id) {
-        return NULL;
-    }
+}
 
-    int internal1 = g->reverse_hash[v1];
-    int internal2 = g->reverse_hash[v2];
+pair* dijkstra(graph* g, int internal1) {
 
-    if(internal1 == -1 || internal2 == -1) {
-        return NULL;
-    }
+    // Initialize Single Source Shortest Path
 
-    // Initialize single source shortest path
-
-    int distances[g->nVertices];
-    int parents[g->nVertices];
+    int* distances = (int*) malloc(sizeof(int) * g->nVertices);
+    int* parents   = (int*) malloc(sizeof(int) * g->nVertices);
 
     for(int i=0; i<g->nVertices; i++) {
 
@@ -393,6 +389,30 @@ pair* shortest_path(graph* g, int v1, int v2) {
 
     pq->destroy(pq); // O(1) because the priority q is empty at this point.
 
+    return make_pair(distances, parents);
+
+}
+
+pair* shortest_path(graph* g, int v1, int v2) {
+
+    // Check boundary conditions
+
+    if(v1 < 0 || v2 < 0 || v1 >= g->max_id || v2 >= g->max_id) {
+        return NULL;
+    }
+
+    int internal1 = g->reverse_hash[v1];
+    int internal2 = g->reverse_hash[v2];
+
+    if(internal1 == -1 || internal2 == -1) {
+        return NULL;
+    }
+
+    pair* p = dijkstra(g, internal1);
+
+    int* distances = (int*) p->first;
+    int* parents = (int*) p->second;
+
     graph* path = make_graph(g->max_id);
 
     insert_vertex(path, v2);
@@ -416,6 +436,9 @@ pair* shortest_path(graph* g, int v1, int v2) {
 
     result->first = (void*) path;
     result->second = (void*) distances[internal2];
+
+    free(distances);
+    free(parents);
 
     return result;
 
@@ -533,5 +556,167 @@ void destroy_graph(graph* g) {
     g->reverse_hash = NULL;
 
     free(g);
+
+}
+
+int steiner_verification(graph* g, int v, void* input) {
+
+    int check1 = degree(g, v) >= 3;
+    int check2 = element_exists(v, (set_t*) input);
+
+    return check1 || check2;
+
+}
+
+void fill_table_under_mask(graph* g, int** table, set_t* terminals, int** distances, long long mask) {
+
+    for(int v=0; v<g->nVertices; v++) {
+
+        set_t* X = get_subset(terminals, mask);
+        
+        int w = _dfs(g, v, steiner_verification, X); // O(V+E)
+
+        if( element_exists(g->hash[w], X) ) {
+
+            long long submask = 1ll << (set_size(terminals) - find_position(terminals, g->hash[w]) - 1);
+
+            table[v][mask - 1] = distances[v][w] + table[w][(mask & ~submask) - 1];   
+
+        } else {
+
+            int min = INT_MAX;
+
+            for(long long submask = (mask - 1) & mask; submask != 0; submask = (submask - 1) & mask) { // iterate over submasks of the mask
+
+                long long tmp = 1ll << (set_size(terminals) - 1);
+
+                int cost = distances[v][w] + table[w][submask - 1] + table[w][(mask & ~submask) - 1];
+
+                if(cost < min) {
+
+                    min = cost;
+
+                }
+
+            }
+
+            table[v][mask - 1] = min;
+
+        }
+
+        free(X);
+
+    }
+
+}
+
+void fill_table_k_combinations(graph* g, int** table, set_t* terminals, int** distances, long long mask, int position, int k) {
+
+    if(__builtin_popcount(mask) == k) {
+
+        fill_table_under_mask(g, table, terminals, distances, mask);
+        return;
+
+    }
+
+    if(position >= set_size(terminals)) {
+        return;
+    }
+
+    fill_table_k_combinations(g, table, terminals, distances, mask, position + 1, k);
+    fill_table_k_combinations(g, table, terminals, distances, mask | (1 << position), position + 1, k);
+
+}
+
+int steiner_bottom_up(graph* g, set_t* terminals) {
+
+    int**    costs =    (int**) malloc(sizeof(int) * g->nVertices);
+    graph*** trees = (graph***) malloc(sizeof(graph**) * g->nVertices);
+
+    long long num_combinations =  (long long) pow(2, set_size(terminals)) - 1;
+
+    for(int v=0; v<g->nVertices; v++) {
+
+        costs[v] = (int*) malloc(sizeof(int) * num_combinations);
+        trees[v] = (graph**) malloc(sizeof(graph*) * num_combinations);
+
+    }
+
+    // All pairs shortest path
+
+    int** distances = (int**) malloc(sizeof(int*) * g->nVertices);
+    int** parents = (int**) malloc(sizeof(int*) * g->nVertices);
+
+    for(int i=0; i<g->nVertices; i++) {
+
+        pair* p = dijkstra(g, i); // (E + V log (V))
+
+        distances[i] = (int*) p->first;
+        parents[i] = (int*) p->second;
+
+        free(p);
+
+    }
+
+    // Fill base cases
+
+    for(int v=0; v<g->nVertices; v++) {
+
+        long long mask = 1ll << (set_size(terminals) - 1);
+
+        for(int pos=set_size(terminals) - 1; pos >= 0; pos--) {
+
+            int u = g->reverse_hash[get_element(terminals, pos)];
+
+            costs[v][mask - 1] = distances[v][u];
+
+            mask = mask >> 1;
+
+        }
+
+    }
+
+    // Start building the array in order by incrementing a mask until 2^|T| - 1
+
+    for(int comb=2; comb<=set_size(terminals); comb++) {
+
+        fill_table_k_combinations(g, costs, terminals, distances, 0, 0, comb);
+
+    }
+
+    // Extract minimum from table.
+
+    int min = INT_MAX;
+
+    for(int i=0; i<g->nVertices; i++) {
+
+        if(costs[i][num_combinations - 1] < min) {
+            min = costs[i][num_combinations - 1];
+        }
+
+    }
+
+    // Print table
+
+    printf("\n");
+    for(int i=0; i<num_combinations; i++) {
+        printf("+--");
+    }
+    printf("+\n");
+
+    for(int i=0; i<g->nVertices; i++) {
+        printf("|");
+        for(int j=0; j<num_combinations; j++) {
+            printf("%2d|", costs[i][j]);
+        }
+        printf("\n");
+        for(int j=0; j<num_combinations; j++) {
+            printf("+--");
+        }
+        printf("+\n");
+    }
+    printf("\n");
+    
+    return min;
 
 }

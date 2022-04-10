@@ -4,8 +4,11 @@
     #define GRAPH_H
 
     #include "pair.h"
+    #include "set.h"
 
     typedef struct graph graph;
+
+    int steiner_bottom_up(graph* g, set_t* terminals);
 
     /**
      * @brief Creates an empty graph with a maximum id of max_id.
@@ -87,6 +90,8 @@
      * @return a pair containing first a graph pointer and second an integer.
      */
     pair* shortest_path(graph* g, int v1, int v2);
+
+    pair* all_pairs_shortest_path(graph* g);
 
     /**
      * @brief Get the degree of the specified vertex.

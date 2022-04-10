@@ -74,9 +74,11 @@ int main(int argc, char** argv) {
     set_insert(t, 9);
     set_insert(t, 10);
 
-    graph* steiner = steiner_tree(g, t);
+    int steiner = steiner_bottom_up(g, t);
     
-    to_graphviz(steiner, "st3.dot");
+    printf("minimum: %d\n", steiner);
+
+    // to_graphviz(steiner, "st3.dot");
 
     destroy_graph(g);
     
