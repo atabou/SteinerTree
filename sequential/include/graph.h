@@ -115,9 +115,9 @@
      * @param start the vertex to start dfs from.
      * @param func the search function to run at each vertex.
      * @param input the additional input for func.
-     * @return int -1 if func never returned true of the id of the first vertex that returned true.
+     * @return set_t* the set of vertices that fulfill the conditions in the function func.
      */
-    int dfs(graph* g, int start, int func(graph*, int, void*), void* input);
+    set_t* dfs(graph* g, int start, int func(graph*, int, void*), void* input);
 
     /**
      * @brief Merges the graphs together on the specified node.

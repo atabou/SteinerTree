@@ -9,6 +9,7 @@
 #include "heap.h"
 #include "pair.h"
 #include "set.h"
+#include "common.h"
 
 struct graph {
 
@@ -291,16 +292,16 @@ int degree(graph* g, int id) {
 
 }
 
-void _dfs_rec(graph* g, int start, int* visited, int func(graph*, int, void*), void* input, int* result) {
+void _dfs_rec(graph* g, int start, int* visited, int func(graph*, int, void*), void* input, set_t* result) {
 
+    
     if(func(g, g->hash[start], input) == 1) {
-        *result = start;
-        return;
+        set_insert(result, g->hash[start]);
     }
 
     llist* curr = g->lst[start];
 
-    while(curr != NULL && *result == -1) {
+    while(curr != NULL) {
 
         if(visited[curr->data] == 0) {
 
@@ -315,7 +316,7 @@ void _dfs_rec(graph* g, int start, int* visited, int func(graph*, int, void*), v
 
 }
 
-int _dfs(graph* g, int start, int func(graph*, int, void*), void* input) {
+set_t* _dfs(graph* g, int start, int func(graph*, int, void*), void* input) {
 
     int visited[g->nVertices];
 
@@ -323,17 +324,18 @@ int _dfs(graph* g, int start, int func(graph*, int, void*), void* input) {
         visited[i] = 0;
     }
 
-    int result = -1;
+    
+    set_t* result = make_set();
 
-    _dfs_rec(g, start, visited, func, input, &result);
-
+    _dfs_rec(g, start, visited, func, input, result);
+    
     return result;
 
 }
 
-int dfs(graph* g, int start, int func(graph*, int, void*), void* input) {
+set_t* dfs(graph* g, int start, int func(graph*, int, void*), void* input) {
 
-    return g->reverse_hash[_dfs(g, g->reverse_hash[start], func, input)];
+    return _dfs(g, g->reverse_hash[start], func, input);
 
 }
 
@@ -570,49 +572,74 @@ int steiner_verification(graph* g, int v, void* input) {
 
 void fill_table_under_mask(graph* g, int** table, set_t* terminals, int** distances, long long mask) {
 
+    set_t* X = get_subset(terminals, mask);
+
     for(int v=0; v<g->nVertices; v++) {
 
-        set_t* X = get_subset(terminals, mask);
+        set_t* W = _dfs(g, v, steiner_verification, X); // O(V+E)
         
-        int w = _dfs(g, v, steiner_verification, X); // O(V+E)
+        int min = INT_MAX;
 
-        if( element_exists(g->hash[w], X) ) {
+        for(int i=0; i < set_size(W); i++) {
 
-            long long submask = 1ll << (set_size(terminals) - find_position(terminals, g->hash[w]) - 1);
+            int w = g->reverse_hash[get_element(W, i)];
 
-            table[v][mask - 1] = distances[v][w] + table[w][(mask & ~submask) - 1];   
+            if( element_exists(g->hash[w], X) ) {
 
-        } else {
+                long long submask = 1ll << (set_size(terminals) - find_position(terminals, g->hash[w]) - 1);
 
-            int min = INT_MAX;
-
-            for(long long submask = (mask - 1) & mask; submask != 0; submask = (submask - 1) & mask) { // iterate over submasks of the mask
-
-                long long tmp = 1ll << (set_size(terminals) - 1);
-
-                int cost = distances[v][w] + table[w][submask - 1] + table[w][(mask & ~submask) - 1];
+                int cost = distances[v][w] + table[w][(mask & ~submask) - 1];
 
                 if(cost < min) {
-
                     min = cost;
+                }
+
+            } else {
+
+                for(long long submask = (mask - 1) & mask; submask != 0; submask = (submask - 1) & mask) { // iterate over submasks of the mask
+
+                    int cost = distances[v][w] + table[w][submask - 1] + table[w][(mask & ~submask) - 1];
+
+                    if(cost < min) {
+                        min = cost;
+                    }
 
                 }
 
             }
 
-            table[v][mask - 1] = min;
-
         }
 
-        free(X);
+
+        table[v][mask - 1] = min;
+
+        free(W);
 
     }
 
+    free(X);
+
 }
+
+// typedef struct queue_t queue_t;
+
+// struct queue_t {
+
+//     long long mask;
+//     int position;
+//     int size;
+
+//     queue_t* left;
+//     queue_t* right;
+
+// };
 
 void fill_table_k_combinations(graph* g, int** table, set_t* terminals, int** distances, long long mask, int position, int k) {
 
     if(__builtin_popcount(mask) == k) {
+
+        print_bits(mask, set_size(terminals));
+        printf("\n");
 
         fill_table_under_mask(g, table, terminals, distances, mask);
         return;
@@ -623,29 +650,29 @@ void fill_table_k_combinations(graph* g, int** table, set_t* terminals, int** di
         return;
     }
 
-    fill_table_k_combinations(g, table, terminals, distances, mask, position + 1, k);
     fill_table_k_combinations(g, table, terminals, distances, mask | (1 << position), position + 1, k);
+    fill_table_k_combinations(g, table, terminals, distances, mask, position + 1, k);
+    
 
 }
 
 int steiner_bottom_up(graph* g, set_t* terminals) {
 
-    int**    costs =    (int**) malloc(sizeof(int) * g->nVertices);
-    graph*** trees = (graph***) malloc(sizeof(graph**) * g->nVertices);
-
+    int num_vertices = g->nVertices;
     long long num_combinations =  (long long) pow(2, set_size(terminals)) - 1;
+
+    int** costs = (int**) malloc(sizeof(int*) * num_vertices);
 
     for(int v=0; v<g->nVertices; v++) {
 
         costs[v] = (int*) malloc(sizeof(int) * num_combinations);
-        trees[v] = (graph**) malloc(sizeof(graph*) * num_combinations);
-
+        
     }
 
     // All pairs shortest path
 
-    int** distances = (int**) malloc(sizeof(int*) * g->nVertices);
-    int** parents = (int**) malloc(sizeof(int*) * g->nVertices);
+    int** distances = (int**) malloc(sizeof(int*) * num_vertices);
+    int** parents = (int**) malloc(sizeof(int*) * num_vertices);
 
     for(int i=0; i<g->nVertices; i++) {
 
@@ -678,7 +705,7 @@ int steiner_bottom_up(graph* g, set_t* terminals) {
 
     // Start building the array in order by incrementing a mask until 2^|T| - 1
 
-    for(int comb=2; comb<=set_size(terminals); comb++) {
+    for(int comb=1; comb<=set_size(terminals); comb++) {
 
         fill_table_k_combinations(g, costs, terminals, distances, 0, 0, comb);
 
@@ -696,27 +723,14 @@ int steiner_bottom_up(graph* g, set_t* terminals) {
 
     }
 
-    // Print table
+    // // Print table
 
-    printf("\n");
-    for(int i=0; i<num_combinations; i++) {
-        printf("+--");
-    }
-    printf("+\n");
+    print_table(costs, g->nVertices, num_combinations);
 
-    for(int i=0; i<g->nVertices; i++) {
-        printf("|");
-        for(int j=0; j<num_combinations; j++) {
-            printf("%2d|", costs[i][j]);
-        }
-        printf("\n");
-        for(int j=0; j<num_combinations; j++) {
-            printf("+--");
-        }
-        printf("+\n");
-    }
-    printf("\n");
-    
+    free_table(costs, num_vertices, num_combinations);
+    free_table(distances, num_vertices, num_vertices);
+    free_table(parents, num_vertices, num_vertices);
+
     return min;
 
 }

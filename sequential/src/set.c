@@ -25,17 +25,27 @@ set_t* make_set() {
 
 void set_insert(set_t* set, int x) {
 
-    for(int i=0; i<set->size; i++) {
+    if(set->size == 0) {
 
-        if(set->elements[i] == x) {
-            return;
+        set->elements = (int*) malloc( sizeof(int) );
+        set->elements[0] = x;
+        set->size++;
+        
+    } else {
+
+        for(int i=0; i<set->size; i++) {
+
+            if(set->elements[i] == x) {
+                return;
+            }
+
         }
 
-    }
+        set->elements = (int*) realloc(set->elements, sizeof(int) * set->size + 1);
+        set->elements[set->size] = x;
+        set->size++;
 
-    set->elements = (int*) realloc(set->elements, set->size + 1);
-    set->elements[set->size] = x;
-    set->size++;
+    }
 
 }
 

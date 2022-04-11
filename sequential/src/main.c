@@ -7,6 +7,7 @@
 #include "pair.h"
 #include "steiner.h"
 #include "set.h"
+#include "common.h"
 
 graph* test_graph() {
 
@@ -81,6 +82,10 @@ int main(int argc, char** argv) {
     // to_graphviz(steiner, "st3.dot");
 
     destroy_graph(g);
+
+    long long n = combination(5, 1, 1);
+    print_bits(n, 5);
+    printf("\n");
     
     return 0;
 

@@ -9,7 +9,7 @@ GREEN=\033[0;32m
 YELLOW=\033[1;33m
 NOCOLOR=\033[0m
 
-COMPILE=${OBJ}/main.o ${OBJ}/steiner.o ${OBJ}/graph.o ${OBJ}/llist.o ${OBJ}/heap.o ${OBJ}/fibheap.o ${OBJ}/set.o ${OBJ}/pair.o
+COMPILE=${OBJ}/main.o ${OBJ}/steiner.o ${OBJ}/graph.o ${OBJ}/llist.o ${OBJ}/heap.o ${OBJ}/fibheap.o ${OBJ}/set.o ${OBJ}/pair.o ${OBJ}/common.o
 
 all: | pre-build ${BIN}/main
 	@echo "${GREEN}Compilation done.${NOCOLOR}"
@@ -28,7 +28,7 @@ ${OBJ}/main.o: ${SRC}/main.c ${INC}/graph.h ${INC}/set.h
 ${OBJ}/steiner.o: ${SRC}/steiner.c ${INC}/steiner.h ${INC}/pair.h ${INC}/graph.h ${INC}/set.h
 	gcc -Iinclude -c $< -o $@
 
-${OBJ}/graph.o: ${SRC}/graph.c ${INC}/graph.h ${INC}/heap.h ${INC}/llist.h ${INC}/pair.h
+${OBJ}/graph.o: ${SRC}/graph.c ${INC}/graph.h ${INC}/heap.h ${INC}/llist.h ${INC}/pair.h ${INC}/common.h
 	gcc -Iinclude -c $< -o $@
 
 ${OBJ}/llist.o: ${SRC}/llist.c ${INC}/llist.h
@@ -44,6 +44,9 @@ ${OBJ}/set.o: ${SRC}/set.c ${INC}/set.h
 	gcc -Iinclude -c $< -o $@
 
 ${OBJ}/pair.o: ${SRC}/pair.c ${INC}/pair.h
+	gcc -Iinclude -c $< -o $@
+
+${OBJ}/common.o: ${SRC}/common.c ${INC}/common.h
 	gcc -Iinclude -c $< -o $@
 
 
