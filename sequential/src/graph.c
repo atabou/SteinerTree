@@ -570,15 +570,16 @@ int steiner_verification(graph* g, int v, void* input) {
 
 }
 
-void fill_table_under_mask(graph* g, int** table, set_t* terminals, int** distances, long long mask) {
+void fill_table(graph* g, int** table, graph*** trees, set_t* terminals, int** distances, graph*** paths, long long mask) {
 
     set_t* X = get_subset(terminals, mask);
 
     for(int v=0; v<g->nVertices; v++) {
 
         set_t* W = _dfs(g, v, steiner_verification, X); // O(V+E)
-        
+    
         int min = INT_MAX;
+        graph* min_tree = NULL;
 
         for(int i=0; i < set_size(W); i++) {
 
@@ -592,6 +593,7 @@ void fill_table_under_mask(graph* g, int** table, set_t* terminals, int** distan
 
                 if(cost < min) {
                     min = cost;
+                    min_tree = graph_union(paths[v][w], trees[w][(mask & ~submask) - 1]);
                 }
 
             } else {
@@ -601,7 +603,15 @@ void fill_table_under_mask(graph* g, int** table, set_t* terminals, int** distan
                     int cost = distances[v][w] + table[w][submask - 1] + table[w][(mask & ~submask) - 1];
 
                     if(cost < min) {
+
                         min = cost;
+
+                        destroy_graph(min_tree);
+
+                        graph* tmp_tree = graph_union(trees[w][submask - 1], trees[w][(mask & ~submask) - 1]);
+                        min_tree = graph_union(paths[v][w], tmp_tree);
+                        destroy_graph(tmp_tree);
+
                     }
 
                 }
@@ -612,36 +622,23 @@ void fill_table_under_mask(graph* g, int** table, set_t* terminals, int** distan
 
 
         table[v][mask - 1] = min;
+        trees[v][mask - 1] = min_tree;
 
         free(W);
 
     }
 
+    print_table(table, g->nVertices, (long long) pow(2, set_size(terminals)) - 1);
+
     free(X);
 
 }
 
-// typedef struct queue_t queue_t;
-
-// struct queue_t {
-
-//     long long mask;
-//     int position;
-//     int size;
-
-//     queue_t* left;
-//     queue_t* right;
-
-// };
-
-void fill_table_k_combinations(graph* g, int** table, set_t* terminals, int** distances, long long mask, int position, int k) {
+void fill_table_on_combinations_of_size_k(graph* g, int** table, graph*** trees, set_t* terminals, int** distances, graph*** paths, long long mask, int position, int k) {
 
     if(__builtin_popcount(mask) == k) {
 
-        print_bits(mask, set_size(terminals));
-        printf("\n");
-
-        fill_table_under_mask(g, table, terminals, distances, mask);
+        fill_table(g, table, trees, terminals, distances, paths, mask);
         return;
 
     }
@@ -650,8 +647,8 @@ void fill_table_k_combinations(graph* g, int** table, set_t* terminals, int** di
         return;
     }
 
-    fill_table_k_combinations(g, table, terminals, distances, mask | (1 << position), position + 1, k);
-    fill_table_k_combinations(g, table, terminals, distances, mask, position + 1, k);
+    fill_table_on_combinations_of_size_k(g, table, trees, terminals, distances, paths, mask | (1 << position), position + 1, k);
+    fill_table_on_combinations_of_size_k(g, table, trees, terminals, distances, paths, mask, position + 1, k);
     
 
 }
@@ -662,25 +659,70 @@ int steiner_bottom_up(graph* g, set_t* terminals) {
     long long num_combinations =  (long long) pow(2, set_size(terminals)) - 1;
 
     int** costs = (int**) malloc(sizeof(int*) * num_vertices);
-
+    graph*** trees = (graph***) malloc(sizeof(graph**) * num_vertices);
+    
     for(int v=0; v<g->nVertices; v++) {
 
         costs[v] = (int*) malloc(sizeof(int) * num_combinations);
+        trees[v] = (graph**) malloc(sizeof(graph*) * num_combinations);
         
+    }
+
+    for(int i=0; i<num_vertices; i++) {
+        for(int j=0; j<num_combinations; j++) {
+            costs[i][j] = -1;
+        }
     }
 
     // All pairs shortest path
 
     int** distances = (int**) malloc(sizeof(int*) * num_vertices);
-    int** parents = (int**) malloc(sizeof(int*) * num_vertices);
+    graph*** paths = (graph***) malloc(sizeof(graph**) * num_vertices);
 
-    for(int i=0; i<g->nVertices; i++) {
+    for(int v=0; v<g->nVertices; v++) {
 
-        pair* p = dijkstra(g, i); // (E + V log (V))
+        pair* p = dijkstra(g, v); // (E + V log (V))
 
-        distances[i] = (int*) p->first;
-        parents[i] = (int*) p->second;
+        // Construct distances
 
+        distances[v] = (int*) p->first;
+        
+        // Construct paths
+
+        paths[v] = (graph**) malloc(sizeof(graph*) * num_vertices);
+        
+        int* parents = (int*) p->second;
+
+        for(int u=0; u<num_vertices; u++) {
+
+            graph* path = make_graph(g->max_id);
+
+            insert_vertex(path, g->hash[u]);
+
+            int child  = u;
+            int vertex = parents[u];
+
+            while(vertex != -1) {
+
+                insert_vertex(path, g->hash[vertex]);
+
+                insert_edge(path, g->hash[vertex], g->hash[child], distances[v][child] - distances[v][vertex]);
+                insert_edge(path, g->hash[child], g->hash[vertex], distances[v][child] - distances[v][vertex]);
+
+                child = vertex;
+                vertex = parents[vertex];
+
+            }
+
+            printf("%d, %d\n", v, u);
+
+            paths[v][u] = path;
+
+            
+
+        }
+
+        free(parents);
         free(p);
 
     }
@@ -691,11 +733,12 @@ int steiner_bottom_up(graph* g, set_t* terminals) {
 
         long long mask = 1ll << (set_size(terminals) - 1);
 
-        for(int pos=set_size(terminals) - 1; pos >= 0; pos--) {
+        for(int pos=0; pos < set_size(terminals); pos++) {
 
             int u = g->reverse_hash[get_element(terminals, pos)];
 
             costs[v][mask - 1] = distances[v][u];
+            trees[v][mask - 1] = paths[v][u];
 
             mask = mask >> 1;
 
@@ -703,33 +746,39 @@ int steiner_bottom_up(graph* g, set_t* terminals) {
 
     }
 
+    print_table(costs, num_vertices, num_combinations);
+
     // Start building the array in order by incrementing a mask until 2^|T| - 1
 
-    for(int comb=1; comb<=set_size(terminals); comb++) {
+    for(int comb=2; comb<=set_size(terminals); comb++) {
 
-        fill_table_k_combinations(g, costs, terminals, distances, 0, 0, comb);
+        fill_table_on_combinations_of_size_k(g, costs, trees, terminals, distances, paths, 0, 0, comb);
 
     }
 
     // Extract minimum from table.
 
     int min = INT_MAX;
+    graph* min_tree = NULL;
 
     for(int i=0; i<g->nVertices; i++) {
 
         if(costs[i][num_combinations - 1] < min) {
             min = costs[i][num_combinations - 1];
+            min_tree = trees[i][num_combinations - 1];
         }
 
     }
 
-    // // Print table
+    to_graphviz(min_tree, "result.dot");
 
-    print_table(costs, g->nVertices, num_combinations);
+    // Free table
 
     free_table(costs, num_vertices, num_combinations);
     free_table(distances, num_vertices, num_vertices);
-    free_table(parents, num_vertices, num_vertices);
+    // free_table(parents, num_vertices, num_vertices);
+
+    print_set(terminals);
 
     return min;
 
