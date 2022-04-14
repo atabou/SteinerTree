@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "graph.h"
 #include "pair.h"
@@ -191,6 +192,14 @@ int main(int argc, char** argv) {
 
         for(int T=2; T <= 10; T++) {
 
+            if(V >= 1000) {
+
+                printf("Waiting for memory to be freed..\n");
+                sleep(5);
+                printf("Freed.\n");
+                
+            }
+
             set_t* t = make_set();
 
             for(int i=0; i<T; i++) {
@@ -206,7 +215,7 @@ int main(int argc, char** argv) {
 
             int min_cost = (int) steiner->second;
 
-            printf("|V|: %d, |T|: %d, min: %d, time: %fs\n", V, T, min_cost, ((double)elaps)/CLOCKS_PER_SEC);
+            printf("|V|: %d, |T|: %d, min: %d, time: %fs\n\n", V, T, min_cost, ((double)elaps)/CLOCKS_PER_SEC);
 
             destroy_set(t);
 

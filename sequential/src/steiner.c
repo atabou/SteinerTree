@@ -1,4 +1,6 @@
 
+#include <time.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <math.h>
@@ -8,6 +10,7 @@
 #include "common.h"
 #include "shortestpath.h"
 
+clock_t elaps;
 
 int steiner_verification(graph* g, int v, void* input) {
 
@@ -36,7 +39,9 @@ pair* steiner_tree(graph* g, set_t* terminals) {
 
     // All pairs shortest path
 
+    elaps = clock();
     pair* apsp = all_pairs_shortest_path(g);
+    printf("All Pairs Shortest Path: %fs.\n", (double) (clock() - elaps)/CLOCKS_PER_SEC);
 
     graph*** paths  = (graph***) apsp->first;
     int** distances =    (int**) apsp->second;
@@ -61,6 +66,8 @@ pair* steiner_tree(graph* g, set_t* terminals) {
         }
 
     }
+
+    elaps = clock();
 
     for(int k=2; k <= T; k++) {
 
@@ -128,6 +135,8 @@ pair* steiner_tree(graph* g, set_t* terminals) {
         }
 
     }
+
+    printf("DP step: %fs.\n", (double) (clock() - elaps)/CLOCKS_PER_SEC);
 
     // print_table(costs, V, P);
 
