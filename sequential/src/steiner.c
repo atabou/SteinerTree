@@ -5,6 +5,7 @@
 
 #include "steiner.h"
 #include "bfs.h"
+#include "common.h"
 #include "shortestpath.h"
 
 
