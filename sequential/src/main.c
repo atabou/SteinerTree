@@ -141,6 +141,7 @@ graph* make_randomly_connected_graph(int max_id) {
             if(used[j] != -1) {
 
                 insert_edge(g, i, used[j], 1);
+                insert_edge(g, used[j], i, 1);
 
             }
 
