@@ -27,6 +27,46 @@ graph* make_graph(int max_id) {
 
 }
 
+
+int number_of_vertices(graph* g) {
+
+    return g->nVertices;
+
+}
+
+int number_of_edges(graph* g) {
+
+    int n = 0;
+
+    for(int i=0; i<number_of_vertices(g); i++) {
+        n += g->deg[i];
+    }
+
+    return n;
+
+}
+
+int degree(graph* g, int id) {
+
+    if(id >= 0 && id < g->max_id) {
+
+        int k = g->reverse_hash[id];
+
+        if(k != -1) {
+
+            return g->deg[k];
+
+        } else {
+
+            return -1;
+
+        }
+
+    }
+
+}
+
+
 void insert_vertex(graph* g, int id) {
 
     if(id >= 0 && id < g->max_id && g->reverse_hash[id] == -1) {
@@ -229,7 +269,6 @@ graph* make_randomly_connected_graph(int max_id) {
 
             if(used[j] != -1) {
 
-                // printf("(%d, %d)\n", i, used[j]);
                 insert_edge(g, i, used[j], 1);
 
             }
@@ -239,35 +278,6 @@ graph* make_randomly_connected_graph(int max_id) {
     }
 
     return g;
-
-}
-
-int degree(graph* g, int id) {
-
-    if(id >= 0 && id < g->max_id) {
-
-        int k = g->reverse_hash[id];
-
-        if(k != -1) {
-
-            return g->deg[k];
-
-        } else {
-
-            return -1;
-
-        }
-
-    }
-
-    
-
-}
-
-
-int max(int x, int y) {
-
-    return (x > y) ? x : y;
 
 }
 

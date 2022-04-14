@@ -30,9 +30,6 @@
 
     };
 
-    int number_of_vertices(graph* g);
-    int get_vertex_internal_id(graph* g, int id);
-
     /**
      * @brief Creates an empty graph with a maximum id of max_id.
      * 
@@ -42,6 +39,35 @@
      * @return graph* an empty graph.
      */
     graph* make_graph(int max_id);
+
+    /**
+     * @brief Returns the number of vertices in the graph.
+     * 
+     * Complexity: O(1)
+     * 
+     * @param g the graph the get the number of vertices from.
+     * @return int 
+     */
+    int number_of_vertices(graph* g);
+
+    /**
+     * @brief Returns the number of edges in the graph.
+     * 
+     * Complexity: O(V)
+     * 
+     * @param g the graph the get the number of edges from.
+     * @return int the number of vertices int the graph.
+     */
+    int number_of_edges(graph* g);
+
+    /**
+     * @brief Get the degree of the specified vertex.
+     * 
+     * @param g the graph to get to operate on.
+     * @param id the id of the vertex.
+     * @return int the degree of the vertex.
+     */
+    int degree(graph* g, int id);
 
     /**
      * @brief Makes a randomly connected graph with a maximum.
@@ -104,15 +130,6 @@
     void remove_edge(graph* g, int id1, int id2);
 
     /**
-     * @brief Get the degree of the specified vertex.
-     * 
-     * @param g the graph to get to operate on.
-     * @param id the id of the vertex.
-     * @return int the degree of the vertex.
-     */
-    int degree(graph* g, int id);
-
-    /**
      * @brief Merges the graphs together on the specified node.
      * The objects inputed are destroyed in the process.
      * If w does not exist in one or more of the graphs the generated graph will not be connected.
@@ -124,7 +141,6 @@
      * @return graph* 
      */
     graph* graph_union(graph* g1, graph* g2);
-
 
     /**
      * @brief Prints to specified file the graphviz representation of the graph.

@@ -10,4 +10,7 @@
 
     void free_table(int** table, int n, int m);
 
+    int max(int x, int y);
+    int min(int x, int y);
+
 #endif
