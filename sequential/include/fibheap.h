@@ -6,7 +6,7 @@
     /**
      * @brief Creates a new empty fibonacci heap with a specified initial capacity.
      * 
-     * O(capacity)
+     * Complexity: O(capacity)
      * 
      * @param capacity the initial capacity of the heap to create. 
      * @return heap* a newly created heap.
