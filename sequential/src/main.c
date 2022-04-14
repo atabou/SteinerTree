@@ -60,6 +60,8 @@ graph* test_graph1() {
 
 }
 
+    
+
 graph* test_graph2() {
 
     graph* g = make_graph(7);
@@ -108,7 +110,6 @@ int main(int argc, char** argv) {
     // set_insert(t, 3);
     // set_insert(t, 5);
 
-    
     set_insert(t, 1);
     set_insert(t, 6);
     set_insert(t, 7);
@@ -116,15 +117,16 @@ int main(int argc, char** argv) {
     set_insert(t, 9);
     set_insert(t, 10);
     
+    pair* steiner = steiner_tree(g, t);
     
-    int steiner = steiner_bottom_up(g, t);
-    
-    printf("minimum: %d\n", steiner);
+    graph* tree = (graph*) steiner->first;
+    int min = (int) steiner->second;
 
-    // to_graphviz(steiner, "st3.dot");
+    printf("minimum: %d\n", min);
+    to_graphviz(tree, "result.dot");
 
     destroy_graph(g);
-    
+
     return 0;
 
 }

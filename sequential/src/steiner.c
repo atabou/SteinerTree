@@ -1,15 +1,14 @@
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <math.h>
 
-#include "pair.h"
-#include "graph.h"
 #include "steiner.h"
-#include "set.h"
+#include "bfs.h"
+#include "shortestpath.h"
 
-int verify(graph* g, int v, void* input) {
+
+int steiner_verification(graph* g, int v, void* input) {
 
     int check1 = degree(g, v) >= 3;
     int check2 = element_exists(v, (set_t*) input);
@@ -18,137 +17,159 @@ int verify(graph* g, int v, void* input) {
 
 }
 
-pair* streiner_tree_dp(graph* g, set_t* terminals, int v) {
+pair* steiner_tree(graph* g, set_t* terminals) {
 
-    if(set_size(terminals) == 1) {
+    int V = g->nVertices;
+    int T = set_size(terminals);
+    long long P =  (long long) pow(2, T) - 1;
 
-        pair* p = shortest_path(g, v, get_element(terminals, 0));
+    int** costs = (int**) malloc(sizeof(int*) * V);
+    graph*** trees = (graph***) malloc(sizeof(graph**) * V);
+    
+    for(int v=0; v < V; v++) {
 
-        // if(get_element(terminals, 0) == 10)
-        //     printf("(%d, %d): %d\n", v, get_element(terminals, 0), (int) p->second);
+        costs[v] = (int*) malloc(sizeof(int) * P);
+        trees[v] = (graph**) malloc(sizeof(graph*) * P);
+        
+    }
 
-        return p;
+    // All pairs shortest path
 
-    } else {
+    pair* apsp = all_pairs_shortest_path(g);
 
-        int w = dfs(g, v, verify, terminals);
+    graph*** paths  = (graph***) apsp->first;
+    int** distances =    (int**) apsp->second;
 
-        if(v == 1) {
-            printf("start: %d, result: %d - ", v, w);
-            print_set(terminals);
+    free(apsp);
+
+    // Fill base cases
+
+    for(int v=0; v < V; v++) {
+
+        long long mask = 1ll << (T - 1);
+
+        for(int pos=0; pos < T; pos++) {
+
+            int u = g->reverse_hash[get_element(terminals, pos)];
+
+            costs[v][mask - 1] = distances[v][u];
+            trees[v][mask - 1] = paths[v][u];
+
+            mask = mask >> 1;
+
         }
-
-        // printf("%d\n", w);
-
-        pair*  sp_pair = shortest_path(g, v, w);
-
-        graph* sp_path = (graph*) sp_pair->first;
-        int    sp_dist =    (int) sp_pair->second;
-
-        free(sp_pair);
-
-        graph* min_tree = NULL;
-        int    min_cost = INT_MAX;
-
-        if( element_exists(w, terminals) ) {
-
-            set_t* X = remove_element(w, terminals);
-
-            pair*  dp_pair = streiner_tree_dp(g, X, w);
-
-            destroy_set(X);
-
-            graph* dp_tree = (graph*) dp_pair->first;
-            int    dp_cost =    (int) dp_pair->second;
-
-            free(dp_pair);
-
-            min_tree = graph_union(sp_path, dp_tree);
-            min_cost = sp_dist + dp_cost;
-
-            destroy_graph(dp_tree);
-
-        } else {
-
-            for(long long mask=1; mask<pow(2, set_size(terminals)) - 1; mask++) {
-
-                set_t* X = get_subset(terminals, mask); // Constructs the subset X from the given mask.
-
-                pair*  dp_pair1 = streiner_tree_dp(g, X, w);
-
-                destroy_set(X);
-
-                graph* dp_tree1 = (graph*) dp_pair1->first;
-                int    dp_cost1 =    (int) dp_pair1->second;
-
-                free(dp_pair1);
-
-                set_t* Y = get_subset(terminals, (~mask) & ((long long) pow(2, set_size(terminals)) - 1)); // Constructs the subset terminals - X
-
-                pair*  dp_pair2 = streiner_tree_dp(g, Y, w);
-
-                destroy_set(Y);
-
-                graph* dp_tree2 = (graph*) dp_pair2->first;
-                int    dp_cost2 =    (int) dp_pair2->second;
-
-                free(dp_pair2);
-
-                if(dp_cost1 + dp_cost2 + sp_dist < min_cost) {
-                    
-                    destroy_graph(min_tree);
-
-                    graph* tmp_tree = graph_union(dp_tree1, dp_tree2);
-                    int tmp_cost = dp_cost1 + dp_cost2;
-
-                    min_tree = graph_union(tmp_tree, sp_path);
-                    min_cost = tmp_cost + sp_dist;
-
-                    destroy_graph(tmp_tree);
-
-                }
-
-                destroy_graph(dp_tree1);
-                destroy_graph(dp_tree2);
-
-            }
-            
-        }
-
-        destroy_graph(sp_path);
-
-        return make_pair(min_tree, min_cost);
 
     }
 
-}
+    for(int k=2; k <= T; k++) {
 
-graph* steiner_tree(graph* g, set_t* terminals) {
+        long long mask = 0;
 
-    // graph* min_tree = NULL;
-    // int min_cost = INT_MAX;
+        while( next_combination(T, k, &mask) ) { // while loop runs T choose k times (nCr).
 
-    // for(int i=1; i<11; i++) {
+            set_t* X = get_subset(terminals, mask);
 
-    //     pair* p = streiner_tree_dp(g, terminals, i);
+            for(int v=0; v < V; v++) { // O(T * 2^T * V * (V + E))
 
-    //     graph* steiner = (graph*) p->first;
-    //     int    cost = (int) p->second;
+                set_t* W = bfs(g, g->hash[v], steiner_verification, X); // O(V+E)
+            
+                int min = INT_MAX;
+                graph* min_tree = NULL;
 
-    //     if(cost < min_cost) {
+                for(int i=0; i < set_size(W); i++) { // O(T * 2^T * (V+E))
 
-    //         destroy_graph(min_tree);
+                    int w = g->reverse_hash[get_element(W, i)];
 
-    //         min_tree = steiner;
-    //         min_cost = cost;
+                    if( element_exists(g->hash[w], X) ) { // O(V + E)
 
-    //     }
+                        long long submask = 1ll << (T - find_position(terminals, g->hash[w]) - 1);
 
-    //     printf("%d\n", cost);
+                        int cost = distances[v][w] + costs[w][(mask & ~submask) - 1];
 
-    // }
+                        if(cost < min) {
+                            min = cost;
+                            min_tree = graph_union(paths[v][w], trees[w][(mask & ~submask) - 1]); // (V + E)
+                        }
 
-    // return min_tree;
+                    } else { // O(2^T (V+E))
 
+                        for(long long submask = (mask - 1) & mask; submask != 0; submask = (submask - 1) & mask) { // iterate over submasks of the mask O(2^T)
+
+                            int cost = distances[v][w] + costs[w][submask - 1] + costs[w][(mask & ~submask) - 1];
+
+                            if(cost < min) {
+
+                                min = cost;
+
+                                destroy_graph(min_tree);
+
+                                graph* tmp_tree = graph_union(trees[w][submask - 1], trees[w][(mask & ~submask) - 1]); // O(V + E)
+                                min_tree = graph_union(paths[v][w], tmp_tree);
+                                destroy_graph(tmp_tree);
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                costs[v][mask - 1] = min;
+                trees[v][mask - 1] = min_tree;
+
+                destroy_set(W);
+
+            }
+
+            destroy_set(X);
+
+        }
+
+    }
+
+    print_table(costs, V, P);
+
+    // Extract minimum from table.
+
+    int min_index = 0;
+    
+    for(int i=1; i < V; i++) {
+        
+        if(costs[i][P - 1] < costs[min_index][P - 1]) {
+            min_index = i;
+        }
+    
+    }
+
+    graph* tree = trees[min_index][P - 1];
+    int    cost = costs[min_index][P - 1];
+
+    // Free table
+
+    free_table(costs, V, P);
+    free_table(distances, V, V);
+
+    for(int i=0; i < V; i++) {
+
+        for(long long j=0; j<P; j++) {
+
+            if(i != min_index || j != P - 1) {
+                destroy_graph(trees[i][j]);
+            }
+
+            trees[i][j] = NULL;
+
+        }
+
+        free(trees[i]);
+        trees[i] = NULL;
+
+    }
+
+    free(trees);
+    trees = NULL;
+
+    return make_pair(tree, cost);
 
 }

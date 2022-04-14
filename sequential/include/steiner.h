@@ -5,6 +5,7 @@
 
     #include "set.h"
     #include "graph.h"
+    #include "pair.h"
 
     /**
      * @brief Calculates the steiner tree of the supplied graph ans set of terminals.
@@ -13,8 +14,8 @@
      * 
      * @param g the graph to operate on.
      * @param terminals the set of terminals to calculate steiner tree.
-     * @return graph* the steiner tree.
+     * @return pair* the steiner tree.
      */
-    graph* steiner_tree(graph* g, set_t* terminals);
+    pair* steiner_tree(graph* g, set_t* terminals);
 
 #endif

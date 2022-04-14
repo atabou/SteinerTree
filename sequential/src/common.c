@@ -4,6 +4,24 @@
 
 #include "common.h"
 
+int next_combination(int n, int k, long long* mask) {
+
+    if(*mask == 0) {
+
+        *mask = (1ll << k) - 1ll;
+
+    } else {
+
+        long long c = (*mask) & -(*mask);
+        long long r = (*mask) + c;
+        *mask = r | (((r ^ (*mask)) >> 2)/c);
+
+    }
+
+    return *mask <= (1ll << n) - (1ll << (n-k));
+
+}
+
 void print_bits(long long number, int num_bits) {
 
     long long bit = 1ll << (num_bits - 1);

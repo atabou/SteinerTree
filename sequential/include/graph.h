@@ -5,10 +5,33 @@
 
     #include "pair.h"
     #include "set.h"
+    #include "llist.h"
 
     typedef struct graph graph;
 
-    int steiner_bottom_up(graph* g, set_t* terminals);
+    struct graph {
+
+        /**
+        * Hash that links the internal ID of a vertex to a user specified ID.
+        * If next_slot is less than nVertices then the slot represented by next_slot represents an empty "parent" slot.
+        * 
+        */
+        int*    hash;
+
+        int     nVertices; // The number of vertices in the graph. Also represents the leftmost empty position.
+        int     capacity; // The capacity of the hash table.
+
+        int*    reverse_hash; // Links the user specified IDs to its corresponding internal ID.
+        int     max_id; // The biggest user specified ID. Also the size of the reverse hash table minus - 1.
+        
+
+        int*    deg; // Represents the degree of the node. If the degree of the node is -1 then the node does not exits.
+        llist** lst; // The adjacency list of the graph.
+
+    };
+
+    int number_of_vertices(graph* g);
+    int get_vertex_internal_id(graph* g, int id);
 
     /**
      * @brief Creates an empty graph with a maximum id of max_id.
@@ -81,19 +104,6 @@
     void remove_edge(graph* g, int id1, int id2);
 
     /**
-     * @brief Implementation of Dijkstra's shortest path algorithm with a fibonacci heap.
-     * Complexity: O(max_id + E + V log(V))
-     * 
-     * @param g 
-     * @param v1 
-     * @param v2 
-     * @return a pair containing first a graph pointer and second an integer.
-     */
-    pair* shortest_path(graph* g, int v1, int v2);
-
-    pair* all_pairs_shortest_path(graph* g);
-
-    /**
      * @brief Get the degree of the specified vertex.
      * 
      * @param g the graph to get to operate on.
@@ -101,23 +111,6 @@
      * @return int the degree of the vertex.
      */
     int degree(graph* g, int id);
-
-    /**
-     * @brief starts dfs of over the graph g from the specified node start.
-     * Each time a node is encountered the specified function func is run.
-     * If this function returns true, the id of the vertex at which it was invoked is returned, and dfs is stopped. 
-     * The supplied function should take as input:
-     *      - graph*: dfs will input g into this function
-     *      - int: dfs will input the vertex it is currently processing.
-     *      - void*: a void pointer that contains additional input data necessary to run func.
-     * 
-     * @param g the graph to run dfs on.
-     * @param start the vertex to start dfs from.
-     * @param func the search function to run at each vertex.
-     * @param input the additional input for func.
-     * @return set_t* the set of vertices that fulfill the conditions in the function func.
-     */
-    set_t* dfs(graph* g, int start, int func(graph*, int, void*), void* input);
 
     /**
      * @brief Merges the graphs together on the specified node.
