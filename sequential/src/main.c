@@ -192,13 +192,13 @@ int main(int argc, char** argv) {
 
         for(int T=2; T <= 10; T++) {
 
-            if(V >= 1000) {
+            // if(V >= 1000) {
 
-                printf("Waiting for memory to be freed..\n");
-                sleep(5);
-                printf("Freed.\n");
+            //     printf("Waiting for memory to be freed..\n");
+            //     sleep(5);
+            //     printf("Freed.\n");
                 
-            }
+            // }
 
             set_t* t = make_set();
 
