@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "graph.h"
 #include "pair.h"
@@ -181,7 +182,10 @@ int main(int argc, char** argv) {
 
     // destroy_graph(g);
 
-    for(int V=10; V<=10000; V*=10) {
+
+    clock_t elaps;
+
+    for(int V=10; V<=1000; V*=10) {
 
         graph* g = make_randomly_connected_graph(V);
 
@@ -194,12 +198,15 @@ int main(int argc, char** argv) {
                 set_insert(t, rand() % (V + 1) );
 
             }
-
+            
+	        elaps = clock();
             pair* steiner = steiner_tree(g, t);
+	        elaps = clock() - elaps;
+
 
             int min_cost = (int) steiner->second;
 
-            printf("|V|: %d, |T|: %d, min: %d\n", V, T, min_cost);
+            printf("|V|: %d, |T|: %d, min: %d, time: %fs\n", V, T, min_cost, ((double)elaps)/CLOCKS_PER_SEC);
 
             destroy_set(t);
 
