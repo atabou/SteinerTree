@@ -234,53 +234,6 @@ void remove_edge(graph* g, int id1, int id2) {
 
 }
 
-graph* make_randomly_connected_graph(int max_id) {
-
-    graph* g = make_graph(max_id);
-
-    for(int i=0; i<g->max_id + 1; i++) {
-        insert_vertex(g, i);
-    }
-
-    int used[max_id + 1];
-
-    for(int i=0; i<max_id+1; i++) {
-
-        for(int j=0; j<max_id + 1; j++) {
-            used[j] = j;
-        }
-
-        used[i] = -1;
-
-        for(int j=0; j<max_id + 1; j++) { // Shuffle array
-
-            int x = rand() % (max_id + 1);
-            int y = rand() % (max_id + 1);
-
-            int tmp = used[x];
-            used[x] = used[y];
-            used[y] = tmp;
-
-        }
-
-        int deg = rand() % max_id;
-
-        for(int j=0; j<deg; j++) {
-
-            if(used[j] != -1) {
-
-                insert_edge(g, i, used[j], 1);
-
-            }
-
-        }
-
-    }
-
-    return g;
-
-}
-
 // O(max_id + V + E)
 graph* graph_union(graph* g1, graph* g2) {
 

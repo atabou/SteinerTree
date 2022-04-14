@@ -128,7 +128,7 @@ pair* steiner_tree(graph* g, set_t* terminals) {
 
     }
 
-    print_table(costs, V, P);
+    // print_table(costs, V, P);
 
     // Extract minimum from table.
 

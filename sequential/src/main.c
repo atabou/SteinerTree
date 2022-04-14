@@ -99,33 +99,114 @@ graph* test_graph2() {
 
 }
 
+/**
+ * @brief Makes a randomly connected graph with a maximum.
+ * 
+ * @param max_id the highest id that will be used to represent vertices in this graph.
+ * @return graph* a randomly connected graph.
+ */
+graph* make_randomly_connected_graph(int max_id) {
+
+    graph* g = make_graph(max_id);
+
+    for(int i=0; i<g->max_id + 1; i++) {
+        insert_vertex(g, i);
+    }
+
+    int used[max_id + 1];
+
+    for(int i=0; i<max_id+1; i++) {
+
+        for(int j=0; j<max_id + 1; j++) {
+            used[j] = j;
+        }
+
+        used[i] = -1;
+
+        for(int j=0; j<max_id + 1; j++) { // Shuffle array
+
+            int x = rand() % (max_id + 1);
+            int y = rand() % (max_id + 1);
+
+            int tmp = used[x];
+            used[x] = used[y];
+            used[y] = tmp;
+
+        }
+
+        int deg = rand() % max_id;
+
+        for(int j=0; j<deg; j++) {
+
+            if(used[j] != -1) {
+
+                insert_edge(g, i, used[j], 1);
+
+            }
+
+        }
+
+    }
+
+    return g;
+
+}
+
 int main(int argc, char** argv) {
     
-    graph* g = test_graph1();
+    // graph* g = test_graph1();
 
-    to_graphviz(g, "test.dot");
+    // to_graphviz(g, "test.dot");
     
-    set_t* t = make_set();
+    // set_t* t = make_set();
 
     // set_insert(t, 3);
     // set_insert(t, 5);
 
-    set_insert(t, 1);
-    set_insert(t, 6);
-    set_insert(t, 7);
-    set_insert(t, 8);
-    set_insert(t, 9);
-    set_insert(t, 10);
+    // set_insert(t, 1);
+    // set_insert(t, 6);
+    // set_insert(t, 7);
+    // set_insert(t, 8);
+    // set_insert(t, 9);
+    // set_insert(t, 10);
     
-    pair* steiner = steiner_tree(g, t);
+    // pair* steiner = steiner_tree(g, t);
     
-    graph* tree = (graph*) steiner->first;
-    int min = (int) steiner->second;
+    // graph* tree = (graph*) steiner->first;
+    // int min = (int) steiner->second;
 
-    printf("minimum: %d\n", min);
-    to_graphviz(tree, "result.dot");
+    // printf("minimum: %d\n", min);
+    // to_graphviz(tree, "result.dot");
 
-    destroy_graph(g);
+    // destroy_graph(g);
+
+    for(int V=10; V<=10000; V*=10) {
+
+        graph* g = make_randomly_connected_graph(V);
+
+        for(int T=2; T <= 10; T++) {
+
+            set_t* t = make_set();
+
+            for(int i=0; i<T; i++) {
+
+                set_insert(t, rand() % (V + 1) );
+
+            }
+
+            pair* steiner = steiner_tree(g, t);
+
+            int min_cost = (int) steiner->second;
+
+            printf("|V|: %d, |T|: %d, min: %d\n", V, T, min_cost);
+
+            destroy_set(t);
+
+        }
+
+        destroy_graph(g);
+
+    }
 
     return 0;
 

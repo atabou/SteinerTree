@@ -70,15 +70,6 @@
     int degree(graph* g, int id);
 
     /**
-     * @brief Makes a randomly connected graph with a maximum.
-     * 
-     * @param max_id the highest id that will be used to represent vertices in this graph.
-     * @return graph* a randomly connected graph.
-     */
-    graph* make_randomly_connected_graph(int max_id);
-
-
-    /**
      * @brief Inserts a new vertex in the graph.
      * If the id already exists in the graph nothing is done.
      * 
