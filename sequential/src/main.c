@@ -163,8 +163,8 @@ int main(int argc, char** argv) {
     
     // set_t* t = make_set();
 
-    // set_insert(t, 3);
-    // set_insert(t, 5);
+    // // set_insert(t, 3);
+    // // set_insert(t, 5);
 
     // set_insert(t, 1);
     // set_insert(t, 6);
@@ -183,47 +183,26 @@ int main(int argc, char** argv) {
 
     // destroy_graph(g);
 
+    int V = atoi(argv[1]);
+    int T = atoi(argv[2]);
 
-    clock_t elaps;
+    graph* g = make_randomly_connected_graph(V);
 
-    for(int V=10; V<=1000; V*=10) {
+    set_t* t = make_set();
 
-        graph* g = make_randomly_connected_graph(V);
+    for(int i=0; i<T; i++) {
 
-        for(int T=2; T <= 10; T++) {
-
-            // if(V >= 1000) {
-
-            //     printf("Waiting for memory to be freed..\n");
-            //     sleep(5);
-            //     printf("Freed.\n");
-                
-            // }
-
-            set_t* t = make_set();
-
-            for(int i=0; i<T; i++) {
-
-                set_insert(t, rand() % (V + 1) );
-
-            }
-            
-	        elaps = clock();
-            pair* steiner = steiner_tree(g, t);
-	        elaps = clock() - elaps;
-
-
-            int min_cost = (int) steiner->second;
-
-            printf("|V|: %d, |T|: %d, min: %d, time: %fs\n\n", V, T, min_cost, ((double)elaps)/CLOCKS_PER_SEC);
-
-            destroy_set(t);
-
-        }
-
-        destroy_graph(g);
+        set_insert(t, rand() % (V + 1) );
 
     }
+    
+    pair* steiner = steiner_tree(g, t);
+
+    destroy_graph((graph*) (steiner->first));
+    free(steiner);
+
+    destroy_set(t);
+    destroy_graph(g);
 
     return 0;
 
