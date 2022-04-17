@@ -26,12 +26,12 @@ pair* steiner_tree(graph* g, set_t* terminals) {
     long long P =  (long long) pow(2, T) - 1;
 
     int** costs  =  (int**) malloc(sizeof(int*) * V);
-    graph*** trees = (graph***) malloc(sizeof(graph**) * V);
+    // graph*** trees = (graph***) malloc(sizeof(graph**) * V);
     
     for(int v=0; v < V; v++) {
 
         costs[v] = (int*) malloc(sizeof(int) * P);
-        trees[v] = (graph**) malloc(sizeof(graph*) * P);
+        // trees[v] = (graph**) malloc(sizeof(graph*) * P);
         
     }
 
@@ -39,7 +39,7 @@ pair* steiner_tree(graph* g, set_t* terminals) {
 
     pair* apsp = all_pairs_shortest_path(g);
 
-    graph*** paths  = (graph***) apsp->first;
+    // graph*** paths  = (graph***) apsp->first;
     int** distances =    (int**) apsp->second;
 
     free(apsp);
@@ -61,15 +61,15 @@ pair* steiner_tree(graph* g, set_t* terminals) {
                     int u = g->reverse_hash[get_element(X, 0)];
 
                     costs[v][mask - 1] = distances[v][u];
-                    trees[v][mask - 1] = paths[v][u];
+                    // trees[v][mask - 1] = paths[v][u];
 
                 } else {
 
                     set_t* W = bfs(g, g->hash[v], steiner_verification, X); // O(V+E)
             
                     int min = INT_MAX;
-                    graph* min_tree = NULL;
-
+                    // graph* min_tree = NULL;
+                    
                     for(int i=0; i < set_size(W); i++) { // O(T * 2^T * (V+E))
 
                         int w = g->reverse_hash[get_element(W, i)];
@@ -81,10 +81,11 @@ pair* steiner_tree(graph* g, set_t* terminals) {
                             int cost = distances[v][w] + costs[w][(mask & ~submask) - 1];
 
                             if(cost < min) {
+
                                 min = cost;
 
-                                destroy_graph(min_tree);
-                                min_tree = graph_union(paths[v][w], trees[w][(mask & ~submask) - 1]); // (V + E)
+                                // destroy_graph(min_tree);
+                                // min_tree = graph_union(paths[v][w], trees[w][(mask & ~submask) - 1]); // (V + E)
 
                             }
 
@@ -98,11 +99,11 @@ pair* steiner_tree(graph* g, set_t* terminals) {
 
                                     min = cost;
 
-                                    destroy_graph(min_tree);
+                                    // destroy_graph(min_tree);
 
-                                    graph* tmp_tree = graph_union(trees[w][submask - 1], trees[w][(mask & ~submask) - 1]); // O(V + E)
-                                    min_tree = graph_union(paths[v][w], tmp_tree);
-                                    destroy_graph(tmp_tree);
+                                    // graph* tmp_tree = graph_union(trees[w][submask - 1], trees[w][(mask & ~submask) - 1]); // O(V + E)
+                                    // min_tree = graph_union(paths[v][w], tmp_tree);
+                                    // destroy_graph(tmp_tree);
 
                                 }
 
@@ -113,7 +114,7 @@ pair* steiner_tree(graph* g, set_t* terminals) {
                     }
 
                     costs[v][mask - 1] = min;
-                    trees[v][mask - 1] = min_tree;
+                    // trees[v][mask - 1] = min_tree;
 
                     destroy_set(W);
 
@@ -139,7 +140,7 @@ pair* steiner_tree(graph* g, set_t* terminals) {
     
     }
 
-    graph* tree = trees[min_index][P - 1];
+    // graph* tree = trees[min_index][P - 1];
     int    cost = costs[min_index][P - 1];
 
     // Free table
@@ -147,45 +148,47 @@ pair* steiner_tree(graph* g, set_t* terminals) {
     free_table(costs, V, P);
     free_table(distances, V, V);
 
-    for(int i=0; i<V; i++) {
+    // for(int i=0; i<V; i++) {
 
-        for(int j=0; j<V; j++) {
-            destroy_graph(paths[i][j]);
-            paths[i][j] = NULL;
-        }
+    //     for(int j=0; j<V; j++) {
+    //         destroy_graph(paths[i][j]);
+    //         paths[i][j] = NULL;
+    //     }
 
-        free(paths[i]);
-        paths[i] = NULL;
+    //     free(paths[i]);
+    //     paths[i] = NULL;
 
-    }
+    // }
 
-    free(paths);
-    paths = NULL;
+    // free(paths);
+    // paths = NULL;
 
-    for(int i=0; i < V; i++) {
+    // for(int i=0; i < V; i++) {
 
-        for(long long j=0; j<P; j++) {
+    //     for(long long j=0; j<P; j++) {
 
-            if(__builtin_popcount(j + 1) != 1) {
+    //         if(__builtin_popcount(j + 1) != 1) {
 
-                if(i != min_index || j != P - 1) {
-                    destroy_graph(trees[i][j]);
-                }
+    //             if(i != min_index || j != P - 1) {
+    //                 destroy_graph(trees[i][j]);
+    //             }
 
-            }
+    //         }
 
-            trees[i][j] = NULL;
+    //         trees[i][j] = NULL;
 
-        }
+    //     }
 
-        free(trees[i]);
-        trees[i] = NULL;
+    //     free(trees[i]);
+    //     trees[i] = NULL;
 
-    }
+    // }
 
-    free(trees);
-    trees = NULL;
+    // free(trees);
+    // trees = NULL;
 
-    return make_pair(tree, cost);
+    // return make_pair(tree, cost);
+
+    return make_pair(NULL, cost);
 
 }

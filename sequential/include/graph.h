@@ -96,31 +96,6 @@
     void insert_edge(graph* g, int id1, int id2, int w);
 
     /**
-     * @brief Removes the vertex from the graph and clears all corresponding edges.
-     * 
-     * Complexity: O(V + E)
-     * 
-     * @param g a graph to delete a vertex from.
-     * @param id the id of the vertex to delete.
-     */
-    void remove_vertex(graph* g, int id);
-
-    /**
-     * @brief Removes the edge between the specified ids.
-     * If one of the specied ids does not exists nothing is done.
-     * If the edge does not exist, nothing is done.
-     * 
-     * Complexity: O( deg(V) )
-     * Best-Case: O(1)
-     * Worst-Case: O(V - 1)
-     * 
-     * @param g the graph to delete an edge from.
-     * @param id1 the source id of the vertex to delete.
-     * @param id2 the destination of the vertex to delete.
-     */
-    void remove_edge(graph* g, int id1, int id2);
-
-    /**
      * @brief Merges the graphs together on the specified node.
      * The objects inputed are destroyed in the process.
      * If w does not exist in one or more of the graphs the generated graph will not be connected.

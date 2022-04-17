@@ -14,10 +14,12 @@ void _bfs(graph* g, int start, int* visited, int func(graph*, int, void*), void*
 
     while(curr != NULL) {
 
-        if(visited[curr->data] == 0) {
+        int pos = (int) ((pair*) curr->data)->first;
 
-            visited[curr->data] = 1;
-            _bfs(g, curr->data, visited, func, input, result);
+        if(visited[pos] == 0) {
+
+            visited[pos] = 1;
+            _bfs(g, pos, visited, func, input, result);
 
         }
 

@@ -64,6 +64,8 @@ int degree(graph* g, int id) {
 
     }
 
+    return -1;
+
 }
 
 
@@ -113,7 +115,9 @@ void insert_edge(graph* g, int id1, int id2, int w) {
 
             while(e != NULL) {
 
-                if(e->data == internal2) {
+                int comp = (int) ((pair*) e->data)->first;
+
+                if(comp == internal2) {
                     return;
                 }
 
@@ -121,116 +125,12 @@ void insert_edge(graph* g, int id1, int id2, int w) {
 
             }
 
-            g->lst[internal1] = llist_add(g->lst[internal1], internal2, w);
+            g->lst[internal1] = llist_add(g->lst[internal1], make_pair((void*) internal2, (void*) w));
             g->deg[internal1]++;
 
         }
 
     }
-
-}
-
-void remove_vertex(graph* g, int id) {
-
-    if(id > 0 && id < g->max_id) {
-
-        int internal = g->reverse_hash[id];
-
-        if(internal != -1) {
-
-            // Removes all edges related to id.
-
-            for(int i=0; i<g->nVertices; i++) { // O(E)
-
-                if(i == internal) {
-
-                    destroy_llist(g->lst[i]);
-                    g->lst[i] = NULL;
-                    g->deg[i] = 0;
-
-                } else {
-
-                    remove_edge(g, i, internal);
-
-                }
-
-            }
-
-            // Move all upstream vertices and their ids down.
-
-            for(int i=internal; i<g->nVertices - 1; i++) { // O(V)
-
-                g->reverse_hash[g->hash[i+1]] = i;
-                g->hash[i] = g->hash[i+1];
-                g->deg[i] = g->deg[i+1];
-                g->lst[i] = g->lst[i+1];
-
-            }
-
-            // Clear the corresponding reverse hash
-
-            g->reverse_hash[id] = -1;
-
-            // Set the last position in the hash as availble
-            
-            g->hash[g->nVertices - 1] = -1;
-            g->deg[g->nVertices - 1]  = 0;
-            g->lst[g->nVertices - 1]  = NULL;
-            g->nVertices--;
-            
-        }
-
-    }
-
-}
-
-void remove_edge(graph* g, int id1, int id2) {
-
-    if(id1 >= 0 && id2 >= 0 && id1 < g->max_id && id2 < g->max_id) {
-
-        int internal1 = g->reverse_hash[id1];
-        int internal2 = g->reverse_hash[id2];
-
-        if(g->lst[internal1] != NULL) {
-
-            if(g->lst[internal1]->data == internal2) {
-
-                llist* del = g->lst[internal1];
-                g->lst[internal1] = g->lst[internal1]->next;
-                del->next = NULL;
-
-                destroy_llist(del);
-                del = NULL;
-
-                g->deg[internal1]--;
-
-            } else {
-
-                llist* curr = g->lst[internal1];
-
-                while(curr->next != NULL && curr->next->data != internal2) {
-                    curr = curr->next;
-                }
-
-                if(curr->next != NULL) {
-
-                    llist* del = curr->next;
-                    curr->next = curr->next->next;
-                    del->next = NULL;
-                    
-                    destroy_llist(del);
-                    del = NULL;
-
-                    g->deg[internal1]--;
-
-                }
-
-            }
-
-        }
-
-    }
-
 
 }
 
@@ -249,7 +149,12 @@ graph* graph_union(graph* g1, graph* g2) {
         
         while(e != NULL) {
 
-            insert_edge(g, g1->hash[i], g1->hash[e->data], e->weight);
+            pair* p = (pair*) e->data;
+
+            int dest = g1->hash[(int) p->first];
+            int w    = (int) p->second;
+
+            insert_edge(g, g1->hash[i], dest, w);
             e = e->next;
 
         }
@@ -266,7 +171,12 @@ graph* graph_union(graph* g1, graph* g2) {
         
         while(e != NULL) {
 
-            insert_edge(g, g2->hash[i], g2->hash[e->data], e->weight);
+            pair* p = (pair*) e->data;
+
+            int dest = g2->hash[(int) p->first];
+            int w    = (int) p->second;
+
+            insert_edge(g, g2->hash[i], dest, w);
             e = e->next;
             
         }
@@ -297,7 +207,12 @@ void to_graphviz(graph* g, char* filename) {
 
         while(curr != NULL) {
 
-            fprintf(fp, "\t%d -> %d [label=\"%d\"];\n", i, curr->data, curr->weight);  
+            pair* p = (pair*) curr->data;
+
+            int dest = (int) p->first;
+            int w    = (int) p->second;
+
+            fprintf(fp, "\t%d -> %d [label=\"%d\"];\n", i, dest, w);  
             curr = curr->next;
 
         }
@@ -318,7 +233,7 @@ void destroy_graph(graph* g) {
 
     for(int i=0; i<g->nVertices; i++) {
 
-        destroy_llist(g->lst[i]);
+        destroy_llist(g->lst[i], free);
         g->lst[i] = NULL;
 
     }

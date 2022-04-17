@@ -7,8 +7,9 @@
 
     struct llist {
 
-        int     data;
-        int     weight;
+        void*   data;
+        // int     data;
+        // int     weight;
         llist*  next;
 
     };
@@ -21,13 +22,13 @@
      * @param w the weight of this node.
      * @return llist* a pointer to the new beginning of the list
      */
-    llist* llist_add(llist* lst, int v, int w);
+    llist* llist_add(llist* lst, void* data);
 
     /**
      * @brief Destroy and frees the linked list
      * 
      * @param lst the linked list to destroy.
      */
-    void destroy_llist(llist* lst);
+    void destroy_llist(llist* lst, void free_data(void*));
 
 #endif

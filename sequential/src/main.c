@@ -198,8 +198,8 @@ int main(int argc, char** argv) {
     
     pair* steiner = steiner_tree(g, t);
 
-    destroy_graph((graph*) (steiner->first));
-    free(steiner);
+    // destroy_graph((graph*) (steiner->first));
+    // free(steiner);
 
     destroy_set(t);
     destroy_graph(g);

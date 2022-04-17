@@ -39,11 +39,15 @@ pair* dijkstra(graph* g, int internal1) {
 
         while(curr != NULL) {
 
-            int v = curr->data;
+            pair* p = (pair*) curr->data;
 
-            if(distances[v] > distances[u] + curr->weight) {
+            int v = (int) p->first;
+            int w = (int) p->second;
 
-                distances[v] = distances[u] + curr->weight;
+
+            if(distances[v] > distances[u] + w) {
+
+                distances[v] = distances[u] + w;
                 pq->decrease_key(pq, v, distances[v]);
                 parents[v] = u;
 
@@ -120,7 +124,7 @@ pair* shortest_path(graph* g, int v1, int v2) {
 pair* all_pairs_shortest_path(graph* g) {
 
     int** distances =    (int**) malloc(sizeof(int*) * g->nVertices);
-    graph*** paths  = (graph***) malloc(sizeof(graph**) * g->nVertices);
+    // graph*** paths  = (graph***) malloc(sizeof(graph**) * g->nVertices);
 
     for(int v=0; v<g->nVertices; v++) {
 
@@ -132,21 +136,23 @@ pair* all_pairs_shortest_path(graph* g) {
         
         // Construct paths
 
-        paths[v] = (graph**) malloc(sizeof(graph*) * g->nVertices);
+        // paths[v] = (graph**) malloc(sizeof(graph*) * g->nVertices);
         
-        int* parents = (int*) sp->second;
+        // int* parents = (int*) sp->second;
 
-        for(int u=0; u<g->nVertices; u++) { // O(V*E)
+        // for(int u=0; u<g->nVertices; u++) { // O(V*E)
 
-            paths[v][u] = construct_path(g, distances[v], parents, u); // O(E)
+        //     paths[v][u] = construct_path(g, distances[v], parents, u); // O(E)
 
-        }
+        // }
 
-        free(parents);
+        free(sp->second);
         free(sp);
 
     }
 
-    return make_pair(paths, distances);
+    // return make_pair(paths, distances);
+
+    return make_pair(NULL, distances);
 
 }
