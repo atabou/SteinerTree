@@ -155,33 +155,37 @@ graph* make_randomly_connected_graph(int max_id) {
 
 }
 
-int main(int argc, char** argv) {
+void test() {
     
-    // graph* g = test_graph1();
+    graph* g = test_graph1();
 
-    // to_graphviz(g, "test.dot");
+    to_graphviz(g, "test.dot");
     
-    // set_t* t = make_set();
+    set_t* t = make_set();
 
-    // // set_insert(t, 3);
-    // // set_insert(t, 5);
+    // set_insert(t, 3);
+    // set_insert(t, 5);
 
-    // set_insert(t, 1);
-    // set_insert(t, 6);
-    // set_insert(t, 7);
-    // set_insert(t, 8);
-    // set_insert(t, 9);
-    // set_insert(t, 10);
+    set_insert(t, 1);
+    set_insert(t, 6);
+    set_insert(t, 7);
+    set_insert(t, 8);
+    set_insert(t, 9);
+    set_insert(t, 10);
     
-    // pair* steiner = steiner_tree(g, t);
+    pair* steiner = steiner_tree(g, t);
     
-    // graph* tree = (graph*) steiner->first;
-    // int min = (int) steiner->second;
+    graph* tree = (graph*) steiner->first;
+    int min = (int) steiner->second;
 
-    // printf("minimum: %d\n", min);
-    // to_graphviz(tree, "result.dot");
+    printf("minimum: %d\n", min);
+    to_graphviz(tree, "result.dot");
 
-    // destroy_graph(g);
+    destroy_graph(g);
+
+}
+
+void specify_args(int argc, char** argv) {
 
     int V = atoi(argv[1]);
     int T = atoi(argv[2]);
@@ -199,10 +203,59 @@ int main(int argc, char** argv) {
     pair* steiner = steiner_tree(g, t);
 
     // destroy_graph((graph*) (steiner->first));
-    // free(steiner);
+    free(steiner);
 
     destroy_set(t);
     destroy_graph(g);
+
+}
+
+void perf_test() {
+
+    FILE* fp = fopen("steiner.csv", "w");
+    fprintf(fp, "V,T,time(s)\n");
+
+    for(int V=8; V<=512; V*=2) {
+
+        graph* g = make_randomly_connected_graph(V);
+
+        for(int T=2; T<8; T++) {
+
+            set_t* t = make_set();
+
+            for(int i=0; i<T; i++) {
+
+                set_insert(t, rand() % (V + 1) );
+
+            }
+
+            clock_t c = clock();
+            pair* steiner = steiner_tree(g, t);
+            double time = (double) (clock() - c) / CLOCKS_PER_SEC;
+
+            fprintf(fp, "%d,%d,%f\n", V, T, time);
+            printf("|V|: %d, |T|%d, time: %fs\n", V, T, time);
+
+            destroy_set(t);
+
+        }
+
+        
+        destroy_graph(g);
+
+    }
+
+    fclose(fp);
+
+}
+
+int main(int argc, char** argv) {
+    
+    // test();
+    specify_args(argc, argv);
+
+    // perf_test();
+    
 
     return 0;
 
