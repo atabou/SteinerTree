@@ -3,6 +3,11 @@
 
     #define COMMON_H
 
+    #include "graph.h"
+    #include "set.h"
+    
+    int load_gr_file(char* filename, graph** G, set_t** T);
+
     /**
      * @brief Given a pointer to a 64-bit bitmask, updates the content of the bitmask to the next combination n choose k,
      * and then returns a boolean that represents if this is the last possible combination from n choose k.

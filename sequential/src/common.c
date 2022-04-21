@@ -1,8 +1,78 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "common.h"
+
+int load_gr_file(char* filename, graph** G, set_t** T) {
+
+    FILE* fp = fopen(filename, "r");
+
+    if(fp == NULL) {
+        return -1;
+    }
+
+    *T = make_set();
+
+    char* line = NULL;
+    size_t buff = 0;
+    ssize_t len = 0;
+
+    int type = 0;
+
+    while( (len = getline(&line, &buff, fp)) != -1) {
+
+        char* token = strtok(line, " ");
+
+        int type = 0;
+
+        while(token != NULL) {
+
+            if(type == 1) {
+
+                int x = atoi(token);
+
+                insert_vertex(*G, x);
+
+                token = strtok(NULL, " ");
+                int y = atoi(token);
+
+                insert_vertex(*G, y);
+
+                token = strtok(NULL, " ");
+                int w = atoi(token);
+
+                insert_edge(*G, x, y, w);
+                insert_edge(*G, y, x, w);
+
+            } else if(type == 2) {
+                
+                set_insert(*T, atoi(token));
+
+            } else if(type == 3) {
+
+                *G = make_graph(atoi(token));
+
+            }
+
+            if(token[0] == 'E' && token[1] == '\0') {
+                type = 1;
+            } else if(token[0] == 'T' && token[1] == '\0') {
+                type = 2;
+            } else if(token[0] == 'N' && token[1] == 'o') {
+                type = 3;
+            }
+
+            token = strtok(NULL, " ");
+
+        }
+
+    }
+
+    fclose(fp);
+
+}
 
 int next_combination(int n, int k, long long* mask) {
 

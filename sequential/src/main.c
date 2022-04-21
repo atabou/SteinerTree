@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "graph.h"
 #include "pair.h"
@@ -175,12 +176,10 @@ void test() {
     
     pair* steiner = steiner_tree(g, t);
     
-    graph* tree = (graph*) steiner->first;
     int min = (int) steiner->second;
 
     printf("minimum: %d\n", min);
-    to_graphviz(tree, "result.dot");
-
+    
     destroy_graph(g);
 
 }
@@ -212,8 +211,8 @@ void specify_args(int argc, char** argv) {
 
 void perf_test() {
 
-    FILE* fp = fopen("steiner.csv", "w");
-    fprintf(fp, "V,T,time(s)\n");
+    // FILE* fp = fopen("steiner.csv", "w");
+    // fprintf(fp, "V,T,time(s)\n");
 
     for(int V=8; V<=512; V*=2) {
 
@@ -229,12 +228,12 @@ void perf_test() {
 
             }
 
-            clock_t c = clock();
+            // clock_t c = clock();
             pair* steiner = steiner_tree(g, t);
-            double time = (double) (clock() - c) / CLOCKS_PER_SEC;
+            // double time = (double) (clock() - c) / CLOCKS_PER_SEC;
 
-            fprintf(fp, "%d,%d,%f\n", V, T, time);
-            printf("|V|: %d, |T|%d, time: %fs\n", V, T, time);
+            // fprintf(fp, "%d,%d,%f\n", V, T, time);
+            // printf("|V|: %d, |T|%d, time: %fs\n", V, T, time);
 
             destroy_set(t);
 
@@ -245,17 +244,38 @@ void perf_test() {
 
     }
 
-    fclose(fp);
+    // fclose(fp);
 
 }
 
 int main(int argc, char** argv) {
     
     // test();
-    specify_args(argc, argv);
+    // specify_args(argc, argv);
 
     // perf_test();
-    
+
+    graph* G;
+    set_t* T;
+
+    char str[100];
+
+    for(int i=3; i< 50; i+=2) {
+
+        sprintf(str, "tests/instance%03d.gr", i);
+
+        load_gr_file(str, &G, &T);
+
+        printf(str);
+
+        pair* p = steiner_tree(G, T);
+
+        int min = (int) p->second;
+
+        destroy_graph(G);
+        destroy_set(T);
+
+    }
 
     return 0;
 
