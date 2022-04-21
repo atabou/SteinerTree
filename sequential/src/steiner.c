@@ -6,18 +6,8 @@
 #include <math.h>
 
 #include "steiner.h"
-#include "bfs.h"
 #include "common.h"
 #include "shortestpath.h"
-
-int steiner_verification(graph* g, int v, void* input) {
-
-    int check1 = degree(g, v) >= 3;
-    int check2 = element_exists(v, (set_t*) input);
-
-    return check1 || check2;
-
-}
 
 pair* steiner_tree(graph* g, set_t* terminals) {
 
@@ -33,6 +23,9 @@ pair* steiner_tree(graph* g, set_t* terminals) {
         
     }
 
+    printf(" - V: %d, T: %d, time: ", V, T);
+    fflush(stdout);
+
     // All pairs shortest path
 
     pair* apsp = all_pairs_shortest_path(g);
@@ -42,6 +35,8 @@ pair* steiner_tree(graph* g, set_t* terminals) {
     free(apsp);
 
     // Fill tables
+
+    clock_t c = clock();
 
     for(int k=1; k <= T; k++) {
 
@@ -59,14 +54,10 @@ pair* steiner_tree(graph* g, set_t* terminals) {
                     costs[v][mask - 1] = distances[v][u];
                     
                 } else {
-
-                    set_t* W = bfs(g, g->hash[v], steiner_verification, X); // O(V+E)
-            
+                    
                     int min = INT_MAX;
                     
-                    for(int i=0; i < set_size(W); i++) { // O(T * 2^T * (V+E))
-
-                        int w = g->reverse_hash[get_element(W, i)];
+                    for(int w=0; w < V; w++) { // O(T * 2^T * (V+E))
 
                         if( element_exists(g->hash[w], X) ) { // O(V + E)
 
@@ -80,7 +71,7 @@ pair* steiner_tree(graph* g, set_t* terminals) {
 
                             }
 
-                        } else { // O(2^T (V+E))
+                        } else if(degree(g, g->hash[w]) >= 3) { // O(2^T (V+E))
 
                             for(long long submask = (mask - 1) & mask; submask != 0; submask = (submask - 1) & mask) { // iterate over submasks of the mask O(2^T)
 
@@ -100,8 +91,6 @@ pair* steiner_tree(graph* g, set_t* terminals) {
 
                     costs[v][mask - 1] = min;
 
-                    destroy_set(W);
-
                 }
                 
             }
@@ -111,6 +100,8 @@ pair* steiner_tree(graph* g, set_t* terminals) {
         }
 
     }
+
+    printf("%f\n", (double) (clock() - c) / CLOCKS_PER_SEC );
 
     // Extract minimum from table.
 
