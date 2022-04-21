@@ -260,7 +260,7 @@ int main(int argc, char** argv) {
 
     char str[100];
 
-    for(int i=3; i< 50; i+=2) {
+    for(int i=7; i< 50; i+=2) {
 
         sprintf(str, "tests/instance%03d.gr", i);
 
@@ -277,6 +277,6 @@ int main(int argc, char** argv) {
 
     }
 
-    return 0;
+    // return 0;
 
 }

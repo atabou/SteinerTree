@@ -37,16 +37,7 @@
      * @param n the number of rows in the table.
      * @param m the number of columns in the table.
      */
-    void print_table(int** table, int n, int m);
-    
-    /**
-     * @brief Frees a table of integers.
-     * 
-     * @param table the 2D array of integers to free.
-     * @param n the number of rows in the table.
-     * @param m the number of columns in the table.
-     */
-    void free_table(int** table, int n, int m);
+    void print_table(int* table, int n, int m);
 
     /**
      * @brief Returns the maximum between the two input integer values.

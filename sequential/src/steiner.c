@@ -15,13 +15,7 @@ pair* steiner_tree(graph* g, set_t* terminals) {
     int T = set_size(terminals);
     long long P =  (long long) pow(2, T) - 1;
 
-    int** costs  =  (int**) malloc(sizeof(int*) * V);
-    
-    for(int v=0; v < V; v++) {
-
-        costs[v] = (int*) malloc(sizeof(int) * P);
-        
-    }
+    int* costs = (int*) malloc(sizeof(int) * V * P);
 
     printf(" - V: %d, T: %d, time: ", V, T);
     fflush(stdout);
@@ -30,7 +24,7 @@ pair* steiner_tree(graph* g, set_t* terminals) {
 
     pair* apsp = all_pairs_shortest_path(g);
     
-    int** distances = (int**) apsp->second;
+    int* distances = (int*) apsp->second;
 
     free(apsp);
 
@@ -46,12 +40,12 @@ pair* steiner_tree(graph* g, set_t* terminals) {
 
             set_t* X = get_subset(terminals, mask);
 
-            for(int v=0; v < V; v++) { // 
+            for(int v=0; v < V; v++) {
 
                 if(k == 1) {
 
                     int u = g->reverse_hash[get_element(X, 0)];
-                    costs[v][mask - 1] = distances[v][u];
+                    costs[v*P + (mask - 1)] = distances[v * V + u];
                     
                 } else {
                     
@@ -63,7 +57,7 @@ pair* steiner_tree(graph* g, set_t* terminals) {
 
                             long long submask = 1ll << (T - find_position(terminals, g->hash[w]) - 1);
 
-                            int cost = distances[v][w] + costs[w][(mask & ~submask) - 1];
+                            int cost = distances[v * V + w] + costs[w * P + ((mask & ~submask) - 1)];
 
                             if(cost < min) {
 
@@ -75,7 +69,7 @@ pair* steiner_tree(graph* g, set_t* terminals) {
 
                             for(long long submask = (mask - 1) & mask; submask != 0; submask = (submask - 1) & mask) { // iterate over submasks of the mask O(2^T)
 
-                                int cost = distances[v][w] + costs[w][submask - 1] + costs[w][(mask & ~submask) - 1];
+                                int cost = distances[v * V + w] + costs[w * P + (submask - 1)] + costs[w * P + ((mask & ~submask) - 1)];
 
                                 if(cost < min) {
 
@@ -89,7 +83,7 @@ pair* steiner_tree(graph* g, set_t* terminals) {
 
                     }
 
-                    costs[v][mask - 1] = min;
+                    costs[v * P + (mask - 1)] = min;
 
                 }
                 
@@ -108,19 +102,19 @@ pair* steiner_tree(graph* g, set_t* terminals) {
     int min_index = 0;
     
     for(int i=1; i < V; i++) {
-        
-        if(costs[i][P - 1] < costs[min_index][P - 1]) {
+
+        if(costs[i * P + (P - 1)] < costs[min_index * P + (P - 1)]) {
             min_index = i;
         }
     
     }
 
-    int    cost = costs[min_index][P - 1];
+    int cost = costs[min_index * P + (P - 1)];
 
     // Free table
 
-    free_table(costs, V, P);
-    free_table(distances, V, V);
+    free(costs);
+    free(distances);
 
     return make_pair(NULL, cost);
 
