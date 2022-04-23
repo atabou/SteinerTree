@@ -262,7 +262,7 @@ int main(int argc, char** argv) {
 
     for(int i=7; i< 50; i+=2) {
 
-        sprintf(str, "tests/instance%03d.gr", i);
+        sprintf(str, "../tests/instance%03d.gr", i);
 
         load_gr_file(str, &G, &T);
 
@@ -277,6 +277,6 @@ int main(int argc, char** argv) {
 
     }
 
-    // return 0;
-
+    return 0;
+	
 }
