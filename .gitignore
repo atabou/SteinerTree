@@ -3,3 +3,5 @@
 main
 *.dot
 doc/
+.ccls
+.ccls-cache
