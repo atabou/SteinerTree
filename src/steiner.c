@@ -48,6 +48,10 @@ void fill_steiner_dp_table_cpu(table_t* costs, graph_t* g, set_t* terminals, tab
 
                             for(uint64_t submask = (mask - 1) & mask; submask != 0; submask = (submask - 1) & mask) { // iterate over submasks of the mask O(2^T)
 
+//								print_bits(mask, terminals->size); printf(" - ");
+//								print_bits(submask, terminals->size); printf(" - ");
+//								print_bits(mask & ~submask, terminals->size); printf("\n");
+
                                 uint32_t cost = distances->vals[v * distances->m + w] 
                                               + costs->vals[w * costs->m + submask - 1] 
                                               + costs->vals[w * costs->m + (mask & ~submask) - 1];
@@ -59,6 +63,8 @@ void fill_steiner_dp_table_cpu(table_t* costs, graph_t* g, set_t* terminals, tab
                                 }
 
                             }
+
+//							printf("\n");
 
                         }
 
