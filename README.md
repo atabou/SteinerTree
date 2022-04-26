@@ -6,8 +6,10 @@
 - gcc (only works on gcc and maybe clang)
 - Make
 
-## Run Sequential: (Only tested on ubuntu)
+## Run: (Only tested on ubuntu)
 
-1. `cd sequential`
-2. `make all`
-3. `./bin/main`
+```
+cd /path/to/folder
+make all
+./bin/main
+```
