@@ -1,7 +1,7 @@
 
 CC=gcc
 NV=nvcc
-COMMON=-Wall
+COMMON=-Wall -O2
 SRC=./src
 INC=./include
 OBJ=./obj
