@@ -5,3 +5,4 @@ main
 doc/
 .ccls
 .ccls-cache
+*.gr
