@@ -21,7 +21,9 @@ COMPILE=steiner.o \
         pair.o \
         shortestpath.o \
 		util.o \
-		table.o
+		table.o \
+		combination.cu.o \
+		steiner.cu.o
 
 all: | pre-build ${BIN}/main
 	@echo "${GREEN}Compilation done.${NOCOLOR}"
@@ -34,6 +36,8 @@ ${BIN}/main: ./main.c $(patsubst %,${OBJ}/%,${COMPILE})
 	${CC} ./main.c ${COMMON} -I${INC} -o ${BIN}/main $(patsubst %,${OBJ}/%,${COMPILE}) ${LNK}
 	@echo "${YELLOW}Ignore Warnings${NOCOLOR}"
 
+${OBJ}/%.cu.o: ${SRC}/%.cu ${INC}.cuh
+	${CC} ${COMMON} -I${INC} -c $< -o $@
 ${OBJ}/%.o: ${SRC}/%.c ${INC}/%.h
 	${CC} ${COMMON} -I${INC} -c $< -o $@
 
