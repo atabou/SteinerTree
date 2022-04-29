@@ -1,31 +1,20 @@
 
-#include <cuda.h>
-#include <device_functions.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
 #include "combination.cuh"
-#include "graph.h"
-#include "table.h"
-#include "set.h"
+#include "cudatable.cuh"
+#include "cudagraph.cuh"
+#include "cudaset.cuh"
 
 #define BLOCK_SIZE 1024
 #define MAX_BLOCKS 65536
 
-
-__device__ uint64_t generate_submask(uint64_t mask, uint64_t i) {
-
-	// TODO implement this function.	
-
-	return 0;
-
-}
-
 /**
  * Only can address 2^58 of the 2^64 possible terminals.
  */
-__global__ void dw_power_set(table_t* costs, table_t* distances, uint64_t mask, uint32_t v, uint32_t w) {
+__global__ void dw_power_set(cudatable_t* costs, cudatable_t* distances, uint64_t mask, uint32_t v, uint32_t w) {
 
 	uint64_t pos = blockIdx.z * gridDim.y * gridDim.x * blockDim.x // Number of threads inside the 3D part of the grid coming before the thread in question.
 				 + blockIdx.y * gridDim.x * blockDim.x // Number of threads inside the 2D part of the grid coming before the thread in question.
@@ -35,11 +24,9 @@ __global__ void dw_power_set(table_t* costs, table_t* distances, uint64_t mask, 
 	if(pos < __popcll(mask)) {
 	
 		// TODO implement generate submask.
-		uint64_t submask = generate_submask(mask, pos);
+		uint64_t submask = ith_subset(mask, pos);
 	
-		uint32_t cost = distances->vals[v * distances->m + w] 
-				      + costs->vals[w * costs->m + (submask - 1)] 
-				      + costs->vals[w * costs->m + ((mask * ~submask) - 1)];
+		uint32_t cost = distances->vals[v * distances->m + w] + costs->vals[w * costs->m + (submask - 1)] + costs->vals[w * costs->m + ((mask * ~submask) - 1)];
 
 		atomicMin(&(costs->vals[v * costs->m + (mask - 1)]), cost);
 
@@ -48,7 +35,7 @@ __global__ void dw_power_set(table_t* costs, table_t* distances, uint64_t mask, 
 }
 
 
-__global__ void dw_recurrence_relation(table_t* costs, graph_t* g, table_t* distances, set_t* terminals, uint64_t mask, uint32_t v) {
+__global__ void dw_recurrence_relation(cudatable_t* costs, cudagraph_t* g, cudatable_t* distances, cudaset_t* terminals, uint64_t mask, uint32_t v) {
 
 	uint32_t w =  blockIdx.y * gridDim.x * blockDim.x + blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -120,7 +107,7 @@ __global__ void dw_recurrence_relation(table_t* costs, graph_t* g, table_t* dist
 
 }
 
-__global__ void dw_combination_kernel(table_t* costs, graph_t* g, table_t* distances, set_t* terminals, uint64_t mask) {
+__global__ void dw_combination_kernel(cudatable_t* costs, cudagraph_t* g, cudatable_t* distances, cudaset_t* terminals, uint64_t mask) {
 	
 	uint32_t v = blockIdx.y * gridDim.x * blockDim.x + blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -156,7 +143,7 @@ __global__ void dw_combination_kernel(table_t* costs, graph_t* g, table_t* dista
 
 }
 
-__global__ void dw_kernel(table_t* costs, graph_t* g, table_t* distances, set_t* terminals, uint32_t k, uint64_t nCr) {
+__global__ void dw_kernel(cudatable_t* costs, cudagraph_t* g, cudatable_t* distances, cudaset_t* terminals, uint32_t k, uint64_t nCr) {
 
 	uint64_t thread_id = blockIdx.z * gridDim.y * gridDim.x * blockDim.x // Number of threads inside the 3D part of the grid coming before the thread in question.
 					   + blockIdx.y * gridDim.x * blockDim.x // Number of threads inside the 2D part of the grid coming before the thread in question.
@@ -191,7 +178,7 @@ __global__ void dw_kernel(table_t* costs, graph_t* g, table_t* distances, set_t*
 /**
  * Only works on |T| < 58 (total number of threads than can be launched is 2^58: 65536^3  * 1024 = (2^16)^3 * 2^10 = 2^48 * 2^10 = 2^58)
  */
-void fill_steiner_dp_table_gpu(table_t* table, graph_t* g, set_t* t, table_t* distances) {
+void fill_steiner_dp_table_gpu(cudatable_t* table, cudagraph_t* g, cudaset_t* t, cudatable_t* distances) {
 
 	// Fill table by multiple subsequent kernel calls
 
