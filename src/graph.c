@@ -64,10 +64,8 @@ void insert_edge(graph_t* g, uint32_t src, uint32_t dest, uint32_t w) {
         llist_t* e = g->lst[src];
 
         while (e != NULL) {
-            
-            uint32_t tmp = (uint32_t) ((pair_t*) e->data)->first;
 
-            if(tmp == dest) {
+            if(e->dest == dest) {
                 return;
             }
 
@@ -76,7 +74,7 @@ void insert_edge(graph_t* g, uint32_t src, uint32_t dest, uint32_t w) {
 
         }
 
-        g->lst[src] = llist_add(g->lst[src], make_pair((void*) dest, (void*) w));
+        g->lst[src] = llist_add(g->lst[src], dest, w);
         g->deg[src]++;
         
 
@@ -105,17 +103,15 @@ void to_graphviz(graph_t* g, char* filename) {
 
     for(uint32_t i=0; i<g->vrt; i++) {
 
-        llist_t* curr = g->lst[i];
+        llist_t* edge = g->lst[i];
 
-        while(curr != NULL) {
+        while(edge != NULL) {
 
-            pair_t* p = (pair_t*) curr->data;
-
-            uint32_t dest = (uint32_t) p->first;
-            uint32_t w    = (uint32_t) p->second;
+            uint32_t dest = edge->dest;
+            uint32_t w    = edge->weight;
 
             fprintf(fp, "\t%d -> %d [label=\"%d\"];\n", i, dest, w);  
-            curr = curr->next;
+            edge = edge->next;
 
         }
 
@@ -136,7 +132,7 @@ void destroy_graph(graph_t* g) {
 
     for(uint32_t i=0; i<g->vrt; i++) {
 
-        destroy_llist(g->lst[i], free);
+        destroy_llist(g->lst[i]);
         g->lst[i] = NULL;
 
     }

@@ -3,18 +3,19 @@
 
 #include "llist.h"
 
-llist_t* llist_add(llist_t* lst, void* data) {
+llist_t* llist_add(llist_t* lst, uint32_t dest, uint32_t weight) {
 
     llist_t* l = (llist_t*) malloc(sizeof(llist_t));
 
-    l->data = data;
+    l->dest = dest;
+    l->weight = weight;
     l->next = lst;
 
     return l;
 
 }
 
-void destroy_llist(llist_t* lst, void free_data(void*)) {
+void destroy_llist(llist_t* lst) {
 
     if(lst != NULL) {
 
@@ -24,8 +25,6 @@ void destroy_llist(llist_t* lst, void free_data(void*)) {
 
             llist_t* del = l;
             l = l->next;
-
-            free_data(del->data);
 
             del->next = NULL;
             free(del);

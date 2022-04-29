@@ -33,16 +33,13 @@ void dijkstra(graph_t* g, uint32_t src, table_t* distances, table_t* parents, ui
 
         uint32_t u = pq->extract_min(pq);
 
-        llist_t* curr = g->lst[u];
+        llist_t* edges = g->lst[u];
 
-        while(curr != NULL) {
+        while(edges != NULL) {
 
-            pair_t* p = (pair_t*) curr->data;
-
-            uint32_t v = (uint32_t) p->first;
-            uint32_t w = (uint32_t) p->second;
-
-
+            uint32_t v = edges->dest;
+            uint32_t w = edges->weight;
+           
             if(distances->vals[v + start] > distances->vals[u + start] + w) {
 
                 distances->vals[v + start] = distances->vals[u + start] + w;
@@ -51,7 +48,7 @@ void dijkstra(graph_t* g, uint32_t src, table_t* distances, table_t* parents, ui
 
             }
 
-            curr = curr->next;
+            edges = edges->next;
 
         }
 
