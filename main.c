@@ -280,8 +280,8 @@ void test() {
 
 void specify_args(int argc, char** argv) {
 
-    int V = atoi(argv[1]);
-    int T = atoi(argv[2]);
+    uint32_t V = atoi(argv[1]);
+    uint32_t T = atoi(argv[2]);
 
     graph_t* g = make_randomly_connected_graph(V);
 
@@ -369,9 +369,9 @@ void gr_file_test() {
 
 int main(int argc, char** argv) {
     
-    // test();
-    // specify_args(argc, argv);
-    perf_test();
+    //test();
+    specify_args(argc, argv);
+    // perf_test();
 	/* gr_file_test(); */
 
 

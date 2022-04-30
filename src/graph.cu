@@ -1,8 +1,10 @@
 
 #include <stdio.h>
 
-#include "cudagraph.cuh"
-#include "cudallist.cuh"
+extern "C" {
+    #include "graph.cuda.h"
+    #include "llist.cuda.h"
+}
 
 cudagraph_t* make_cudagraph() {
 
@@ -14,6 +16,15 @@ cudagraph_t* make_cudagraph() {
 
     if(err) {
         printf("Error initializing memory for cuda graph. (Error code: %d)\n", err);
+        exit(err);
+    }
+
+    err = cudaDeviceSynchronize();
+
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not synchronize cuda device after graph memory allocation. (Error code: %d)\n", err);
         exit(err);
     }
 
@@ -43,7 +54,34 @@ cudagraph_t* copy_cudagraph(graph_t* cpu_graph) {
         exit(err);
     }
 
+    // Create and set cuda graph adjacency array
+
+    err = cudaMalloc(&(tmp.lst), sizeof(cudallist_t*) * cpu_graph->max);
+
+    if(err) {
+        printf("Could not allocate memory for graph adjacency list. (Error code: %d)\n", err);
+        exit(err);
+    }
+
+    // Synchronize after memory allocation.
+
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not synchronize cuda device after memory allocation. (Error code: %d)\n", err);
+        exit(err);
+    }
+
+    // Copy degrees into degree array
+
     cudaMemcpy(tmp.deg, cpu_graph->deg, sizeof(uint32_t) * cpu_graph->vrt, cudaMemcpyHostToDevice);
+
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not synchronize cuda device after degree memory copy. (Error code: %d)\n", err);
+        exit(err);
+    }
 
     // Create and set cuda graph adjacency list
 
@@ -51,24 +89,31 @@ cudagraph_t* copy_cudagraph(graph_t* cpu_graph) {
 
     for(uint32_t i=0; i<cpu_graph->vrt; i++) {
 
-        edges[i] = copy_cudallist(cpu_graph->lst[i]);
+        edges[i] = copy_cudallist(cpu_graph->lst[i], cpu_graph->deg[i]);
 
     }
 
-    err = cudaMalloc(&(tmp.lst), sizeof(cudallist_t*) * cpu_graph->max);
+    cudaMemcpy(tmp.lst, edges, sizeof(cudallist_t*) * cpu_graph->vrt, cudaMemcpyHostToDevice);
+ 
+    err = cudaDeviceSynchronize();
 
     if(err) {
-        printf("Could not allocate memory for graph adjacency list. (Error code: %d)\n", err);
+        printf("Could not synchronize cuda device after llist array memory copy. (Error code: %d)\n", err);
         exit(err);
-    } 
-
-    cudaMemcpy(tmp.lst, edges, sizeof(cudallist_t*) * cpu_graph->vrt, cudaMemcpyHostToDevice);
+    }
 
     // Copy cuda graph struct to gpu
 
     cudagraph_t* cuda_graph = make_cudagraph();
-    
+
     cudaMemcpy(cuda_graph, &tmp, sizeof(cudagraph_t), cudaMemcpyHostToDevice);
+
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not synchronize cuda device after graph memory copy. (Error code: %d)\n", err);
+        exit(err);
+    }
 
     return cuda_graph;
 

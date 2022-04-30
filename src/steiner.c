@@ -6,9 +6,11 @@
 #include <math.h>
 
 #include "steiner.h"
-#include "util.h"
+#include "steiner.cuda.h"
+
 #include "shortestpath.h"
-#include "table.h"
+#include "util.h"
+#include "pair.h"
 
 void fill_steiner_dp_table_cpu(table_t* costs, graph_t* g, set_t* terminals, table_t* distances) {
 
@@ -107,7 +109,38 @@ table_t* steiner_tree(graph_t* g, set_t* terminals) {
 
     c = clock();
     fill_steiner_dp_table_cpu(costs, g, terminals, distances);
-    printf("\tDP Table fill: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
+    printf("\tCPU DP Table fill: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
+
+    /* print_table(costs); */
+
+    // GPU
+
+    c = clock();
+    cudatable_t* c_d = make_cudatable(g->vrt, (uint64_t) pow(2, terminals->size) - 1);  
+    printf("\tGPU Table create: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
+
+    c = clock();
+    cudatable_t* d_d = copy_cudatable(distances);
+    printf("\tGPU table copy: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
+    
+    c = clock();
+    cudagraph_t* g_d = copy_cudagraph(g);
+    printf("\tGPU graph copy: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
+
+    c = clock();
+    cudaset_t* t_d = copy_cudaset(terminals);
+    printf("\tGPU set copy: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC); 
+
+    c = clock();
+    fill_steiner_dp_table_gpu(c_d, g_d, t_d, terminals->size, d_d);
+    printf("\tGPU table fill: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
+    
+
+    free_cudatable(c_d);
+    free_cudatable(c_d);
+    free_cudagraph(g_d);
+    free_cudaset(t_d);
+
 
     // Free table
 

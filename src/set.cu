@@ -1,7 +1,9 @@
 
 #include <stdio.h>
 
-#include "cudaset.cuh"
+extern "C" {
+    #include "set.cuda.h"
+}
 
 
 cudaset_t* copy_cudaset(set_t* set) {
@@ -19,8 +21,22 @@ cudaset_t* copy_cudaset(set_t* set) {
         exit(err);
     }
 
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not synchronize after cuda set element memory allocation. (Error code: %d)\n", err);
+        exit(err);
+    }
+
     cudaMemcpy(tmp.vals, set->vals, sizeof(uint32_t) * set->size, cudaMemcpyHostToDevice);
-    
+
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not synchronize after cuda set element memory copy. (Error code: %d)\n", err);
+        exit(err);
+    }
+ 
     cudaset_t* cuda_set = NULL;
 
     err = cudaMalloc(&cuda_set, sizeof(cudaset_t));
@@ -30,7 +46,21 @@ cudaset_t* copy_cudaset(set_t* set) {
         exit(err);
     }
 
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not synchronize after cuda set memory allocation. (Error code: %d)\n", err);
+        exit(err);
+    }
+
     cudaMemcpy(cuda_set, &tmp, sizeof(cudaset_t), cudaMemcpyHostToDevice);
+
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not synchronize after cuda set element memory copy. (Error code: %d)\n", err);
+        exit(err);
+    }
 
     return cuda_set;
 

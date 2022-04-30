@@ -1,11 +1,13 @@
 
-#ifndef CUDASET_CUH
+#ifndef CUDASET_H
 
-    #define CUDASET_CUH
+    #define CUDASET_H
 
-    extern "C" {
-        #include "set.h"
-    }
+//    extern "C" {
+//        #include "set.h"
+//    }
+
+    #include "set.h"
 
     typedef set_t cudaset_t;
 

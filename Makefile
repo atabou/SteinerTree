@@ -1,7 +1,6 @@
 
-CC=gcc
-NV=nvcc
-COMMON=-Wall -O2
+CC=nvcc
+COMMON= -g -G --Werror all-warnings -rdc=true -lcudadevrt -O3
 SRC=./src
 INC=./include
 OBJ=./obj
@@ -23,7 +22,12 @@ COMPILE=steiner.o \
 		util.o \
 		table.o \
 		combination.cu.o \
-		steiner.cu.o
+		graph.cu.o \
+		llist.cu.o \
+		set.cu.o \
+		table.cu.o \
+		steiner.cu.o \
+		
 
 all: | pre-build ${BIN}/main
 	@echo "${GREEN}Compilation done.${NOCOLOR}"
@@ -36,8 +40,9 @@ ${BIN}/main: ./main.c $(patsubst %,${OBJ}/%,${COMPILE})
 	${CC} ./main.c ${COMMON} -I${INC} -o ${BIN}/main $(patsubst %,${OBJ}/%,${COMPILE}) ${LNK}
 	@echo "${YELLOW}Ignore Warnings${NOCOLOR}"
 
-${OBJ}/%.cu.o: ${SRC}/%.cu ${INC}.cuh
+${OBJ}/%.cu.o: ${SRC}/%.cu ${INC}/%.cuda.h
 	${CC} ${COMMON} -I${INC} -c $< -o $@
+
 ${OBJ}/%.o: ${SRC}/%.c ${INC}/%.h
 	${CC} ${COMMON} -I${INC} -c $< -o $@
 

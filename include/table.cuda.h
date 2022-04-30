@@ -1,11 +1,13 @@
 
-#ifndef CUDATABLE_CUH
+#ifndef CUDATABLE_H
 
-#define CUDATABLE_CUH
+    #define CUDATABLE_H
 
-    extern "C" {
-        #include "table.h"
-    }
+//    extern "C" {
+//        #include "table.h"
+//    }
+
+    #include "table.h"
 
     typedef table_t cudatable_t;
 
