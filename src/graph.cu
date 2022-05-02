@@ -120,12 +120,19 @@ cudagraph_t* copy_cudagraph(graph_t* cpu_graph) {
 }
 
 void free_cudagraph(cudagraph_t* g) {
-
+ 
     cudaError_t err;
     cudagraph_t tmp;
 
     cudaMemcpy(&tmp, g, sizeof(cudagraph_t), cudaMemcpyDeviceToHost);
-    
+ 
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not copy graph data before free. (Error code: %d)\n", err);
+        exit(err);
+    }
+
     err = cudaFree(g);
 
     if(err) {
@@ -140,9 +147,23 @@ void free_cudagraph(cudagraph_t* g) {
         exit(err);
     }
 
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not synchronize after cuda degree array free. (Error code: %d)\n", err);
+        exit(err);
+    }
+
     cudallist_t* del[tmp.vrt];
 
-    cudaMemcpy(del, tmp.lst, sizeof(cudallist_t*) * g->vrt, cudaMemcpyDeviceToHost);
+    cudaMemcpy(del, tmp.lst, sizeof(cudallist_t*) * tmp.vrt, cudaMemcpyDeviceToHost);
+
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not synchronize after cuda graph memcpy from device. (Error code: %d)\n", err);
+        exit(err);
+    }
 
     err = cudaFree(tmp.lst);
 
@@ -151,10 +172,17 @@ void free_cudagraph(cudagraph_t* g) {
         exit(err);
     }
 
-    for(uint32_t i=0; i<g->vrt; i++) {
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not synchronize after cuda graph lst free from device. (Error code: %d)\n", err);
+        exit(err);
+    }
+ 
+    for(uint32_t i=0; i<tmp.vrt; i++) {
         free_cudallist(del[i]);
     }
-
+    
 }
 
 

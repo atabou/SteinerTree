@@ -187,11 +187,17 @@ cudatable_t* copy_cudatable(table_t* cpu_table) {
 
 void free_cudatable(cudatable_t* cuda_table) {
 
+    cudaError_t err;
     cudatable_t tmp;
 
     cudaMemcpy(&tmp, cuda_table, sizeof(cudatable_t), cudaMemcpyDeviceToHost);
 
-    cudaError_t err;
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not copy cuda table data before free. (Error code: %d).\n", err);
+        exit(err);
+    }
 
     err = cudaFree(cuda_table);
 
@@ -204,6 +210,13 @@ void free_cudatable(cudatable_t* cuda_table) {
 
     if(err) {
         printf("Could not deallocate memory for cuda table. (Error code: %d)\n", err);
+        exit(err);
+    }
+
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not complete cuda table deallocation. (Error code: %d)\n", err);
         exit(err);
     }
 
