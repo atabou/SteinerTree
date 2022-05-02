@@ -369,7 +369,7 @@ void gr_file_test() {
 
 int main(int argc, char** argv) {
     
-    //test();
+    // test();
     specify_args(argc, argv);
     // perf_test();
 	/* gr_file_test(); */
