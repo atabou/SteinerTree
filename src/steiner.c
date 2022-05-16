@@ -8,6 +8,7 @@
 #include "steiner.h"
 #include "steiner.cuda.h"
 #include "steiner1.cuda.h"
+#include "steiner2.cuda.h"
 
 #include "shortestpath.h"
 #include "util.h"
@@ -136,15 +137,18 @@ table_t* steiner_tree(graph_t* g, set_t* terminals) {
     // fill_steiner_dp_table_gpu(c_d, g_d, t_d, terminals->size, d_d);
     // printf("\tGPU table fill: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
   
+    // c = clock();
+    // fill_steiner_dp_table_gpu_1(c_d, g_d, t_d, g->vrt, terminals->size, d_d);
+    // printf("\tGPU table fill 1: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
+
     c = clock();
-    fill_steiner_dp_table_gpu_1(c_d, g_d, t_d, g->vrt, terminals->size, d_d);
-    printf("\tGPU table fill 1: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
+    fill_steiner_dp_table_gpu_2(c_d, g_d, g->vrt, t_d, terminals->size, d_d);
+    printf("\tGPU table fill 2: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
 
     free_cudatable(c_d);
     free_cudatable(d_d);
     free_cudagraph(g_d);
     free_cudaset(t_d);
-
 
     // Free table
 
