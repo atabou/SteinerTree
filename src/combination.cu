@@ -139,7 +139,7 @@ __device__ __host__ void print_mask(uint64_t mask, uint32_t size) {
 
 }
 
-int gpu_next_combination(uint32_t n, uint32_t k, uint64_t* mask) {
+__device__ int gpu_next_combination(uint32_t n, uint32_t k, uint64_t* mask) {
 
     if(*mask == 0) {
 
