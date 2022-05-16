@@ -28,6 +28,7 @@ COMPILE=steiner.o \
 		table.cu.o \
 		steiner.cu.o \
 		steiner1.cu.o \
+		steiner2.cu.o \
 		
 
 all: | pre-build ${BIN}/main
