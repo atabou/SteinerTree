@@ -1,7 +1,7 @@
 
-#ifndef COMBINATION_H
+#ifndef COMBINATION_CUDA_H
 
-#define COMBINATION_H
+    #define COMBINATION_CUDA_H
 
     #include <stdint.h>
 
@@ -34,6 +34,8 @@
     __device__ uint64_t ith_combination(uint64_t n, uint64_t k, uint64_t i);
 
     __device__ uint64_t ith_subset(uint64_t mask, uint64_t i);
+
+    __device__ int gpu_next_combination(uint32_t n, uint32_t k, uint64_t* mask);
 
 #endif
 

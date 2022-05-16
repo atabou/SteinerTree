@@ -3,10 +3,6 @@
 
     #define CUDATABLE_H
 
-//    extern "C" {
-//        #include "table.h"
-//    }
-
     #include "table.h"
 
     typedef table_t cudatable_t;
