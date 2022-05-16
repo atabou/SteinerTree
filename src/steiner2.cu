@@ -14,7 +14,6 @@ extern "C" {
 #define BLOCK_1D_SIZE 1024
 #define MAX_BLOCKS 65536
 
-
 __device__ void print_cuda_table(cudatable_t* t) {
 
     for(int v=0; v < t->n; v++) {
@@ -25,7 +24,6 @@ __device__ void print_cuda_table(cudatable_t* t) {
     }
 
 }
-
 
 __global__ void dw_fill_base_cases(cudatable_t* costs, cudagraph_t* g, cudatable_t* distances, cudaset_t* terminals) {
 
@@ -50,39 +48,36 @@ __global__ void dw_fill_kth_combination(cudatable_t* costs, cudagraph_t* g, cuda
 
     uint64_t v = gridDim.x * blockIdx.x + threadIdx.x;
     uint64_t w = gridDim.y * blockIdx.y + threadIdx.y;
-
-    if(v == 0 && w == 0) {
-        print_cuda_table(t);
-    }
-
+ 
     if(v < g->vrt && w < g->vrt) {
         
-        uint32_t exists = 0;
-        uint32_t position = 0;
-
-        for(uint32_t i=0; i<terminals->size; i++) {
-
-            if(u == terminals->vals[i] && ((mask >> (terminals->size - i - 1)) & 1) == 1 ) {
-
-                exists = 1;
-                position = i;
-
-            }
-
-        }
-
-        __syncthreads();
-
         uint64_t mask = 0;
 
         while( gpu_next_combination(terminals->size, k, &mask) ) {
 
+            uint32_t exists = 0;
+            uint32_t position = 0;
+
+            for(uint32_t i=0; i<terminals->size; i++) {
+
+                if(w == terminals->vals[i] && ((mask >> (terminals->size - i - 1)) & 1) == 1 ) {
+
+                    exists = 1;
+                    position = i;
+
+                }
+
+            }
+
+            __syncthreads();
+
+
             if(exists) {
-                
+
                 uint64_t submask = 1ll << (terminals->size - position - 1);
 
                 uint32_t cost = distances->vals[v * distances->m + w] 
-                         +     costs->vals[w * costs->m + ((mask & ~submask) - 1)];
+                    +     costs->vals[w * costs->m + ((mask & ~submask) - 1)];
 
                 atomicMin(&costs->vals[v * costs->m + mask - 1], cost);
 
@@ -91,8 +86,8 @@ __global__ void dw_fill_kth_combination(cudatable_t* costs, cudagraph_t* g, cuda
                 for(uint64_t submask = (mask - 1) & mask; submask != 0; submask = (submask - 1) & mask) { // iterate over submasks of the mask O(2^T)
 
                     uint32_t cost = distances->vals[v * distances->m + w]
-                                  +     costs->vals[w * costs->m + submask - 1]
-                                  +     costs->vals[w * costs->m + (mask & ~submask) - 1];
+                        +     costs->vals[w * costs->m + submask - 1]
+                        +     costs->vals[w * costs->m + (mask & ~submask) - 1];
 
                     atomicMin(&costs->vals[v * costs->m + mask - 1], cost);
 
@@ -107,7 +102,7 @@ __global__ void dw_fill_kth_combination(cudatable_t* costs, cudagraph_t* g, cuda
     }
 
 }
-    
+
 /**
  * Works for any values of T and V satisfying the following equation 2^T * V < 2^26
  * This could be improved to 2^T * V < 2^58
@@ -117,7 +112,7 @@ void base_case(cudatable_t* table, cudagraph_t* g, uint64_t g_size, cudaset_t* t
     uint64_t num_thread = g_size * t_size;
     uint64_t num_blocks = (num_thread + BLOCK_1D_SIZE - 1) / BLOCK_1D_SIZE;
 
-    dw_fill_base_cases<<<num_blocks, MAX_BLOCKS>>>(table, g, distances, t);
+    dw_fill_base_cases<<<num_blocks, BLOCK_1D_SIZE>>>(table, g, distances, t);
 
     cudaError_t err = cudaDeviceSynchronize();
 
@@ -132,7 +127,7 @@ void base_case(cudatable_t* table, cudagraph_t* g, uint64_t g_size, cudaset_t* t
 /**
  * Works only for values of V < 2^21
  */
- void fill_kth_combination(cudatable_t* table, cudagraph_t* g, uint64_t g_size, cudaset_t* t, uint64_t t_size, cudatable_t* distances, uint32_t k) {
+void fill_kth_combination(cudatable_t* table, cudagraph_t* g, uint64_t g_size, cudaset_t* t, uint64_t t_size, cudatable_t* distances, uint32_t k) {
 
 
     uint64_t num_thread_x = g_size;
@@ -141,10 +136,10 @@ void base_case(cudatable_t* table, cudagraph_t* g, uint64_t g_size, cudaset_t* t
     uint64_t num_blocks_x = (num_thread_x + BLOCK_2D_SIZE - 1) / BLOCK_2D_SIZE;
     uint64_t num_blocks_y = (num_thread_y + BLOCK_2D_SIZE - 1) / BLOCK_2D_SIZE;
 
-    dim3 num_thread_per_block(num_thread_x, num_thread_y);
+    dim3 num_thread_per_block(BLOCK_2D_SIZE, BLOCK_2D_SIZE);
     dim3 num_blocks(num_blocks_x, num_blocks_y);
 
-    dw_fill_kth_combination<<<num_blocks, num_thread_per_block>>>(table, g, t, distances, k);
+    dw_fill_kth_combination<<<num_blocks, num_thread_per_block>>>(table, g, distances, t, k);
 
     cudaError_t err = cudaDeviceSynchronize();
 
@@ -164,7 +159,7 @@ void fill_steiner_dp_table_gpu_2(cudatable_t* table, cudagraph_t* g, uint64_t g_
 
     for(uint32_t k=2; k <= t_size; k++) {
 
-        fill_kth_combination(table, g, g_size, t, t_size, distance, k);
+        fill_kth_combination(table, g, g_size, t, t_size, distances, k);
 
     }
 
