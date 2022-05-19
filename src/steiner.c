@@ -137,7 +137,7 @@ table_t* steiner_tree(graph_t* g, set_t* terminals) {
     // printf("\tGPU table fill 1: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
 
     c = clock();
-    fill_steiner_dp_table_gpu_2(c_d, g_d, g->vrt, t_d, terminals->size, d_d);
+    steiner_tree_gpu(c_d, g_d, g->vrt, t_d, terminals->size, d_d);
     printf("\tGPU table fill 2: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
 
     free_cudatable(c_d);
