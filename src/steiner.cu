@@ -8,171 +8,94 @@ extern "C" {
 }
 
 #include "combination.cuda.h"
+#include "util.h"
 
-#define BLOCK_SIZE 1024
+#define BLOCK_2D_SIZE 32
+#define BLOCK_1D_SIZE 1024
 #define MAX_BLOCKS 65536
 
-/**
- * Only can address 2^58 of the 2^64 possible terminals.
- */
-__global__ void dw_power_set(cudatable_t* costs, cudatable_t* distances, uint64_t mask, uint32_t v, uint32_t w) {
+__device__ void print_cuda_table(cudatable_t* t) {
 
-	uint64_t pos = blockIdx.z * gridDim.y * gridDim.x * blockDim.x // Number of threads inside the 3D part of the grid coming before the thread in question.
-				 + blockIdx.y * gridDim.x * blockDim.x // Number of threads inside the 2D part of the grid coming before the thread in question.
-				 + blockIdx.x * blockDim.x  // Number of threads inside the 1D part of the grid coming before the thread in question.
-				 + threadIdx.x; // The position of the thread in the block
-
-	if(pos < (1llu << __popcll(mask)) - 2) {
-	
-		uint64_t submask = ith_subset(mask, pos);
-
-		uint32_t cost = distances->vals[v * distances->m + w] + costs->vals[w * costs->m + submask - 1] + costs->vals[w * costs->m + (mask & ~submask) - 1];
-
-        atomicMin(&(costs->vals[v * costs->m + (mask - 1)]), cost);
-
+    for(int v=0; v < t->n; v++) {
+        for(int i=0; i<t->m; i++) {
+            printf("%d ", t->vals[v * t->m + i]);
+        }
+        printf("\n");
     }
 
 }
 
-
-__global__ void dw_recurrence_relation(cudatable_t* costs, cudagraph_t* g, cudatable_t* distances, cudaset_t* terminals, uint64_t mask, uint32_t v) {
-
-    uint32_t w =  blockIdx.y * gridDim.x * blockDim.x + blockIdx.x * blockDim.x + threadIdx.x;
-
-    if(w < costs->n) {
-
-        uint32_t exists = 0;
-        uint32_t position = 0;
-
-        for(uint32_t i=0; i<terminals->size; i++) {
-
-            if(w == terminals->vals[i] && ((mask >> (terminals->size - i - 1)) & 1) == 1 ) {
-
-                exists = 1;
-                position = i;
-
-            }
-
-        }
-
-        __syncthreads();
-
-        if(exists) {
-
-
-            uint64_t submask = 1llu << (terminals->size - position - 1);
-
-            uint32_t cost = distances->vals[v * distances->m + w]
-                          + costs->vals[w * costs->m + ((mask & ~submask) - 1)];
-           
-            atomicMin(&(costs->vals[v * costs->m + (mask - 1)]), cost);
-
-        } else if(g->deg[w] >= 3) {
-
-            uint64_t num_threads = costs->m - 2; // -2 to remove all 0s and all 1s
-            uint64_t num_blocks = (num_threads / BLOCK_SIZE) + 1;
-
-            if(num_blocks <= MAX_BLOCKS) {
-
-                dim3 vblock(num_blocks, 1, 1);
-                dw_power_set<<<vblock, BLOCK_SIZE>>>(costs, distances, mask, v, w);
-
-            } else {
-
-                num_blocks = (num_blocks + BLOCK_SIZE - 1) / BLOCK_SIZE;
-
-                if(num_blocks <= MAX_BLOCKS) {
-
-                    dim3 vblock(MAX_BLOCKS, num_blocks, 1);	
-                    dw_power_set<<<vblock, BLOCK_SIZE>>>(costs, distances, mask, v, w);
-
-                } else {
-
-                    num_blocks = (num_blocks + BLOCK_SIZE - 1) / BLOCK_SIZE;
-
-                    if(num_blocks <= MAX_BLOCKS) {
-
-                        dim3 vblock(MAX_BLOCKS, MAX_BLOCKS, num_blocks);						
-                        dw_power_set<<<vblock, BLOCK_SIZE>>>(costs, distances, mask, v, w);
-
-                    } else {
-
-                        // TODO handle this case.
-
-                    }
-
-                }
-
-            }
-
-        }
-
-    }
-
-}
-
-__global__ void dw_combination_kernel(cudatable_t* costs, cudagraph_t* g, cudatable_t* distances, cudaset_t* terminals, uint64_t mask) {
-
-    uint32_t v = blockIdx.y * gridDim.x * blockDim.x + blockIdx.x * blockDim.x + threadIdx.x;
-
-    if(v < costs->n) {
-
-        if(__popcll(mask) == 1) {
-
-            uint32_t u = terminals->vals[terminals->size - __ffsll(mask)];
-            costs->vals[v * costs->m + (mask - 1)] = distances->vals[v * distances->m + u];
-
-        } else {
-
-            uint32_t num_threads = costs->n;
-            uint32_t num_blocks = (num_threads / BLOCK_SIZE) + 1;
-
-            if(num_blocks <= MAX_BLOCKS) {
-
-                dim3 vblock(num_blocks, 1, 1);
-                dw_recurrence_relation<<<vblock, BLOCK_SIZE>>>(costs, g, distances, terminals, mask, v);
-
-            } else {
-
-                num_blocks = (num_blocks + BLOCK_SIZE - 1) / BLOCK_SIZE; // No need to check furthure as we have reached the max size of uint32 with 2D grid.
-
-                dim3 vblock(MAX_BLOCKS, num_blocks, 1);
-                dw_recurrence_relation<<<vblock, BLOCK_SIZE>>>(costs, g, distances, terminals, mask, v);
-
-            }
-
-        }
-
-    }	
-
-}
-
-__global__ void dw_kernel(cudatable_t* costs, cudagraph_t* g, cudatable_t* distances, cudaset_t* terminals, uint32_t k, uint64_t nCr) {
-
+__global__ void dw_fill_base_cases(cudatable_t* costs, cudagraph_t* g, cudatable_t* distances, cudaset_t* terminals) {
 
     uint64_t thread_id = blockIdx.z * gridDim.y * gridDim.x * blockDim.x // Number of threads inside the 3D part of the grid coming before the thread in question.
         + blockIdx.y * gridDim.x * blockDim.x // Number of threads inside the 2D part of the grid coming before the thread in question.
         + blockIdx.x * blockDim.x  // Number of threads inside the 1D part of the grid coming before the thread in question.
         + threadIdx.x; // The position of the thread in the block
 
-    if(thread_id < nCr) {
+    if(thread_id < terminals->size * costs->n) {
 
-        uint64_t mask = ith_combination(terminals->size, k, thread_id);
+        uint64_t v = thread_id / terminals->size;
+        uint64_t mask = ith_combination(terminals->size, 1, thread_id % terminals->size);
 
-        uint32_t num_threads = costs->n;
-        uint32_t num_blocks = (num_threads + BLOCK_SIZE - 1) / BLOCK_SIZE;
+        uint32_t u = terminals->vals[terminals->size - __ffsll(mask)];
+        costs->vals[v * costs->m + (mask - 1)] = distances->vals[v * distances->m + u];
 
-        if(num_blocks <= MAX_BLOCKS) {
+    }
 
-            dim3 vblocks(num_blocks, 1, 1);
-            dw_combination_kernel<<<vblocks, BLOCK_SIZE>>>(costs, g, distances, terminals, mask);
+}
 
-        } else {
+__global__ void dw_fill_kth_combination(cudatable_t* costs, cudagraph_t* g, cudatable_t* distances, cudaset_t* terminals, uint32_t k) {
 
-            num_blocks = (num_blocks + BLOCK_SIZE - 1) / BLOCK_SIZE; // No need to check furthure as we have reached the max size of uint32 with 2D grid.
+    uint64_t v = gridDim.x * blockIdx.x + threadIdx.x;
+    uint64_t w = gridDim.y * blockIdx.y + threadIdx.y;
+ 
+    if(v < g->vrt && w < g->vrt) {
+        
+        uint64_t mask = 0;
 
-            dim3 vblocks(MAX_BLOCKS, num_blocks, 1);
-            dw_combination_kernel<<<vblocks, BLOCK_SIZE>>>(costs, g, distances, terminals, mask);
+        while( gpu_next_combination(terminals->size, k, &mask) ) {
+
+            uint32_t exists = 0;
+            uint32_t position = 0;
+
+            for(uint32_t i=0; i<terminals->size; i++) {
+
+                if(w == terminals->vals[i] && ((mask >> (terminals->size - i - 1)) & 1) == 1 ) {
+
+                    exists = 1;
+                    position = i;
+
+                }
+
+            }
+
+            __syncthreads();
+
+
+            if(exists) {
+
+                uint64_t submask = 1ll << (terminals->size - position - 1);
+
+                uint32_t cost = distances->vals[v * distances->m + w] 
+                    +     costs->vals[w * costs->m + ((mask & ~submask) - 1)];
+
+                atomicMin(&costs->vals[v * costs->m + mask - 1], cost);
+
+            } else if(g->deg[w] >= 3) {
+
+                for(uint64_t submask = (mask - 1) & mask; submask != 0; submask = (submask - 1) & mask) { // iterate over submasks of the mask O(2^T)
+
+                    uint32_t cost = distances->vals[v * distances->m + w]
+                        +     costs->vals[w * costs->m + submask - 1]
+                        +     costs->vals[w * costs->m + (mask & ~submask) - 1];
+
+                    atomicMin(&costs->vals[v * costs->m + mask - 1], cost);
+
+                }
+
+            }
+
+            __syncthreads();
 
         }
 
@@ -181,58 +104,62 @@ __global__ void dw_kernel(cudatable_t* costs, cudagraph_t* g, cudatable_t* dista
 }
 
 /**
- * Only works on |T| < 58 (total number of threads than can be launched is 2^58: 65536^3  * 1024 = (2^16)^3 * 2^10 = 2^48 * 2^10 = 2^58)
+ * Works for any values of T and V satisfying the following equation 2^T * V < 2^26
+ * This could be improved to 2^T * V < 2^58
  */
-void fill_steiner_dp_table_gpu(cudatable_t* table, cudagraph_t* g, cudaset_t* t, uint32_t t_size, cudatable_t* distances) {
+void base_case(cudatable_t* table, cudagraph_t* g, uint64_t g_size, cudaset_t* t, uint64_t t_size, cudatable_t* distances) {
+
+    uint64_t num_thread = g_size * t_size;
+    uint64_t num_blocks = (num_thread + BLOCK_1D_SIZE - 1) / BLOCK_1D_SIZE;
+
+    dw_fill_base_cases<<<num_blocks, BLOCK_1D_SIZE>>>(table, g, distances, t);
+
+    cudaError_t err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Base case exit. (Error code: %d)\n", err);
+        exit(err);
+    }
+
+
+}
+
+/**
+ * Works only for values of V < 2^21
+ */
+void fill_kth_combination(cudatable_t* table, cudagraph_t* g, uint64_t g_size, cudaset_t* t, uint64_t t_size, cudatable_t* distances, uint32_t k) {
+
+
+    uint64_t num_thread_x = g_size;
+    uint64_t num_thread_y = g_size;
+
+    uint64_t num_blocks_x = (num_thread_x + BLOCK_2D_SIZE - 1) / BLOCK_2D_SIZE;
+    uint64_t num_blocks_y = (num_thread_y + BLOCK_2D_SIZE - 1) / BLOCK_2D_SIZE;
+
+    dim3 num_thread_per_block(BLOCK_2D_SIZE, BLOCK_2D_SIZE);
+    dim3 num_blocks(num_blocks_x, num_blocks_y);
+
+    dw_fill_kth_combination<<<num_blocks, num_thread_per_block>>>(table, g, distances, t, k);
+
+    cudaError_t err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not complete the steiner tree call with k: %d. (Error code: %d)\n", k, err);
+        exit(err);
+    }
+
+
+}
+
+void fill_steiner_dp_table_gpu_2(cudatable_t* table, cudagraph_t* g, uint64_t g_size, cudaset_t* t, uint64_t t_size, cudatable_t* distances) {
+
+    base_case(table, g, g_size, t, t_size, distances);
 
     // Fill table by multiple subsequent kernel calls
 
-    for(uint32_t k=1; k <= t_size; k++) {
+    for(uint32_t k=2; k <= t_size; k++) {
 
-        uint64_t num_threads = nCr(t_size, k);
-        uint64_t num_blocks =  (num_threads + BLOCK_SIZE - 1) / BLOCK_SIZE;
-
-        if(num_blocks <= MAX_BLOCKS) {
-
-            dim3 vblock(num_blocks, 1, 1);
-            dw_kernel<<<vblock, BLOCK_SIZE>>>(table, g, distances, t, k, num_threads);
-
-        } else {
-
-            num_blocks = (num_blocks + BLOCK_SIZE - 1) / BLOCK_SIZE;
-
-            if(num_blocks <= MAX_BLOCKS) {
-
-                dim3 vblock(MAX_BLOCKS, num_blocks, 1);
-                dw_kernel<<<vblock, BLOCK_SIZE>>>(table, g, distances, t, k, num_threads);
-
-            } else {
-
-                num_blocks = (num_blocks + BLOCK_SIZE - 1) / BLOCK_SIZE;
-
-                if(num_blocks <= MAX_BLOCKS) {
-
-                    dim3 vblock(MAX_BLOCKS, MAX_BLOCKS, num_blocks);
-                    dw_kernel<<<vblock, BLOCK_SIZE>>>(table, g, distances, t, k, num_threads);
-
-                } else {
-
-                    // TODO handle this case.
-
-                }
-
-            }
-
-        }
-
-        cudaError_t err = cudaDeviceSynchronize();
-
-        printf("\n");
-
-        if(err) {
-            printf("Could not complete the steiner tree call with k: %d. (Error code: %d)\n", k, err);
-            exit(err);
-        }
+        fill_kth_combination(table, g, g_size, t, t_size, distances, k);
 
     }
 

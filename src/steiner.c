@@ -7,8 +7,6 @@
 
 #include "steiner.h"
 #include "steiner.cuda.h"
-#include "steiner1.cuda.h"
-#include "steiner2.cuda.h"
 
 #include "shortestpath.h"
 #include "util.h"
