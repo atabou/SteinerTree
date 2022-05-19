@@ -3,10 +3,6 @@
 
     #define CUDASET_H
 
-//    extern "C" {
-//        #include "set.h"
-//    }
-
     #include "set.h"
 
     typedef set_t cudaset_t;

@@ -3,10 +3,6 @@
 
     #define CUDAGRAPH_H
 
-//    extern "C" {
-//        #include "graph.h"
-//    }
-
     #include "graph.h"
 
     typedef graph_t cudagraph_t;

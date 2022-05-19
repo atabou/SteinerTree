@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "pair.h"
 #include "graph.h"
 
 graph_t* make_graph() {

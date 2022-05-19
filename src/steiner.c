@@ -12,7 +12,6 @@
 
 #include "shortestpath.h"
 #include "util.h"
-#include "pair.h"
 
 void fill_steiner_dp_table_cpu(table_t* costs, graph_t* g, set_t* terminals, table_t* distances) {
 

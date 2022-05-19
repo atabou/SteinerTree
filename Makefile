@@ -15,7 +15,6 @@ COMPILE=steiner.o \
         graph.o \
         llist.o \
 	 	set.o \
-        pair.o \
         shortestpath.o \
 		util.o \
 		table.o \

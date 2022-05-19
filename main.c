@@ -7,7 +7,6 @@
 #include <string.h>
 
 #include "graph.h"
-#include "pair.h"
 #include "steiner.h"
 #include "set.h"
 
