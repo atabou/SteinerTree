@@ -14,8 +14,6 @@ NOCOLOR=\033[0m
 COMPILE=steiner.o \
         graph.o \
         llist.o \
-        heap.o \
-        fibheap.o \
 	 	set.o \
         pair.o \
         shortestpath.o \
