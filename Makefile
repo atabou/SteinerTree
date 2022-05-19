@@ -1,10 +1,10 @@
 
 CC=nvcc
-COMMON= -g -G --Werror all-warnings -rdc=true -lcudadevrt -O3
+COMMON= -g -G --Werror all-warnings -rdc=true -lcudadevrt -O3 -I./include -I${CONDA_PREFIX}/include
 SRC=./src
 INC=./include
 OBJ=./obj
-LNK=-lm
+LNK=-lm -Xlinker=-rpath=${CONDA_PREFIX}/lib -L${CONDA_PREFIX}/lib -lcugraph_c -lcugraph -lcugraph-ops++
 BIN=./bin
 RED=\033[0;31m
 GREEN=\033[0;32m
@@ -28,8 +28,7 @@ COMPILE=steiner.o \
 		table.cu.o \
 		steiner.cu.o \
 		steiner1.cu.o \
-		steiner2.cu.o \
-		
+		steiner2.cu.o	
 
 all: | pre-build ${BIN}/main
 	@echo "${GREEN}Compilation done.${NOCOLOR}"
@@ -39,14 +38,14 @@ pre-build:
 	@mkdir -p "${OBJ}" "${BIN}"
 
 ${BIN}/main: ./main.c $(patsubst %,${OBJ}/%,${COMPILE})
-	${CC} ./main.c ${COMMON} -I${INC} -o ${BIN}/main $(patsubst %,${OBJ}/%,${COMPILE}) ${LNK}
+	${CC} ./main.c ${COMMON} -I/opt/cuda/include -o ${BIN}/main $(patsubst %,${OBJ}/%,${COMPILE}) ${LNK}
 	@echo "${YELLOW}Ignore Warnings${NOCOLOR}"
 
 ${OBJ}/%.cu.o: ${SRC}/%.cu ${INC}/%.cuda.h
-	${CC} ${COMMON} -I${INC} -c $< -o $@
+	${CC} ${COMMON} -c $< -o $@
 
 ${OBJ}/%.o: ${SRC}/%.c ${INC}/%.h
-	${CC} ${COMMON} -I${INC} -c $< -o $@
+	${CC} ${COMMON} -c $< -o $@
 
 clean:
 	rm -rf ${OBJ} ${BIN}

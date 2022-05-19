@@ -2,15 +2,9 @@
 
     #define SHORTESTPATH_H
 
-    #include "pair.h"
     #include "graph.h"
+    #include "table.h"
 
-    /**
-     * @brief 
-     * 
-     * @param g 
-     * @return pair* 
-     */
-    pair_t* all_pairs_shortest_path(graph_t* g);
+    void apsp_gpu_graph(graph_t* graph, table_t* distances, table_t* predecessors);
 
 #endif

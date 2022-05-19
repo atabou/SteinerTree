@@ -1,78 +1,210 @@
-
 #include <stdlib.h>
-#include <limits.h>
+#include <stdio.h>
+#include <float.h>
+#include <unistd.h>
 
 #include "shortestpath.h"
-#include "heap.h"
-#include "table.h"
+#include "cugraph_c/graph.h"
+#include "cugraph_c/algorithms.h"
 
-void dijkstra(graph_t* g, uint32_t src, table_t* distances, table_t* parents, uint32_t start) {
+void toCOO(graph_t* graph, int32_t** src, int32_t** dst, float** wgt, int32_t* nedg) {
 
-    // Initialize Single Source Shortest Path
+    *nedg = 0;
 
-    for(uint32_t i=0; i<g->vrt; i++) {
-
-        distances->vals[i + start] = UINT32_MAX;
-        parents->vals[i + start] = UINT32_MAX;
-
+    for(int32_t i=0; i<graph->vrt; i++) {
+        *nedg += graph->deg[i];
     }
 
-    distances->vals[src + start] = 0;
+    *src = (int32_t*) malloc(sizeof(int32_t) * (*nedg));
+    *dst = (int32_t*) malloc(sizeof(int32_t) * (*nedg));
+    *wgt = (float*) malloc(sizeof(float) * (*nedg));
 
-    // Initialize minheap.
+    int32_t count = 0;
 
-    heap_t* pq = make_heap(FIBONACCI, g->vrt);
+    for(int32_t i=0; i<graph->vrt; i++) {
 
-    for(uint32_t i=0; i < g->vrt; i++) {
-        pq->insert(pq, i, distances->vals[i + start]);
-    }
+        llist_t* curr = graph->lst[i];
 
-    // Calculates shortest path
+        for(int32_t j=0; j<graph->deg[i]; j++) {
 
-    while( !pq->empty(pq) ) {
-
-        uint32_t u = pq->extract_min(pq);
-
-        llist_t* edges = g->lst[u];
-
-        while(edges != NULL) {
-
-            uint32_t v = edges->dest;
-            uint32_t w = edges->weight;
-           
-            if(distances->vals[v + start] > distances->vals[u + start] + w) {
-
-                distances->vals[v + start] = distances->vals[u + start] + w;
-                pq->decrease_key(pq, v, distances->vals[v + start]);
-                parents->vals[v + start] = u;
-
-            }
-
-            edges = edges->next;
-
+            (*src)[count] = i;
+            (*dst)[count] = curr->dest;
+            (*wgt)[count] = (float) curr->weight;
+ 
+            curr = curr->next;
+            count++;
+        
         }
 
     }
 
-    pq->destroy(pq); // O(1) because the priority q is empty at this point.
 
 }
 
-pair_t* all_pairs_shortest_path(graph_t* g) {
+void destroy_gpu_graph(cugraph_graph_t* graph) {
+    cugraph_sg_graph_free(graph);
+}
 
-    // Initialize tables
+cugraph_graph_t* create_gpu_graph(cugraph_resource_handle_t* handle, int32_t* hsrc, int32_t* hdst, float* hwgt, int32_t nedg) {
 
-    table_t* distances = make_table(g->vrt, g->vrt);
-    table_t* parents = make_table(g->vrt, g->vrt);
+    cugraph_error_t* error = NULL;
+    cugraph_error_code_t status = CUGRAPH_SUCCESS;
 
-    // Calculate shortest path from every source node.
+    // Initialize device arrays
 
-    for(uint32_t v=0; v<g->vrt; v++) {
+    cugraph_type_erased_device_array_t* src;
+    cugraph_type_erased_device_array_t* dst;
+    cugraph_type_erased_device_array_t* wgt;
 
-        dijkstra(g, v, distances, parents, v * g->vrt); // (E + V log (V))
+    status = cugraph_type_erased_device_array_create(handle, nedg, INT32, &src, &error);
+
+    if(status != CUGRAPH_SUCCESS) {
+        printf("%s\n", cugraph_error_message(error));
+        exit(status);
+    }
+
+    status = cugraph_type_erased_device_array_create(handle, nedg, INT32, &dst, &error);
+
+    if(status != CUGRAPH_SUCCESS) {
+        printf("%s\n", cugraph_error_message(error));
+        exit(status);
+    }
+
+    status = cugraph_type_erased_device_array_create(handle, nedg, FLOAT32, &wgt, &error);
+
+    if(status != CUGRAPH_SUCCESS) {
+        printf("%s\n", cugraph_error_message(error));
+        exit(status);
+    }
+
+    // Initialize array views
+
+    cugraph_type_erased_device_array_view_t* srcv; 
+    cugraph_type_erased_device_array_view_t* dstv;
+    cugraph_type_erased_device_array_view_t* wgtv;
+
+    srcv = cugraph_type_erased_device_array_view(src);
+    dstv = cugraph_type_erased_device_array_view(dst);
+    wgtv = cugraph_type_erased_device_array_view(wgt);
+
+    status = cugraph_type_erased_device_array_view_copy_from_host(handle, srcv, (byte_t*) hsrc, &error);
+
+    if(status != CUGRAPH_SUCCESS) {
+        printf("%s\n", cugraph_error_message(error));
+        printf("%d\n", status);
+        exit(status);
+    }
+
+    status = cugraph_type_erased_device_array_view_copy_from_host(handle, dstv, (byte_t*) hdst, &error);
+
+    if(status != CUGRAPH_SUCCESS) {
+        printf("%s\n", cugraph_error_message(error));
+        exit(status);
+    }
+
+   status = cugraph_type_erased_device_array_view_copy_from_host(handle, wgtv, (byte_t*) hwgt, &error);
+
+    if(status != CUGRAPH_SUCCESS) {
+        printf("%s\n", cugraph_error_message(error));
+        exit(status);
+    }
+
+    // Initialize graph
+
+    cugraph_graph_properties_t properties;
+
+    properties.is_symmetric  = FALSE;
+    properties.is_multigraph = FALSE;
+
+    cugraph_graph_t* graph;
+
+    status = cugraph_sg_graph_create(handle, &properties, srcv, dstv, wgtv, FALSE, FALSE, FALSE, &graph, &error);
+
+    if(status != CUGRAPH_SUCCESS) {
+        printf("%s\n", cugraph_error_message(error));
+        exit(status);
+    }
+
+    cugraph_type_erased_device_array_view_free(wgtv);
+    cugraph_type_erased_device_array_view_free(dstv);
+    cugraph_type_erased_device_array_view_free(srcv);
+    cugraph_type_erased_device_array_free(src);
+    cugraph_type_erased_device_array_free(dst);
+    cugraph_type_erased_device_array_free(wgt);
+
+
+    return graph;
+
+}
+
+void apsp_gpu_graph(graph_t* graph, table_t* distances, table_t* predecessors) {
+
+    cugraph_resource_handle_t* handle = cugraph_create_resource_handle(NULL);
+
+    int32_t  nedg = 0;
+
+    int32_t* src = NULL;
+    int32_t* dst = NULL;
+    float* wgt = NULL;
+
+    toCOO(graph, &src, &dst, &wgt, &nedg);
+
+    cugraph_graph_t* cugraph = create_gpu_graph(handle, src, dst, wgt, nedg);
+    cugraph_paths_result_t* result = NULL;
+    cugraph_error_t* error = NULL;
+    cugraph_error_code_t status = CUGRAPH_SUCCESS;
+
+    for(int32_t source=0; source < distances->n; source++) {
+ 
+
+        status = cugraph_sssp(handle, cugraph, source, FLT_MAX, TRUE, FALSE, &result, &error);
+        
+        if(status != CUGRAPH_SUCCESS) {
+            printf("%s\n", cugraph_error_message(error));
+            exit(status);
+        }
+
+        cugraph_type_erased_device_array_view_t* distv = cugraph_paths_result_get_distances(result);
+
+        float dresult[distances->m];
+   
+        status = cugraph_type_erased_device_array_view_copy_to_host(handle, (byte_t*) dresult, distv, &error);
+
+        if(status != CUGRAPH_SUCCESS) {
+            printf("%s\n", cugraph_error_message(error));
+            exit(status);
+        }
+
+        for(int i=0; i<distances->m; i++) {
+            distances->vals[source * distances->m + i] = (int32_t) dresult[i];
+        }
+        
+
+        cugraph_type_erased_device_array_view_free(distv);
+
+        cugraph_type_erased_device_array_view_t* predv = cugraph_paths_result_get_predecessors(result);
+
+        status = cugraph_type_erased_device_array_view_copy_to_host(handle, (byte_t*) &(predecessors->vals[source * distances->m]), predv, &error);
+
+        if(status != CUGRAPH_SUCCESS) {
+            printf("%s\n", cugraph_error_message(error));
+            exit(status);
+        }
+
+        cugraph_type_erased_device_array_view_free(predv);
+        
+        cugraph_paths_result_free(result);
+        result = NULL;
 
     }
 
-    return make_pair(parents, distances);
+    cugraph_free_resource_handle(handle);
+
+    destroy_gpu_graph(cugraph);
+    
+    free(src);
+    free(dst);
+    free(wgt);
 
 }
+

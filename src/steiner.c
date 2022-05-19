@@ -98,14 +98,12 @@ table_t* steiner_tree(graph_t* g, set_t* terminals) {
 
     // All pairs shortest path.
 
+    table_t* distances = make_table(g->vrt, g->vrt);
+    table_t* parents = make_table(g->vrt, g->vrt);
+
     c = clock();
-    pair_t* apsp = all_pairs_shortest_path(g);
+    apsp_gpu_graph(g, distances, parents);
     printf("\tAll Pairs Shortest Path: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
-
-    table_t* parents   = (table_t*) apsp->first;    
-    table_t* distances = (table_t*) apsp->second;
-
-    free(apsp);
 
     // Fill dp table
 
