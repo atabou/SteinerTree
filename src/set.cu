@@ -14,7 +14,7 @@ cudaset_t* copy_cudaset(set_t* set) {
    
     cudaError_t err;
 
-    err = cudaMalloc(&(tmp.vals), sizeof(uint32_t) * set->size);
+    err = cudaMalloc(&(tmp.vals), sizeof(int32_t) * set->size);
 
     if(err) {
         printf("Could not initialize cuda set element array. (Error code: %d)\n", err);
@@ -28,7 +28,7 @@ cudaset_t* copy_cudaset(set_t* set) {
         exit(err);
     }
 
-    cudaMemcpy(tmp.vals, set->vals, sizeof(uint32_t) * set->size, cudaMemcpyHostToDevice);
+    cudaMemcpy(tmp.vals, set->vals, sizeof(int32_t) * set->size, cudaMemcpyHostToDevice);
 
     err = cudaDeviceSynchronize();
 

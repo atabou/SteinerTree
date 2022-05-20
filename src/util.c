@@ -22,13 +22,13 @@ int next_combination(uint32_t n, uint32_t k, uint64_t* mask) {
 
 }
 
-void print_bits(uint64_t number, uint32_t size) {
+void print_bits(uint64_t bits, int32_t size) {
 
     uint64_t bit = 1ll << (size - 1);
 
     while(bit != 0) {
 
-        if(number & bit) {
+        if(bits & bit) {
             printf("1");
         } else{
             printf("0");

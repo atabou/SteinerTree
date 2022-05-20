@@ -18,7 +18,7 @@ __device__ void print_cuda_table(cudatable_t* t) {
 
     for(int v=0; v < t->n; v++) {
         for(int i=0; i<t->m; i++) {
-            printf("%d ", t->vals[v * t->m + i]);
+            printf("%f ", t->vals[v * t->m + i]);
         }
         printf("\n");
     }
@@ -34,20 +34,22 @@ __global__ void dw_fill_base_cases(cudatable_t* costs, cudagraph_t* g, cudatable
 
     if(thread_id < terminals->size * costs->n) {
 
-        uint64_t v = thread_id / terminals->size;
-        uint64_t mask = ith_combination(terminals->size, 1, thread_id % terminals->size);
+        int32_t v = thread_id / terminals->size;
 
-        uint32_t u = terminals->vals[terminals->size - __ffsll(mask)];
+        uint64_t mask = ith_combination(terminals->size, 1, thread_id % terminals->size);
+        
+        int32_t u = terminals->vals[terminals->size - __ffsll(mask)];
+        
         costs->vals[v * costs->m + (mask - 1)] = distances->vals[v * distances->m + u];
 
     }
 
 }
 
-__global__ void dw_fill_kth_combination(cudatable_t* costs, cudagraph_t* g, cudatable_t* distances, cudaset_t* terminals, uint32_t k) {
+__global__ void dw_fill_kth_combination(cudatable_t* costs, cudagraph_t* g, cudatable_t* distances, cudaset_t* terminals, int32_t k) {
 
-    uint64_t v = gridDim.x * blockIdx.x + threadIdx.x;
-    uint64_t w = gridDim.y * blockIdx.y + threadIdx.y;
+    int32_t v = gridDim.x * blockIdx.x + threadIdx.x;
+    int32_t w = gridDim.y * blockIdx.y + threadIdx.y;
  
     if(v < g->vrt && w < g->vrt) {
         
@@ -55,10 +57,10 @@ __global__ void dw_fill_kth_combination(cudatable_t* costs, cudagraph_t* g, cuda
 
         while( gpu_next_combination(terminals->size, k, &mask) ) {
 
-            uint32_t exists = 0;
-            uint32_t position = 0;
+            int32_t exists = 0;
+            int32_t position = 0;
 
-            for(uint32_t i=0; i<terminals->size; i++) {
+            for(int32_t i=0; i<terminals->size; i++) {
 
                 if(w == terminals->vals[i] && ((mask >> (terminals->size - i - 1)) & 1) == 1 ) {
 
@@ -76,8 +78,8 @@ __global__ void dw_fill_kth_combination(cudatable_t* costs, cudagraph_t* g, cuda
 
                 uint64_t submask = 1ll << (terminals->size - position - 1);
 
-                uint32_t cost = distances->vals[v * distances->m + w] 
-                    +     costs->vals[w * costs->m + ((mask & ~submask) - 1)];
+                float cost = distances->vals[v * distances->m + w] 
+                           + costs->vals[w * costs->m + ((mask & ~submask) - 1)];
 
                 atomicMin(&costs->vals[v * costs->m + mask - 1], cost);
 
@@ -85,9 +87,9 @@ __global__ void dw_fill_kth_combination(cudatable_t* costs, cudagraph_t* g, cuda
 
                 for(uint64_t submask = (mask - 1) & mask; submask != 0; submask = (submask - 1) & mask) { // iterate over submasks of the mask O(2^T)
 
-                    uint32_t cost = distances->vals[v * distances->m + w]
-                        +     costs->vals[w * costs->m + submask - 1]
-                        +     costs->vals[w * costs->m + (mask & ~submask) - 1];
+                    float cost = distances->vals[v * distances->m + w]
+                               + costs->vals[w * costs->m + submask - 1]
+                               + costs->vals[w * costs->m + (mask & ~submask) - 1];
 
                     atomicMin(&costs->vals[v * costs->m + mask - 1], cost);
 
@@ -107,7 +109,7 @@ __global__ void dw_fill_kth_combination(cudatable_t* costs, cudagraph_t* g, cuda
  * Works for any values of T and V satisfying the following equation 2^T * V < 2^26
  * This could be improved to 2^T * V < 2^58
  */
-void base_case(cudatable_t* table, cudagraph_t* g, uint64_t g_size, cudaset_t* t, uint64_t t_size, cudatable_t* distances) {
+void base_case(cudatable_t* table, cudagraph_t* g, int32_t g_size, cudaset_t* t, int32_t t_size, cudatable_t* distances) {
 
     uint64_t num_thread = g_size * t_size;
     uint64_t num_blocks = (num_thread + BLOCK_1D_SIZE - 1) / BLOCK_1D_SIZE;
@@ -127,14 +129,13 @@ void base_case(cudatable_t* table, cudagraph_t* g, uint64_t g_size, cudaset_t* t
 /**
  * Works only for values of V < 2^21
  */
-void fill_kth_combination(cudatable_t* table, cudagraph_t* g, uint64_t g_size, cudaset_t* t, uint64_t t_size, cudatable_t* distances, uint32_t k) {
+void fill_kth_combination(cudatable_t* table, cudagraph_t* g, int32_t g_size, cudaset_t* t, int32_t t_size, cudatable_t* distances, int32_t k) {
 
+    int32_t num_thread_x = g_size;
+    int32_t num_thread_y = g_size;
 
-    uint64_t num_thread_x = g_size;
-    uint64_t num_thread_y = g_size;
-
-    uint64_t num_blocks_x = (num_thread_x + BLOCK_2D_SIZE - 1) / BLOCK_2D_SIZE;
-    uint64_t num_blocks_y = (num_thread_y + BLOCK_2D_SIZE - 1) / BLOCK_2D_SIZE;
+    int32_t num_blocks_x = (num_thread_x + BLOCK_2D_SIZE - 1) / BLOCK_2D_SIZE;
+    int32_t num_blocks_y = (num_thread_y + BLOCK_2D_SIZE - 1) / BLOCK_2D_SIZE;
 
     dim3 num_thread_per_block(BLOCK_2D_SIZE, BLOCK_2D_SIZE);
     dim3 num_blocks(num_blocks_x, num_blocks_y);
@@ -151,13 +152,13 @@ void fill_kth_combination(cudatable_t* table, cudagraph_t* g, uint64_t g_size, c
 
 }
 
-void steiner_tree_gpu(cudatable_t* table, cudagraph_t* g, uint64_t g_size, cudaset_t* t, uint64_t t_size, cudatable_t* distances) {
+void steiner_tree_gpu(cudatable_t* table, cudagraph_t* g, int32_t g_size, cudaset_t* t, int32_t t_size, cudatable_t* distances) {
 
     base_case(table, g, g_size, t, t_size, distances);
 
     // Fill table by multiple subsequent kernel calls
 
-    for(uint32_t k=2; k <= t_size; k++) {
+    for(int32_t k=2; k <= t_size; k++) {
 
         fill_kth_combination(table, g, g_size, t, t_size, distances, k);
 

@@ -5,7 +5,7 @@ extern "C" {
     #include "llist.cuda.h"
 }
 
-cudallist_t* copy_cudallist(llist_t* lst, uint32_t size) {
+cudallist_t* copy_cudallist(llist_t* lst, int32_t size) {
 
     if(lst == NULL) {
 
@@ -15,7 +15,7 @@ cudallist_t* copy_cudallist(llist_t* lst, uint32_t size) {
         
         cudallist_t tmp[size];
 
-        uint32_t count = 0;
+        int32_t count = 0;
         llist_t* curr = lst;
 
         while(curr != NULL) {
@@ -31,7 +31,7 @@ cudallist_t* copy_cudallist(llist_t* lst, uint32_t size) {
         cudaError_t  err;
         cudallist_t* prev = NULL;
 
-        for(uint32_t i=size - 1; i < UINT32_MAX; i--) {
+        for(int32_t i=size - 1; i >= 0; i--) {
 
             tmp[i].next = prev;
 

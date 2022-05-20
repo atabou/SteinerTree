@@ -4,6 +4,7 @@
 
 #include "graph.h"
 
+
 graph_t* make_graph() {
 
     graph_t* g = (graph_t*) malloc(sizeof(graph_t));
@@ -20,25 +21,25 @@ graph_t* make_graph() {
 
 uint32_t insert_vertex(graph_t* g) {
 
-    if(g->vrt < UINT32_MAX) {
+    if(g->vrt < INT32_MAX) {
 
         if(g->max == 0) {
 
-            g->deg = (uint32_t*) malloc(sizeof(uint32_t));
+            g->deg = (int32_t*) malloc(sizeof(int32_t));
             g->lst = (llist_t**) malloc(sizeof(llist_t*));
 
             g->max = 1;
 
-        } else if(g->max * 2 < g->max) {
+        } else if(g->max * 2 < g->max) { // Executes if there is an overflow
 
-            g->deg = (uint32_t*) realloc(g->deg, sizeof(uint32_t) * UINT32_MAX);
-            g->lst = (llist_t**) realloc(g->lst, sizeof(llist_t*) * UINT32_MAX);
+            g->deg = (int32_t*) realloc(g->deg, sizeof(int32_t) * INT32_MAX);
+            g->lst = (llist_t**) realloc(g->lst, sizeof(llist_t*) * INT32_MAX);
 
-            g->max = UINT32_MAX;
+            g->max = INT32_MAX;
 
         } else if(g->vrt >= g->max) {
 
-            g->deg = (uint32_t*) realloc(g->deg, sizeof(uint32_t) * 2 * g->max);
+            g->deg = (int32_t*) realloc(g->deg, sizeof(int32_t) * 2 * g->max);
             g->lst = (llist_t**) realloc(g->lst, sizeof(llist_t*) * 2 * g->max);
 
             g->max = 2 * g->max;
@@ -56,7 +57,7 @@ uint32_t insert_vertex(graph_t* g) {
 
 }
 
-void insert_edge(graph_t* g, uint32_t src, uint32_t dest, uint32_t w) {
+void insert_edge(graph_t* g, int32_t src, int32_t dest, float w) {
 
     if(src < g->vrt && dest < g->vrt) {
 
@@ -76,7 +77,6 @@ void insert_edge(graph_t* g, uint32_t src, uint32_t dest, uint32_t w) {
         g->lst[src] = llist_add(g->lst[src], dest, w);
         g->deg[src]++;
         
-
     }
 
 }
@@ -92,7 +92,7 @@ void to_graphviz(graph_t* g, char* filename) {
 
     fprintf(fp, "digraph G {\n\n");
 
-    for(uint32_t i=0; i<g->vrt; i++) {
+    for(int32_t i=0; i<g->vrt; i++) {
 
         fprintf(fp, "\t%d [label=\"%d\"];\n", i, i);
 
@@ -100,16 +100,16 @@ void to_graphviz(graph_t* g, char* filename) {
 
     fprintf(fp, "\n");
 
-    for(uint32_t i=0; i<g->vrt; i++) {
+    for(int32_t i=0; i<g->vrt; i++) {
 
         llist_t* edge = g->lst[i];
 
         while(edge != NULL) {
 
-            uint32_t dest = edge->dest;
-            uint32_t w    = edge->weight;
+            int32_t dest = edge->dest;
+            float w    = edge->weight;
 
-            fprintf(fp, "\t%d -> %d [label=\"%d\"];\n", i, dest, w);  
+            fprintf(fp, "\t%d -> %d [label=\"%f\"];\n", i, dest, w);  
             edge = edge->next;
 
         }
@@ -129,7 +129,7 @@ void destroy_graph(graph_t* g) {
         return;
     }
 
-    for(uint32_t i=0; i<g->vrt; i++) {
+    for(int32_t i=0; i<g->vrt; i++) {
 
         destroy_llist(g->lst[i]);
         g->lst[i] = NULL;
@@ -148,62 +148,4 @@ void destroy_graph(graph_t* g) {
     free(g);
 
 }
-
-
-
-// O(max_id + V + E)
-// graph* graph_union(graph* g1, graph* g2) {
-
-//     graph* g = make_graph( max(g1->max_id, g2->max_id) );
-
-//     for(int i=0; i<g1->nVertices; i++) {
-//         insert_vertex(g, g1->hash[i]);
-//     }
-
-//     for(int i=0; i<g1->nVertices; i++) {
-
-//         llist* e = g1->lst[i];
-        
-//         while(e != NULL) {
-
-//             pair* p = (pair*) e->data;
-
-//             int dest = g1->hash[(int) p->first];
-//             int w    = (int) p->second;
-
-//             insert_edge(g, g1->hash[i], dest, w);
-//             e = e->next;
-
-//         }
-
-//     }
-
-//     for(int j=0; j<g2->nVertices; j++) {
-//         insert_vertex(g, g2->hash[j]);
-//     }
-
-//     for(int i=0; i<g2->nVertices; i++) {
-
-//         llist* e = g2->lst[i];
-        
-//         while(e != NULL) {
-
-//             pair* p = (pair*) e->data;
-
-//             int dest = g2->hash[(int) p->first];
-//             int w    = (int) p->second;
-
-//             insert_edge(g, g2->hash[i], dest, w);
-//             e = e->next;
-            
-//         }
-
-//     }
-
-//     return g;
-
-// }
-
-
-
 

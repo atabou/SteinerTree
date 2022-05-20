@@ -1,6 +1,8 @@
 
 #include <stdio.h>
 
+#include <float.h>
+
 extern "C" {
     #include "table.cuda.h"
 }
@@ -10,7 +12,7 @@ extern "C" {
 
 __global__ void set_table_values_kernel(cudatable_t* table, uint32_t val) {
 
-    uint64_t pos = blockIdx.z * gridDim.y * gridDim.x * blockDim.x // Number of threads inside the 3D part of the grid coming before the thread in question.
+    int32_t pos =  blockIdx.z * gridDim.y * gridDim.x * blockDim.x // Number of threads inside the 3D part of the grid coming before the thread in question.
 				 + blockIdx.y * gridDim.x * blockDim.x // Number of threads inside the 2D part of the grid coming before the thread in question.
 				 + blockIdx.x * blockDim.x  // Number of threads inside the 1D part of the grid coming before the thread in question.
 				 + threadIdx.x; // The position of the thread in the block
@@ -21,7 +23,7 @@ __global__ void set_table_values_kernel(cudatable_t* table, uint32_t val) {
 
 }
 
-void set_table_values(cudatable_t* table, uint64_t n, uint64_t m, uint32_t val) {
+void set_table_values(cudatable_t* table, int32_t n, int32_t m, float val) {
 
     uint64_t num_threads = n * m;
     uint64_t num_blocks =  (num_threads + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -70,7 +72,7 @@ void set_table_values(cudatable_t* table, uint64_t n, uint64_t m, uint32_t val) 
 
 }
 
-cudatable_t* make_cudatable(uint64_t n, uint64_t m) {
+cudatable_t* make_cudatable(int32_t n, int32_t m) {
 
     cudatable_t tmp;
 
@@ -79,7 +81,7 @@ cudatable_t* make_cudatable(uint64_t n, uint64_t m) {
 
     cudaError_t err;
 
-    err = cudaMalloc(&(tmp.vals), sizeof(uint32_t) * n * m);
+    err = cudaMalloc(&(tmp.vals), sizeof(float) * n * m);
 
     if(err) {
         printf("Could not allocat %llu x %llu cuda table. (Error code: %d)\n", (unsigned long long) n, (unsigned long long) m, err);
@@ -120,7 +122,7 @@ cudatable_t* make_cudatable(uint64_t n, uint64_t m) {
 
     // Set the initial memory locations of the table
 
-    set_table_values(cuda_table, n, m, UINT32_MAX);
+    set_table_values(cuda_table, n, m, FLT_MAX);
 
     return cuda_table;
 
@@ -135,10 +137,10 @@ cudatable_t* copy_cudatable(table_t* cpu_table) {
 
     cudaError_t err;
 
-    err = cudaMalloc(&(tmp.vals), sizeof(uint32_t) * tmp.n * tmp.m);
+    err = cudaMalloc(&(tmp.vals), sizeof(float) * tmp.n * tmp.m);
 
     if(err) {
-        printf("Could not allocat %llu x %llu cuda table. (Error code: %d)\n", (unsigned long long) tmp.n, (unsigned long long) tmp.m, err);
+        printf("Could not allocat %d x %d cuda table. (Error code: %d)\n", tmp.n, tmp.m, err);
     }
 
     err = cudaDeviceSynchronize();
@@ -148,7 +150,7 @@ cudatable_t* copy_cudatable(table_t* cpu_table) {
         exit(err);
     }
 
-    cudaMemcpy(tmp.vals, cpu_table->vals, sizeof(uint32_t) * tmp.n * tmp.m, cudaMemcpyHostToDevice);
+    cudaMemcpy(tmp.vals, cpu_table->vals, sizeof(float) * tmp.n * tmp.m, cudaMemcpyHostToDevice);
 
     err = cudaDeviceSynchronize();
 

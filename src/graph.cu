@@ -47,7 +47,7 @@ cudagraph_t* copy_cudagraph(graph_t* cpu_graph) {
 
     // Create and set cuda graph degree array
 
-    err = cudaMalloc(&(tmp.deg), sizeof(uint32_t) * cpu_graph->max);
+    err = cudaMalloc(&(tmp.deg), sizeof(int32_t) * cpu_graph->max);
     
     if(err) { 
         printf("Could not allocate memory for graph degree array. (Error code: %d)\n", err);
@@ -74,7 +74,7 @@ cudagraph_t* copy_cudagraph(graph_t* cpu_graph) {
 
     // Copy degrees into degree array
 
-    cudaMemcpy(tmp.deg, cpu_graph->deg, sizeof(uint32_t) * cpu_graph->vrt, cudaMemcpyHostToDevice);
+    cudaMemcpy(tmp.deg, cpu_graph->deg, sizeof(int32_t) * cpu_graph->vrt, cudaMemcpyHostToDevice);
 
     err = cudaDeviceSynchronize();
 
@@ -87,7 +87,7 @@ cudagraph_t* copy_cudagraph(graph_t* cpu_graph) {
 
     cudallist_t* edges[cpu_graph->vrt];
 
-    for(uint32_t i=0; i<cpu_graph->vrt; i++) {
+    for(int32_t i=0; i<cpu_graph->vrt; i++) {
 
         edges[i] = copy_cudallist(cpu_graph->lst[i], cpu_graph->deg[i]);
 
@@ -179,10 +179,9 @@ void free_cudagraph(cudagraph_t* g) {
         exit(err);
     }
  
-    for(uint32_t i=0; i<tmp.vrt; i++) {
+    for(int32_t i=0; i<tmp.vrt; i++) {
         free_cudallist(del[i]);
     }
     
 }
-
 

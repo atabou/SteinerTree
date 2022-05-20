@@ -11,7 +11,7 @@
      * @param mask the mask to print.
      * @param size the size of the mask.
      */
-    __device__ __host__ void print_mask(uint64_t mask, uint32_t size);
+    __device__ __host__ void print_mask(uint64_t mask, int32_t size);
 
     /**
      * @brief Returns the number of possible combination of size r from n.

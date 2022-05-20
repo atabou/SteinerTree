@@ -9,8 +9,8 @@
 
     struct set_t {
 
-        uint32_t* vals;
-        uint32_t  size;
+        int32_t* vals;
+        int32_t  size;
 
     };
 
@@ -33,7 +33,7 @@
      * @param set the set to insert in.
      * @param x 
      */
-    void set_insert(set_t* set, uint32_t x);
+    void set_insert(set_t* set, int32_t x);
 
     /**
      * @brief Checks wether the specified element exists in the set.
@@ -45,9 +45,9 @@
      * @param mask the mask to search in.
      * @return int 
      */
-    int element_exists(uint32_t element, set_t* set, uint64_t mask);
+    int element_exists(int32_t element, set_t* set, uint64_t mask);
 
-    uint32_t find_position(set_t* set, uint32_t element);
+    int32_t find_position(set_t* set, int32_t element);
     
     /**
      * @brief prints the set in a formatted way.

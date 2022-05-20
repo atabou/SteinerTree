@@ -166,19 +166,12 @@ void apsp_gpu_graph(graph_t* graph, table_t* distances, table_t* predecessors) {
 
         cugraph_type_erased_device_array_view_t* distv = cugraph_paths_result_get_distances(result);
 
-        float dresult[distances->m];
-   
-        status = cugraph_type_erased_device_array_view_copy_to_host(handle, (byte_t*) dresult, distv, &error);
+        status = cugraph_type_erased_device_array_view_copy_to_host(handle, (byte_t*) &(distances->vals[source * distances->m]), distv, &error);
 
         if(status != CUGRAPH_SUCCESS) {
             printf("%s\n", cugraph_error_message(error));
             exit(status);
         }
-
-        for(int i=0; i<distances->m; i++) {
-            distances->vals[source * distances->m + i] = (int32_t) dresult[i];
-        }
-        
 
         cugraph_type_erased_device_array_view_free(distv);
 

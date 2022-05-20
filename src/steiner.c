@@ -13,31 +13,31 @@
 
 void fill_steiner_dp_table_cpu(table_t* costs, graph_t* g, set_t* terminals, table_t* distances) {
 
-    for(uint32_t k=1; k <= terminals->size; k++) {
+    for(int32_t k=1; k <= terminals->size; k++) {
 
         uint64_t mask = 0;
 
         while( next_combination(terminals->size, k, &mask) ) { // while loop runs T choose k times (nCr).
 
-            for(int v=0; v < costs->n; v++) {
+            for(int32_t v=0; v < costs->n; v++) {
 
                 if(k == 1) {
 
-                    uint32_t u = terminals->vals[terminals->size - __builtin_ffsll(mask)];
+                    int32_t u = terminals->vals[terminals->size - __builtin_ffsll(mask)];
                     costs->vals[v * costs->m + (mask - 1)] = distances->vals[v * distances->m + u];
                     
                 } else {
                     
-                    uint32_t min = UINT32_MAX;
+                    uint32_t min = INT32_MAX;
                     
-                    for(int w=0; w < costs->n; w++) { // O(T * 2^T * (V+E))
+                    for(int32_t w=0; w < costs->n; w++) { // O(T * 2^T * (V+E))
 
                         if( element_exists(w, terminals, mask) ) { // O(V + E)
 
                             uint64_t submask = 1ll << (terminals->size - find_position(terminals, w) - 1);
 
-                            int cost = distances->vals[v * distances->m + w] 
-                                     + costs->vals[w * costs->m + ((mask & ~submask) - 1)];
+                            float cost = distances->vals[v * distances->m + w] 
+                                       + costs->vals[w * costs->m + ((mask & ~submask) - 1)];
 
                             if(cost < min) {
 
@@ -49,13 +49,9 @@ void fill_steiner_dp_table_cpu(table_t* costs, graph_t* g, set_t* terminals, tab
 
                             for(uint64_t submask = (mask - 1) & mask; submask != 0; submask = (submask - 1) & mask) { // iterate over submasks of the mask O(2^T)
 
-//								print_bits(mask, terminals->size); printf(" - ");
-//								print_bits(submask, terminals->size); printf(" - ");
-//								print_bits(mask & ~submask, terminals->size); printf("\n");
-
-                                uint32_t cost = distances->vals[v * distances->m + w] 
-                                              + costs->vals[w * costs->m + submask - 1] 
-                                              + costs->vals[w * costs->m + (mask & ~submask) - 1];
+                                float cost = distances->vals[v * distances->m + w] 
+                                           + costs->vals[w * costs->m + submask - 1] 
+                                           + costs->vals[w * costs->m + (mask & ~submask) - 1];
 
                                 if(cost < min) {
 
@@ -64,8 +60,6 @@ void fill_steiner_dp_table_cpu(table_t* costs, graph_t* g, set_t* terminals, tab
                                 }
 
                             }
-
-//							printf("\n");
 
                         }
 
@@ -90,7 +84,7 @@ table_t* steiner_tree(graph_t* g, set_t* terminals) {
     // Initialize DP table.
 
     clock_t c = clock();
-    table_t* costs = make_table(g->vrt, (uint64_t) pow(2, terminals->size) - 1);
+    table_t* costs = make_table(g->vrt, (int32_t) pow(2, terminals->size) - 1);
     printf("\tInitialize DP table: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
 
     // All pairs shortest path.
@@ -113,7 +107,7 @@ table_t* steiner_tree(graph_t* g, set_t* terminals) {
     // GPU
 
     c = clock();
-    cudatable_t* c_d = make_cudatable(g->vrt, (uint64_t) pow(2, terminals->size) - 1);  
+    cudatable_t* c_d = make_cudatable(g->vrt, (int32_t) pow(2, terminals->size) - 1);  
     printf("\tGPU Table create: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
 
     c = clock();
@@ -127,14 +121,6 @@ table_t* steiner_tree(graph_t* g, set_t* terminals) {
     c = clock();
     cudaset_t* t_d = copy_cudaset(terminals);
     printf("\tGPU set copy: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC); 
-
-    // c = clock();
-    // fill_steiner_dp_table_gpu(c_d, g_d, t_d, terminals->size, d_d);
-    // printf("\tGPU table fill: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
-  
-    // c = clock();
-    // fill_steiner_dp_table_gpu_1(c_d, g_d, t_d, g->vrt, terminals->size, d_d);
-    // printf("\tGPU table fill 1: %f\n", (double) (clock() - c) / CLOCKS_PER_SEC);
 
     c = clock();
     steiner_tree_gpu(c_d, g_d, g->vrt, t_d, terminals->size, d_d);

@@ -3,7 +3,7 @@
 
 #include "llist.h"
 
-llist_t* llist_add(llist_t* lst, uint32_t dest, uint32_t weight) {
+llist_t* llist_add(llist_t* lst, int32_t dest, float weight) {
 
     llist_t* l = (llist_t*) malloc(sizeof(llist_t));
 

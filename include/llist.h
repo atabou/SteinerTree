@@ -9,8 +9,8 @@
 
     struct llist_t {
 
-        uint32_t dest;
-        uint32_t weight;
+        int32_t dest;
+        float weight;
         llist_t*  next;
 
     };
@@ -23,7 +23,7 @@
      * @param w the weight of this node.
      * @return llist_t* a pointer to the new beginning of the list
      */
-    llist_t* llist_add(llist_t* lst, uint32_t dest, uint32_t weight);
+    llist_t* llist_add(llist_t* lst, int32_t dest, float weight);
 
     /**
      * @brief Destroy and frees the linked list

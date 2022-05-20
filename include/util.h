@@ -25,7 +25,7 @@
      * @param bitmask The bitmask to print.
      * @param num_bits the number of elements from the bitmask to print.
      */
-    void print_bits(uint64_t number, uint32_t size);
+    void print_bits(uint64_t number, int32_t size);
 
 
 #endif

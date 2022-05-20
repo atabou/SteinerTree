@@ -7,7 +7,7 @@
     #include "graph.cuda.h"
     #include "table.cuda.h"
 
-    void steiner_tree_gpu(cudatable_t* table, cudagraph_t* g, uint64_t g_size, cudaset_t* t, uint64_t t_size, cudatable_t* distances);
+    void steiner_tree_gpu(cudatable_t* table, cudagraph_t* g, int32_t g_size, cudaset_t* t, int32_t t_size, cudatable_t* distances);
 
 
 #endif

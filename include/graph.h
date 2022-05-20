@@ -4,17 +4,17 @@
     #define GRAPH_H
 
     #include <stdint.h>
-    
+
     #include "llist.h"
 
     typedef struct graph_t graph_t;
 
     struct graph_t {
-
-        uint32_t  max; // Current capacity of the graph.
-        uint32_t  vrt; // Number of vertices in the graph.
-        uint32_t* deg; // Represents the degree of the node. If the degree of the node is -1 then the node does not exits.
-        llist_t** lst; // The adjacency list of the graph_t.
+ 
+        int32_t  max; /** Current capacity of the graph. */
+        int32_t  vrt; /** Number of vertices in the graph. */
+        int32_t* deg; /** Represents the degree of the node. If the degree of the node is -1 then the node does not exist. */
+        llist_t** lst; /** The adjacency list of the graph_t. */
 
     };
 
@@ -51,7 +51,7 @@
      * @param id2 id of the destination node of the edge to insert.
      * @param w weight of the edge to insert. 
      */
-    void insert_edge(graph_t* g, uint32_t id1, uint32_t id2, uint32_t w);
+    void insert_edge(graph_t* g, int32_t id1, int32_t id2, float w);
 
     void to_graphviz(graph_t* g, char* filename);
 

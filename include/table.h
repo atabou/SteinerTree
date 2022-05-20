@@ -9,14 +9,14 @@
 
     struct table_t {
 
-        uint32_t* vals;
+        float* vals;
 
-        uint64_t  n;
-        uint64_t  m;
+        int32_t  n;
+        int32_t  m;
 
     };
 
-    table_t* make_table(uint64_t n, uint64_t m);
+    table_t* make_table(int32_t n, int32_t m);
     void print_table(table_t* table);
     void free_table(table_t* t);
 

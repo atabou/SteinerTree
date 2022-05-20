@@ -16,17 +16,17 @@ set_t* make_set() {
 
 }
 
-void set_insert(set_t* set, uint32_t x) {
+void set_insert(set_t* set, int32_t x) {
 
     if(set->size == 0) {
 
-        set->vals = (uint32_t*) malloc( sizeof(uint32_t) );
+        set->vals = (int32_t*) malloc( sizeof(int32_t) );
         set->vals[0] = x;
         set->size++;
         
     } else {
 
-        for(uint32_t i=0; i<set->size; i++) {
+        for(int32_t i=0; i<set->size; i++) {
 
             if(set->vals[i] == x) {
                 return;
@@ -34,7 +34,7 @@ void set_insert(set_t* set, uint32_t x) {
 
         }
 
-        set->vals = (uint32_t*) realloc(set->vals, sizeof(uint32_t) * set->size + 1);
+        set->vals = (int32_t*) realloc(set->vals, sizeof(int32_t) * set->size + 1);
         set->vals[set->size] = x;
         set->size++;
 
@@ -42,9 +42,9 @@ void set_insert(set_t* set, uint32_t x) {
 
 }
 
-uint32_t find_position(set_t* X, uint32_t element) {
+int32_t find_position(set_t* X, int32_t element) {
 
-    for(uint32_t i=0; i < X->size; i++) {
+    for(int32_t i=0; i < X->size; i++) {
         
         if (X->vals[i] == element) {
             return i;
@@ -56,9 +56,9 @@ uint32_t find_position(set_t* X, uint32_t element) {
 
 }
 
-int element_exists(uint32_t element, set_t* set, uint64_t mask) {
+int element_exists(int32_t element, set_t* set, uint64_t mask) {
 
-    for(uint32_t i=0; i<set->size; i++) {
+    for(int32_t i=0; i<set->size; i++) {
 
         if(element == set->vals[i] && ((mask >> (set->size - i - 1)) & 1) == 1) {
             return 1;
@@ -75,7 +75,7 @@ void print_set(set_t* X) {
 
     printf("{");
 
-    for(uint32_t i=0; i<X->size; i++) {
+    for(int32_t i=0; i<X->size; i++) {
 
         printf("%d", X->vals[i]);
 
