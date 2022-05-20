@@ -12,20 +12,20 @@
      * Complexity: O(1)
      * Complexity from a mask of 0 to the last combination: O(n choose k) 
      * 
-     * @param n The number of possible elements to choose from in the combination.
-     * @param k The number of elements to choose.
-     * @param mask A pointer to the current bitmask to update.
-     * @return int 
+     * @param [in] n The number of possible elements to choose from in the combination.
+     * @param [in] k The number of elements to choose.
+     * @param [in] [out] mask A pointer to the current bitmask to update.
+     * @return 0 if no next combination of size exists, 1 otherwise.
      */
     int next_combination(uint32_t n, uint32_t k, uint64_t* mask);
 
     /**
      * @brief Prints the bits in the bitmask in a formatted way.
      * 
-     * @param bitmask The bitmask to print.
-     * @param num_bits the number of elements from the bitmask to print.
+     * @param mask The bitmask to print.
+     * @param size The number of elements from the bitmask to print.
      */
-    void print_bits(uint64_t number, int32_t size);
+    void print_bits(uint64_t mask, int32_t size);
 
 
 #endif
