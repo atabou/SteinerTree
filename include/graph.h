@@ -7,24 +7,21 @@
 
     #include "llist.h"
 
-    typedef struct graph_t graph_t;
+    //typedef struct graph_t graph_t;
 
-    struct graph_t {
+    typedef struct graph_t {
  
         int32_t  max; /** Current capacity of the graph. */
         int32_t  vrt; /** Number of vertices in the graph. */
         int32_t* deg; /** Represents the degree of the node. If the degree of the node is -1 then the node does not exist. */
         llist_t** lst; /** The adjacency list of the graph_t. */
 
-    };
+    } graph_t;
 
     /**
-     * @brief Creates an empty graph_t with a maximum id of max_id.
-     * 
-     * Complexity: O(max_id)
-     * 
-     * @param max_id the biggest possible id that will be entered in the graph_t.  
-     * @return graph_t* an empty graph_t.
+     * @brief Creates an empty graph_t.
+     *  
+     * @return graph_t* a pointer to an empty graph_t.
      */
     graph_t* make_graph();
 
@@ -35,8 +32,8 @@
      * Worst-Case: O(V)
      * Ammortized: O(1)
      * 
-     * @param g the graph_t to insert a vertex in.
-     * @return uint32* the id of the vertex that was inserted.
+     * @param [in] g a pointer to the graph to insert a vertex in.
+     * @return The id of the vertex that was inserted.
      */
     uint32_t insert_vertex(graph_t* g);
 
@@ -46,10 +43,10 @@
      * 
      * Complexity: O( deg(V) )
      * 
-     * @param g the graph_t to insert the edge in.
-     * @param id1 id of the source node of the edge to insert.
-     * @param id2 id of the destination node of the edge to insert.
-     * @param w weight of the edge to insert. 
+     * @param [in] g A pointer to the graph_t to insert the edge in.
+     * @param [in] id1 The id of the source node of the edge to insert.
+     * @param [in] id2 The id of the destination node of the edge to insert.
+     * @param [in] w weight of the edge to insert. 
      */
     void insert_edge(graph_t* g, int32_t id1, int32_t id2, float w);
 
@@ -58,7 +55,7 @@
     /**
      * @brief Destroys and frees the graph_t.
      * 
-     * @param g the graph_t to free.
+     * @param [in] g a pointer to the graph_t to destroy.
      */
     void destroy_graph(graph_t* g);
 
