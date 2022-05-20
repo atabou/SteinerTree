@@ -7,13 +7,11 @@
 
     #include "llist.h"
 
-    //typedef struct graph_t graph_t;
-
     typedef struct graph_t {
  
-        int32_t  max; /** Current capacity of the graph. */
-        int32_t  vrt; /** Number of vertices in the graph. */
-        int32_t* deg; /** Represents the degree of the node. If the degree of the node is -1 then the node does not exist. */
+        int32_t   max; /** Current capacity of the graph. */
+        int32_t   vrt; /** Number of vertices in the graph. */
+        int32_t*  deg; /** Represents the degree of the node. If the degree of the node is -1 then the node does not exist. */
         llist_t** lst; /** The adjacency list of the graph_t. */
 
     } graph_t;
@@ -21,7 +19,7 @@
     /**
      * @brief Creates an empty graph_t.
      *  
-     * @return graph_t* a pointer to an empty graph_t.
+     * @return A pointer to an empty graph_t.
      */
     graph_t* make_graph();
 

@@ -24,42 +24,46 @@
     set_t* make_set();
 
     /**
-     * @brief Inserts a new integer in the set.
-     * 
-     * If the element already exists nothing is done.
+     * @brief Inserts a new integer in the set. If the element already exists nothing is done.
      * 
      * Complexity: O(n)
      * 
-     * @param set the set to insert in.
-     * @param x 
+     * @param [in] set A pointer to the set to insert in.
+     * @param [in] x The element to insert in the set.
      */
     void set_insert(set_t* set, int32_t x);
 
     /**
-     * @brief Checks wether the specified element exists in the set.
+     * @brief Checks wether the specified element exists in the set and inside the specified mask.
      * 
      * Complexity: O(n)
      * 
-     * @param element the element to check for.
-     * @param set the set
-     * @param mask the mask to search in.
+     * @param [in] element The element to search for.
+     * @param [in] set A pointer to the set_t to search in.
+     * @param [in] mask A mask over which the search is considered.
      * @return int 
      */
     int element_exists(int32_t element, set_t* set, uint64_t mask);
 
+    /**
+     * @brief Returns the position of the specified element in the set. If the element does not exist -1 is returned.
+     *
+     * @param [in] set A pointer to a set_t to search in.
+     * @param [in] element The element to search for.
+     */
     int32_t find_position(set_t* set, int32_t element);
     
     /**
-     * @brief prints the set in a formatted way.
+     * @brief Prints the set in a formatted way.
      * 
-     * @param X the set to print.
+     * @param [in] X A pointer to a set_t.
      */
     void print_set(set_t* X);
 
     /**
      * @brief Destroys and frees the set.
      * 
-     * @param set the set to destroy.
+     * @param [in] set A pointer to a set_t.
      */
     void destroy_set(set_t* set);
 

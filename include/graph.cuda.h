@@ -13,16 +13,16 @@
     /**
      * @brief Copies the given graph on the GPU.
      *
-     * @param [in] graph_t a pointer to a non-empty graph_t.
+     * @param [in] graph A pointer to a graph_t on the CPU.
      */
-    cudagraph_t* copy_cudagraph(graph_t* cpu_graph);
+    cudagraph_t* copy_cudagraph(graph_t* graph);
     
     /**
      * @brief Frees the given cudagraph_t from the gpu.
      *
-     * @param [in] cudagraph_t A pointer to a cudagraph_t on the GPU.
+     * @param [in] graph A pointer to a cudagraph_t on the GPU.
      */
-    void free_cudagraph(cudagraph_t* g);
+    void free_cudagraph(cudagraph_t* graph);
 
 
 #endif

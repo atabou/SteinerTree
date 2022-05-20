@@ -9,27 +9,27 @@
 
     struct llist_t {
 
-        int32_t dest;
-        float weight;
-        llist_t*  next;
+        int32_t dest; /** The destination vertex. */
+        float weight; /** The weight of the edge. */
+        llist_t*  next; /** The next edge in the linked list of edges. */
 
     };
 
     /**
-     * @brief Adds a new node to the beginning of the linked list.
+     * @brief Adds a new node to the beginning of the linked list of edges.
      * 
-     * @param lst the list to add to.
-     * @param v the data of this node.
+     * @param lst The linked list of edges to add to.
+     * @param v The destination of this node.
      * @param w the weight of this node.
-     * @return llist_t* a pointer to the new beginning of the list
+     * @return A pointer to the new beginning of the linked list of edges.
      */
     llist_t* llist_add(llist_t* lst, int32_t dest, float weight);
 
     /**
-     * @brief Destroy and frees the linked list
+     * @brief Destroy and frees the linked list.
      * 
-     * @param lst the linked list to destroy.
-     * @param free_data a function that allows freeing the individual elements in the linked list.
+     * @param lst A pointer to the head of the linked list of edges.
+     * @param A function that the given llist_t.
      */
     void destroy_llist(llist_t* lst);
 

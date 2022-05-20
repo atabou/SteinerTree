@@ -9,7 +9,7 @@
      * @brief Prints the specified mask in binary form.
      * 
      * @param [in] mask the mask to print.
-     * @param [in] the size of the mask.
+     * @param [in] size the size of the mask.
      */
     __device__ __host__ void print_mask(uint64_t mask, int32_t size);
 
@@ -44,9 +44,9 @@
     /**
      * @brief Returns the next combination of size k given the previous combination.
      *
-     * @param [in] The number of elements to choose from.
-     * @param [in] The number of elements to choose.
-     * @param [in] The previous combination.
+     * @param [in] n The number of elements to choose from.
+     * @param [in] k The number of elements to choose.
+     * @param [in] mask The previous combination.
      * @return The next combination in the lexicographic order.
      */
     __device__ int gpu_next_combination(uint32_t n, uint32_t k, uint64_t* mask);
