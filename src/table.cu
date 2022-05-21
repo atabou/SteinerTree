@@ -10,7 +10,7 @@ extern "C" {
 #define BLOCK_SIZE 1024
 #define MAX_BLOCKS 65536
 
-__global__ void set_table_values_kernel(cudatable_t* table, uint32_t val) {
+__global__ void set_table_values_kernel(cudatable_t* table, float val) {
 
     int32_t pos =  blockIdx.z * gridDim.y * gridDim.x * blockDim.x // Number of threads inside the 3D part of the grid coming before the thread in question.
 				 + blockIdx.y * gridDim.x * blockDim.x // Number of threads inside the 2D part of the grid coming before the thread in question.
