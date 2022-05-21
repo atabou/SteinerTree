@@ -1,3 +1,6 @@
+/** 
+ * \addtogroup CUDACombination 
+ * @{ */
 
 #ifndef COMBINATION_CUDA_H
 
@@ -52,4 +55,4 @@
     __device__ int gpu_next_combination(uint32_t n, uint32_t k, uint64_t* mask);
 
 #endif
-
+/**@}*/

@@ -1,3 +1,6 @@
+/** 
+ * \addtogroup TableCUDA
+ * @{ */
 
 #ifndef CUDATABLE_H
 
@@ -37,3 +40,4 @@
 
 
 #endif
+/**@}*/

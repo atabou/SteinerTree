@@ -1,3 +1,6 @@
+/** 
+ * \addtogroup LinkedList
+ * @{ */
 
 #ifndef LLIST_H
 
@@ -18,9 +21,9 @@
     /**
      * @brief Adds a new node to the beginning of the linked list of edges.
      * 
-     * @param lst The linked list of edges to add to.
-     * @param v The destination of this node.
-     * @param w the weight of this node.
+     * @param [in] lst The linked list of edges to add to.
+     * @param [in] v The destination of this node.
+     * @param [in] w the weight of this node.
      * @return A pointer to the new beginning of the linked list of edges.
      */
     llist_t* llist_add(llist_t* lst, int32_t dest, float weight);
@@ -28,9 +31,9 @@
     /**
      * @brief Destroy and frees the linked list.
      * 
-     * @param lst A pointer to the head of the linked list of edges.
-     * @param A function that the given llist_t.
+     * @param [in] lst A pointer to the head of the linked list of edges.
      */
     void destroy_llist(llist_t* lst);
 
 #endif
+/**@}*/

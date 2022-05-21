@@ -1,3 +1,6 @@
+/** 
+ * \addtogroup LinkedListCUDA
+ * @{ */
 
 #ifndef CUDALLIST_H
 
@@ -27,3 +30,4 @@
     void free_cudallist(cudallist_t* lst);
 
 #endif
+/**@}*/

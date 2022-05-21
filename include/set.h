@@ -1,3 +1,6 @@
+/** 
+ * \addtogroup Set
+ * @{ */
 
 #ifndef SET_H
 
@@ -68,3 +71,4 @@
     void destroy_set(set_t* set);
 
 #endif
+/**@}*/

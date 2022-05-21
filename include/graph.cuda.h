@@ -1,3 +1,6 @@
+/** 
+ * \addtogroup GraphCUDA
+ * @{ */
 
 #ifndef CUDAGRAPH_H
 
@@ -26,3 +29,4 @@
 
 
 #endif
+/**@}*/

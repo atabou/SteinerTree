@@ -1,3 +1,7 @@
+/** 
+ * \addtogroup SetCUDA
+ * @{ */
+
 
 #ifndef CUDASET_H
 
@@ -26,3 +30,4 @@
     void free_cudaset(cudaset_t* set);
 
 #endif
+/**@}*/

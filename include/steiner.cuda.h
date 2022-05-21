@@ -1,3 +1,6 @@
+/** 
+ * \addtogroup SteinerGPU
+ * @{ */
 
 #ifndef STEINER2_CUDA_H
 
@@ -21,3 +24,4 @@
 
 
 #endif
+/**@}*/

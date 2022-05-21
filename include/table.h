@@ -1,3 +1,7 @@
+/** 
+ * \addtogroup Table
+ * @{ */
+
 
 #ifndef TABLE_H
 
@@ -38,3 +42,4 @@
     void free_table(table_t* t);
 
 #endif
+/**@}*/

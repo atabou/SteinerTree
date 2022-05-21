@@ -1,3 +1,6 @@
+/** 
+ * \addtogroup Util
+ * @{ */
 
 #ifndef UTIL_H
 
@@ -29,3 +32,4 @@
 
 
 #endif
+/**@}*/
