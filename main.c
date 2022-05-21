@@ -6,9 +6,19 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "util.h"
+clock_t CLOCKMACRO;
+
 #include "graph.h"
+#include "shortestpath.h"
 #include "steiner.h"
 #include "set.h"
+#include "table.h"
+
+#include "graph.cuda.h"
+#include "set.cuda.h"
+#include "table.cuda.h"
+#include "steiner.cuda.h"
 
 void load_gr_file(char* filename, graph_t** g, set_t** t, uint32_t** h, uint32_t* hsize) {
 
@@ -115,6 +125,7 @@ void load_gr_file(char* filename, graph_t** g, set_t** t, uint32_t** h, uint32_t
 
 }
 
+
 graph_t* test_graph1() {
 
     graph_t* g = make_graph();
@@ -159,7 +170,6 @@ graph_t* test_graph1() {
     insert_edge(g, 9, 3, 1);
     insert_edge(g, 6, 4, 1);
     insert_edge(g, 9, 4, 1);
-
     return g;
 
 }
@@ -249,34 +259,26 @@ graph_t* make_randomly_connected_graph(uint32_t v) {
 
 }
 
-void test() {
+void test(graph_t** g, cudaset_t** t) {
     
-    graph_t* g = test_graph1();
+    *g = test_graph1();
 
-    to_graphviz(g, "test.dot");
+    to_graphviz(*g, "test.dot");
     
-    set_t* t = make_set();
+    *t = make_set();
 
     // set_insert(t, 3);
     // set_insert(t, 5);
 
-    set_insert(t, 0);
-    set_insert(t, 5);
-    set_insert(t, 6);
-    set_insert(t, 7);
-    set_insert(t, 8);
-    set_insert(t, 9);
+    set_insert(*t, 0);
+    set_insert(*t, 5);
+    set_insert(*t, 6);
+    set_insert(*t, 7);
+    set_insert(*t, 8);
+    set_insert(*t, 9);
     
-    table_t* steiner = steiner_tree(g, t);
-    
-    print_table(steiner);
-
-    destroy_graph(g);
-    destroy_set(t);
-    free_table(steiner);
-
 }
-
+/*
 void specify_args(int argc, char** argv) {
 
     uint32_t V = atoi(argv[1]);
@@ -299,7 +301,7 @@ void specify_args(int argc, char** argv) {
     free_table(steiner);
 
 }
-
+/*
 void perf_test() {
 
     // clock_t c = clock();
@@ -365,15 +367,77 @@ void gr_file_test() {
 	}
 	
 }
+*/
+void run(graph_t* graph, set_t* terminals, table_t** distances, table_t** parents) {
+ 
+    printf("|V|= %u, |T|= %u:\n", graph->vrt, terminals->size);
+
+    if(*distances == NULL) { // All pairs shortest path.
+      
+        *distances = make_table(graph->vrt, graph->vrt); 
+        *parents   = make_table(graph->vrt, graph->vrt);
+       
+        TIME(apsp_gpu_graph(graph, *distances, *parents), "\tAPSP:");
+
+    }
+
+    steiner_tree(graph, terminals, *distances);
+
+
+    cudagraph_t* cuda_graph     = copy_cudagraph(graph);
+    cudaset_t*   cuda_terminals = copy_cudaset(terminals);
+    cudatable_t* cuda_distances = copy_cudatable(*distances);
+    
+    steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances);
+
+    printf("\n");
+
+    free_cudatable(cuda_distances);
+    free_cudaset(cuda_terminals);
+    free_cudagraph(cuda_graph);
+    
+}
 
 int main(int argc, char** argv) {
     
-    test();
+    cudagraph_t* graph;
+    cudaset_t* terminals;
+    cudatable_t* distances = NULL;
+    cudatable_t* predecessors = NULL;
+
+    for(int32_t vrt=512; vrt < 16385; vrt++) {
+
+        graph = make_randomly_connected_graph(vrt);
+
+        printf("%d\n", graph->vrt);
+
+        for(int32_t t=2; t < 10; t++) {
+            
+            terminals = make_set();
+
+            for(int i=0; i<t; i++) {
+                set_insert(terminals, rand() % (vrt + 1) );
+            }
+
+            run(graph, terminals, &distances, &predecessors);
+
+            destroy_set(terminals);
+
+        }
+
+        destroy_graph(graph);
+        free_table(distances);
+        distances = NULL;
+        free_table(predecessors);
+        predecessors = NULL;
+
+    }
+
+    // test(&graph, &terminals);
     // specify_args(argc, argv);
     // perf_test();
 	/* gr_file_test(); */
-
-
+    
     return 0;
 	
 }

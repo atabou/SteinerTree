@@ -182,7 +182,7 @@ void fill_kth_combination(cudatable_t* table, cudagraph_t* g, int32_t g_size, cu
 }
 
 
-void steiner_tree_gpu(cudatable_t* table, cudagraph_t* g, int32_t g_size, cudaset_t* t, int32_t t_size, cudatable_t* distances) {
+void fill_steiner_tree_cuda_table(cudatable_t* table, cudagraph_t* g, int32_t g_size, cudaset_t* t, int32_t t_size, cudatable_t* distances) {
 
     base_case(table, g, g_size, t, t_size, distances);
 
@@ -193,6 +193,16 @@ void steiner_tree_gpu(cudatable_t* table, cudagraph_t* g, int32_t g_size, cudase
         fill_kth_combination(table, g, g_size, t, t_size, distances, k);
 
     }
+
+}
+
+void steiner_tree_gpu(cudagraph_t* graph, int32_t nvrt, cudaset_t* terminals, int32_t nterm, cudatable_t* distances) {
+
+    cudatable_t* costs = make_cudatable(nvrt, (int32_t) pow(2, nterm) - 1);
+
+    TIME(fill_steiner_tree_cuda_table(costs, graph, nvrt, terminals, nterm, distances), "\tGPU table fill:");
+
+    free_cudatable(costs);
 
 }
 

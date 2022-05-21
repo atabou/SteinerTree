@@ -7,6 +7,7 @@
     #define UTIL_H
 
     #include <stdint.h>
+    #include <time.h>
 
     /**
      * @brief Given a pointer to a 64-bit bitmask, updates the content of the bitmask to the next combination n choose k,
@@ -30,6 +31,10 @@
      */
     void print_bits(uint64_t mask, int32_t size);
 
+    /** Global variable that will be used by the time macro. */
+    extern clock_t CLOCKMACRO;
+
+    #define TIME(EXPR, STR) CLOCKMACRO = clock(); EXPR; printf(STR); printf(" %fs\n", (double) (clock() - CLOCKMACRO) / CLOCKS_PER_SEC)
 
 #endif
 /**@}*/

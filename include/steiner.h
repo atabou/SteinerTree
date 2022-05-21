@@ -7,9 +7,6 @@
     #include "graph.h"
     #include "table.h"
 
-    table_t* steiner_tree(graph_t* g, set_t* t);
-    
-    void fill_steiner_dp_table_cpu(table_t* table, graph_t* g, set_t* t, table_t* distances); 
-
+    table_t* steiner_tree(graph_t* graph, set_t* terminals, table_t* distances);
 
 #endif
