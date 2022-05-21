@@ -21,8 +21,6 @@ cudagraph_t* make_cudagraph() {
 
     err = cudaDeviceSynchronize();
 
-    err = cudaDeviceSynchronize();
-
     if(err) {
         printf("Could not synchronize cuda device after graph memory allocation. (Error code: %d)\n", err);
         exit(err);
@@ -39,7 +37,7 @@ cudagraph_t* copy_cudagraph(graph_t* cpu_graph) {
 
     // Set cuda graph max capacity
 
-    tmp.max = cpu_graph->max;
+    tmp.max = cpu_graph->vrt;
 
     // Set cuda graph number of vertices
 
@@ -47,7 +45,7 @@ cudagraph_t* copy_cudagraph(graph_t* cpu_graph) {
 
     // Create and set cuda graph degree array
 
-    err = cudaMalloc(&(tmp.deg), sizeof(int32_t) * cpu_graph->max);
+    err = cudaMalloc(&(tmp.deg), sizeof(int32_t) * cpu_graph->vrt);
     
     if(err) { 
         printf("Could not allocate memory for graph degree array. (Error code: %d)\n", err);
@@ -56,10 +54,11 @@ cudagraph_t* copy_cudagraph(graph_t* cpu_graph) {
 
     // Create and set cuda graph adjacency array
 
-    err = cudaMalloc(&(tmp.lst), sizeof(cudallist_t*) * cpu_graph->max);
+    err = cudaMalloc(&(tmp.dst), sizeof(int32_t*) * cpu_graph->vrt);
+    err = cudaMalloc(&(tmp.wgt), sizeof( float* ) * cpu_graph->vrt);
 
     if(err) {
-        printf("Could not allocate memory for graph adjacency list. (Error code: %d)\n", err);
+        printf("Could not allocate memory for graph adjacency lists. (Error code: %d)\n", err);
         exit(err);
     }
 
@@ -85,20 +84,23 @@ cudagraph_t* copy_cudagraph(graph_t* cpu_graph) {
 
     // Create and set cuda graph adjacency list
 
-    cudallist_t* edges[cpu_graph->vrt];
+    int32_t* dst[cpu_graph->vrt];
+    float*   wgt[cpu_graph->vrt];
 
     for(int32_t i=0; i<cpu_graph->vrt; i++) {
 
-        edges[i] = copy_cudallist(cpu_graph->lst[i], cpu_graph->deg[i]);
+        cudaMemcpy(&dst[i], cpu_graph->dst[i], sizeof(int32_t) * cpu_graph->deg[i], cudaMemcpyHostToDevice);
+        cudaMemcpy(&wgt[i], cpu_graph->wgt[i], sizeof( float ) * cpu_graph->deg[i], cudaMemcpyHostToDevice);
 
     }
 
-    cudaMemcpy(tmp.lst, edges, sizeof(cudallist_t*) * cpu_graph->vrt, cudaMemcpyHostToDevice);
- 
+    cudaMemcpy(tmp.dst, dst, sizeof(int32_t*) * cpu_graph->vrt, cudaMemcpyHostToDevice);
+    cudaMemcpy(tmp.wgt, wgt, sizeof( float* ) * cpu_graph->vrt, cudaMemcpyHostToDevice);
+    
     err = cudaDeviceSynchronize();
 
     if(err) {
-        printf("Could not synchronize cuda device after llist array memory copy. (Error code: %d)\n", err);
+        printf("Could not synchronize cuda device after dst and wgt copy. (Error code: %d)\n", err);
         exit(err);
     }
 
@@ -154,9 +156,11 @@ void free_cudagraph(cudagraph_t* g) {
         exit(err);
     }
 
-    cudallist_t* del[tmp.vrt];
+    int32_t* del1[tmp.vrt];
+    float*   del2[tmp.vrt];
 
-    cudaMemcpy(del, tmp.lst, sizeof(cudallist_t*) * tmp.vrt, cudaMemcpyDeviceToHost);
+    cudaMemcpy(del1, tmp.dst, sizeof(int32_t*) * tmp.vrt, cudaMemcpyDeviceToHost);
+    cudaMemcpy(del2, tmp.wgt, sizeof(float*) * tmp.vrt, cudaMemcpyDeviceToHost);
 
     err = cudaDeviceSynchronize();
 
@@ -165,10 +169,11 @@ void free_cudagraph(cudagraph_t* g) {
         exit(err);
     }
 
-    err = cudaFree(tmp.lst);
+    err = cudaFree(tmp.dst);
+    err = cudaFree(tmp.wgt);
 
     if(err) {
-        printf("Could not deallocate cuda lst array. (Error code: %d)\n", err);
+        printf("Could not deallocate cuda lst arrays. (Error code: %d)\n", err);
         exit(err);
     }
 
@@ -180,7 +185,8 @@ void free_cudagraph(cudagraph_t* g) {
     }
  
     for(int32_t i=0; i<tmp.vrt; i++) {
-        free_cudallist(del[i]);
+        cudaFree(del1[i]);
+        cudaFree(del2[i]);
     }
     
 }

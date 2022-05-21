@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <float.h>
 #include <unistd.h>
+#include <string.h>
+#include <time.h>
 
 #include "shortestpath.h"
 #include "cugraph_c/graph.h"
@@ -17,27 +19,22 @@ void toCOO(graph_t* graph, int32_t** src, int32_t** dst, float** wgt, int32_t* n
 
     *src = (int32_t*) malloc(sizeof(int32_t) * (*nedg));
     *dst = (int32_t*) malloc(sizeof(int32_t) * (*nedg));
-    *wgt = (float*) malloc(sizeof(float) * (*nedg));
+    *wgt = ( float* ) malloc(sizeof( float ) * (*nedg));
 
-    int32_t count = 0;
+    int32_t start = 0;
 
     for(int32_t i=0; i<graph->vrt; i++) {
 
-        llist_t* curr = graph->lst[i];
-
         for(int32_t j=0; j<graph->deg[i]; j++) {
-
-            (*src)[count] = i;
-            (*dst)[count] = curr->dest;
-            (*wgt)[count] = (float) curr->weight;
- 
-            curr = curr->next;
-            count++;
-        
+            (*src)[start + j] = i;
         }
 
-    }
+        memcpy(&((*dst)[start]), graph->dst[i], sizeof(int32_t) * graph->deg[i]);
+        memcpy(&((*wgt)[start]), graph->wgt[i], sizeof( float ) * graph->deg[i]);
+        
+        start += graph->deg[i];
 
+    }
 
 }
 
@@ -146,19 +143,25 @@ void apsp_gpu_graph(graph_t* graph, table_t* distances, table_t* predecessors) {
     int32_t* src = NULL;
     int32_t* dst = NULL;
     float* wgt = NULL;
-
+ 
+    clock_t c = clock();
     toCOO(graph, &src, &dst, &wgt, &nedg);
+    printf("\t\t- Convert graph to COO format: %fs\n", (double) (clock() - c) / CLOCKS_PER_SEC);
 
     cugraph_graph_t* cugraph = create_gpu_graph(handle, src, dst, wgt, nedg);
     cugraph_paths_result_t* result = NULL;
     cugraph_error_t* error = NULL;
     cugraph_error_code_t status = CUGRAPH_SUCCESS;
 
+    double duration = 0;
+
     for(int32_t source=0; source < distances->n; source++) {
  
-
+        c = clock();
         status = cugraph_sssp(handle, cugraph, source, FLT_MAX, TRUE, FALSE, &result, &error);
-        
+        duration = duration + (double) (clock() - c) / CLOCKS_PER_SEC;
+
+
         if(status != CUGRAPH_SUCCESS) {
             printf("%s\n", cugraph_error_message(error));
             exit(status);
@@ -190,6 +193,8 @@ void apsp_gpu_graph(graph_t* graph, table_t* distances, table_t* predecessors) {
         result = NULL;
 
     }
+
+    printf("\t\t- SSSP: %fs (total) - %fs (avg over %d calls)\n", duration, duration / graph->vrt, graph->vrt);
 
     cugraph_free_resource_handle(handle);
 

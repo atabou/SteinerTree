@@ -10,11 +10,12 @@
     #include "llist.h"
 
     typedef struct graph_t {
- 
+
         int32_t   max; /** Current capacity of the graph. */
         int32_t   vrt; /** Number of vertices in the graph. */
         int32_t*  deg; /** Represents the degree of the node. If the degree of the node is -1 then the node does not exist. */
-        llist_t** lst; /** The adjacency list of the graph_t. */
+        int32_t** dst; /** 2D array that contains the destination vertices of the edges. */
+        float** wgt; /** 2D array that contains the weights of the edges */
 
     } graph_t;
 
@@ -61,4 +62,5 @@
 
 
 #endif
+
 /** @} */
