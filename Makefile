@@ -13,14 +13,12 @@ NOCOLOR=\033[0m
 
 COMPILE=steiner.o \
         graph.o \
-        llist.o \
 	 	set.o \
         shortestpath.o \
 		util.o \
 		table.o \
 		combination.cu.o \
 		graph.cu.o \
-		llist.cu.o \
 		set.cu.o \
 		table.cu.o \
 		steiner.cu.o \

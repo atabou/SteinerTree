@@ -7,8 +7,6 @@
 
     #include <stdint.h>
 
-    #include "llist.h"
-
     typedef struct graph_t {
 
         int32_t   max; /** Current capacity of the graph. */

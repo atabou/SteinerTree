@@ -3,7 +3,6 @@
 
 extern "C" {
     #include "graph.cuda.h"
-    #include "llist.cuda.h"
 }
 
 cudagraph_t* make_cudagraph() {
