@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <float.h>
 
 extern "C" {
     #include "steiner.cuda.h"
@@ -14,16 +15,41 @@ extern "C" {
 #define BLOCK_1D_SIZE 1024
 #define MAX_BLOCKS 65536
 
+
 __device__ void print_cuda_table(cudatable_t* t) {
 
     for(int v=0; v < t->n; v++) {
         for(int i=0; i<t->m; i++) {
-            printf("%f ", t->vals[v * t->m + i]);
+            if(t->vals[v*t->m+i] == FLT_MAX) {
+                printf("-1 ");
+            } else {
+                printf("%.1f ", t->vals[v * t->m + i]);
+            }
         }
         printf("\n");
     }
+    printf("\n");
+}
+
+
+__device__ float atomicMin(float* target, float val) {
+
+    int32_t ret = __float_as_int(*target);
+
+    while(val < __int_as_float(ret)) {
+
+        int32_t old = ret;
+        ret = atomicCAS((int32_t*) target, old, __float_as_int(val));
+        if(ret == old){
+            break;
+        }
+
+    }
+
+    return __int_as_float(ret);
 
 }
+
 
 __global__ void dw_fill_base_cases(cudatable_t* costs, cudagraph_t* g, cudatable_t* distances, cudaset_t* terminals) {
 
@@ -45,6 +71,7 @@ __global__ void dw_fill_base_cases(cudatable_t* costs, cudagraph_t* g, cudatable
     }
 
 }
+
 
 __global__ void dw_fill_kth_combination(cudatable_t* costs, cudagraph_t* g, cudatable_t* distances, cudaset_t* terminals, int32_t k) {
 
@@ -105,6 +132,7 @@ __global__ void dw_fill_kth_combination(cudatable_t* costs, cudagraph_t* g, cuda
 
 }
 
+
 /**
  * Works for any values of T and V satisfying the following equation 2^T * V < 2^26
  * This could be improved to 2^T * V < 2^58
@@ -125,6 +153,7 @@ void base_case(cudatable_t* table, cudagraph_t* g, int32_t g_size, cudaset_t* t,
 
 
 }
+
 
 /**
  * Works only for values of V < 2^21
@@ -151,6 +180,7 @@ void fill_kth_combination(cudatable_t* table, cudagraph_t* g, int32_t g_size, cu
 
 
 }
+
 
 void steiner_tree_gpu(cudatable_t* table, cudagraph_t* g, int32_t g_size, cudaset_t* t, int32_t t_size, cudatable_t* distances) {
 
