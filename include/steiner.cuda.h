@@ -19,7 +19,7 @@
      * @param [in] t_size The number of terminals in the cudaset_t t.
      * @param [in] distances A pointer to a cudatable_t containing the all pairs shortest path of the cudagraph_t g/
      */
-    void steiner_tree_gpu(cudagraph_t* g, int32_t g_size, cudaset_t* t, int32_t t_size, cudatable_t* distances);
+     float steiner_tree_gpu(cudagraph_t* g, int32_t g_size, cudaset_t* t, int32_t t_size, cudatable_t* distances);
 
 
 #endif

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <math.h>
+#include <float.h>
 
 #include "steiner.h"
 #include "steiner.cuda.h"
@@ -78,20 +79,32 @@ void fill_steiner_dp_table_cpu(table_t* costs, graph_t* g, set_t* terminals, tab
 
 }
 
-table_t* steiner_tree(graph_t* g, set_t* terminals, table_t* distances) {
+float steiner_tree(graph_t* g, set_t* terminals, table_t* distances) {
 
     // Initialize DP table.
     
     table_t* costs = make_table(g->vrt, (int32_t) pow(2, terminals->size) - 1);
 
-    // Fill dp table
+    // Fill dp table.
 
-    TIME(fill_steiner_dp_table_cpu(costs, g, terminals, distances), "\tCPU DP-table fill:");
- 
+    fill_steiner_dp_table_cpu(costs, g, terminals, distances);
+
+    // Calculate minimum from table.
+
+    float min = FLT_MAX;
+
+    for(int32_t i=costs->m - 1; i < costs->m * distances->n; i+=costs->m) {
+        
+        if(costs->vals[i] < min) {
+            min = costs->vals[i];
+        }
+
+    }
+
     // Free table
-    
+   
     free(costs);
 
-    return NULL;
+    return min;
 
 }

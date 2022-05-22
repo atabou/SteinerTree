@@ -75,9 +75,9 @@ __global__ void dw_fill_base_cases(cudatable_t* costs, cudagraph_t* g, cudatable
 
 __global__ void dw_fill_kth_combination(cudatable_t* costs, cudagraph_t* g, cudatable_t* distances, cudaset_t* terminals, int32_t k) {
 
-    int32_t v = gridDim.x * blockIdx.x + threadIdx.x;
-    int32_t w = gridDim.y * blockIdx.y + threadIdx.y;
- 
+    int32_t v = blockDim.x * blockIdx.x + threadIdx.x;
+    int32_t w = blockDim.y * blockIdx.y + threadIdx.y;
+
     if(v < g->vrt && w < g->vrt) {
         
         uint64_t mask = 0;
@@ -128,7 +128,7 @@ __global__ void dw_fill_kth_combination(cudatable_t* costs, cudagraph_t* g, cuda
 
         }
 
-    }
+    } 
 
 }
 
@@ -196,13 +196,38 @@ void fill_steiner_tree_cuda_table(cudatable_t* table, cudagraph_t* g, int32_t g_
 
 }
 
-void steiner_tree_gpu(cudagraph_t* graph, int32_t nvrt, cudaset_t* terminals, int32_t nterm, cudatable_t* distances) {
+float steiner_tree_gpu(cudagraph_t* graph, int32_t nvrt, cudaset_t* terminals, int32_t nterm, cudatable_t* distances) {
+
+    // Construct the costs table.
 
     cudatable_t* costs = make_cudatable(nvrt, (int32_t) pow(2, nterm) - 1);
 
-    TIME(fill_steiner_tree_cuda_table(costs, graph, nvrt, terminals, nterm, distances), "\tGPU table fill:");
+    // Fill the costs table.
+
+    fill_steiner_tree_cuda_table(costs, graph, nvrt, terminals, nterm, distances);
+
+    // Get the filled table from the GPU.
+
+    table_t* result = get_table_from_gpu(costs);
+
+    // Extract the minimum from the table.
+
+    float min = INT32_MAX;
+    
+    for(int32_t i=result->m - 1; i < result->m * result->n; i = i + result->m) {
+       
+        if(result->vals[i] < min) {
+            min = result->vals[i];
+        }
+
+    }
+
+    // Free
 
     free_cudatable(costs);
+    free_table(result);
+
+    return min;
 
 }
 
