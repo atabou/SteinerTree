@@ -26,12 +26,19 @@ COMPILE=steiner.o \
 all: | pre-build ${BIN}/main
 	@echo "${GREEN}Compilation done.${NOCOLOR}"
 
+test: | pre-build ${BIN}/test
+	@echo "${GREEN}Testing done.${NOCOLOR}"
+
 pre-build:
 	@echo "Creating bin and obj folders if they don't exist."
 	@mkdir -p "${OBJ}" "${BIN}"
 
 ${BIN}/main: ./main.c $(patsubst %,${OBJ}/%,${COMPILE})
 	${CC} ./main.c ${COMMON} -I/opt/cuda/include -o ${BIN}/main $(patsubst %,${OBJ}/%,${COMPILE}) ${LNK}
+	@echo "${YELLOW}Ignore Warnings${NOCOLOR}"
+
+${BIN}/test: ./test.c $(patsubst %,${OBJ}/%,${COMPILE})
+	${CC} ./test.c ${COMMON} -I/opt/cuda/include -o ${BIN}/test $(patsubst %,${OBJ}/%,${COMPILE}) ${LNK}
 	@echo "${YELLOW}Ignore Warnings${NOCOLOR}"
 
 ${OBJ}/%.cu.o: ${SRC}/%.cu ${INC}/%.cuda.h
