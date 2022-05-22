@@ -187,6 +187,39 @@ cudatable_t* copy_cudatable(table_t* cpu_table) {
 
 }
 
+table_t* get_table_from_gpu(cudatable_t* cuda_table) {
+    
+    cudaError_t err;
+
+    table_t* result = (table_t*) malloc(sizeof(table_t));
+
+    cudaMemcpy(result, cuda_table, sizeof(cudatable_t), cudaMemcpyDeviceToHost);
+
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not copy cuda table data before free. (Error code: %d).\n", err);
+        exit(err);
+    }
+
+    float* tmp = (float*) malloc(sizeof(float) * result->m * result->n);
+    
+    cudaMemcpy(tmp, result->vals, sizeof(float) * result->n * result->m, cudaMemcpyDeviceToHost);
+
+    result->vals = tmp;
+
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not complete cuda table deallocation. (Error code: %d)\n", err);
+        exit(err);
+    }
+
+    return result;
+
+
+}
+
 void free_cudatable(cudatable_t* cuda_table) {
 
     cudaError_t err;

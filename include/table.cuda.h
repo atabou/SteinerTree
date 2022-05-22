@@ -22,6 +22,9 @@
      */
     cudatable_t* make_cudatable(int32_t n, int32_t m);
     
+
+    table_t* get_table_from_gpu(cudatable_t* cuda_table);
+    
     /**
      * @brief Creates a new cudatable_t on the GPU, and copies the provided table to it.
      *
