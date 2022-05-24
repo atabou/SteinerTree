@@ -14,23 +14,34 @@
 
 ### Build tools:
 - `make`
-- `cmake` >= 3.20  
-- `doxygen` >= 1.8.11
-- `graphviz`
+- `Anaconda` or `Miniconda`
 
-## Build
+## Setup
 
 ```
-git clone https://github.com/rapidsai/cudagraph.git
-cd cudagraph/cpp
-export CUDACXX="<path to nvcc>"
-mkdir build
+conda create --name cugraphenv
+conda activate cugraphenv
+conda install -c nvidia -c conda-forge -c rapidsai libcugraph=22.04.00=cuda11_g58be5b53_0
 ```
 
-## Run: (Only tested on ubuntu)
+## Build & Run: (Only tested on Linux)
+
+### Run tests:
 
 ```
 cd /path/to/folder
-make all
+make test
+./bin/test
+```
+
+### Run main:
+
+```
+cd /path/to/folder
+make
 ./bin/main
 ```
+
+### Other commands: 
+
+- `make clean`
