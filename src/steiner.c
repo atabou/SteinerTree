@@ -102,6 +102,8 @@ float steiner_tree(graph_t* g, set_t* terminals, table_t* distances) {
     }
 
     // Free table
+    
+    /* print_table(costs); */
    
     free(costs);
 

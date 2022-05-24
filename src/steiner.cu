@@ -58,7 +58,7 @@ __global__ void dw_fill_base_cases(cudatable_t* costs, cudagraph_t* g, cudatable
         + blockIdx.x * blockDim.x  // Number of threads inside the 1D part of the grid coming before the thread in question.
         + threadIdx.x; // The position of the thread in the block
 
-    if(thread_id < terminals->size * costs->n) {
+    if(thread_id < terminals->size * costs->m) {
 
         int32_t v = thread_id / terminals->size;
 
@@ -66,7 +66,7 @@ __global__ void dw_fill_base_cases(cudatable_t* costs, cudagraph_t* g, cudatable
         
         int32_t u = terminals->vals[terminals->size - __ffsll(mask)];
         
-        costs->vals[v * costs->m + (mask - 1)] = distances->vals[v * distances->m + u];
+        costs->vals[(mask - 1) * costs->m + v] = distances->vals[v * distances->m + u];
 
     }
 
@@ -78,9 +78,13 @@ __global__ void dw_fill_kth_combination(cudatable_t* costs, cudagraph_t* g, cuda
     int32_t v = blockDim.x * blockIdx.x + threadIdx.x;
     int32_t w = blockDim.y * blockIdx.y + threadIdx.y;
 
+    __shared__ float costs_s[BLOCK_2D_SIZE][BLOCK_2D_SIZE];
+
+    costs_s[threadIdx.x][threadIdx.y] = FLT_MAX;
+    
     if(v < g->vrt && w < g->vrt) {
         
-        uint64_t mask = 0;
+        uint64_t mask = 0; 
 
         while( gpu_next_combination(terminals->size, k, &mask) ) {
 
@@ -100,31 +104,52 @@ __global__ void dw_fill_kth_combination(cudatable_t* costs, cudagraph_t* g, cuda
 
             __syncthreads();
 
+            costs_s[threadIdx.x][threadIdx.y] = FLT_MAX;
 
             if(exists) {
 
                 uint64_t submask = 1ll << (terminals->size - position - 1);
 
                 float cost = distances->vals[v * distances->m + w] 
-                           + costs->vals[w * costs->m + ((mask & ~submask) - 1)];
+                           + costs->vals[costs->m * ((mask & ~submask) - 1) + w];
 
-                atomicMin(&costs->vals[v * costs->m + mask - 1], cost);
+                if(cost < costs_s[threadIdx.x][threadIdx.y]) {
+                    costs_s[threadIdx.x][threadIdx.y] = cost;
+                }
+
+                /* atomicMin(&costs->vals[(mask - 1) * costs->m + v], cost); */
 
             } else if(g->deg[w] >= 3) {
 
                 for(uint64_t submask = (mask - 1) & mask; submask != 0; submask = (submask - 1) & mask) { // iterate over submasks of the mask O(2^T)
 
                     float cost = distances->vals[v * distances->m + w]
-                               + costs->vals[w * costs->m + submask - 1]
-                               + costs->vals[w * costs->m + (mask & ~submask) - 1];
+                               + costs->vals[costs->m * (submask - 1) + w]
+                               + costs->vals[costs->m * ((mask & ~submask) - 1) + w];
 
-                    atomicMin(&costs->vals[v * costs->m + mask - 1], cost);
+                    /* atomicMin(&costs->vals[costs->m * (mask - 1) + v], cost); */
+
+                    if(cost < costs_s[threadIdx.x][threadIdx.y]) {
+                        costs_s[threadIdx.x][threadIdx.y] = cost;
+                    }
 
                 }
 
             }
 
             __syncthreads();
+
+            for(int i=1; i<BLOCK_2D_SIZE; i++) {
+
+               if(costs_s[threadIdx.x][i] < costs_s[threadIdx.x][0]) {
+                   costs_s[threadIdx.x][0] = costs_s[threadIdx.x][i];
+               } 
+
+            }
+
+            __syncthreads(); 
+
+            atomicMin(&costs->vals[costs->m * (mask - 1) + v], costs_s[threadIdx.x][0]);
 
         }
 
@@ -200,11 +225,11 @@ float steiner_tree_gpu(cudagraph_t* graph, int32_t nvrt, cudaset_t* terminals, i
 
     // Construct the costs table.
 
-    cudatable_t* costs = make_cudatable(nvrt, (int32_t) pow(2, nterm) - 1);
+    cudatable_t* costs = make_cudatable((int32_t) pow(2, nterm) - 1, nvrt);
 
     // Fill the costs table.
 
-    fill_steiner_tree_cuda_table(costs, graph, nvrt, terminals, nterm, distances);
+    TIME(fill_steiner_tree_cuda_table(costs, graph, nvrt, terminals, nterm, distances), "GPU fill:");
 
     // Get the filled table from the GPU.
 
@@ -212,9 +237,9 @@ float steiner_tree_gpu(cudagraph_t* graph, int32_t nvrt, cudaset_t* terminals, i
 
     // Extract the minimum from the table.
 
-    float min = INT32_MAX;
+    float min = FLT_MAX;
     
-    for(int32_t i=result->m - 1; i < result->m * result->n; i = i + result->m) {
+    for(int32_t i= result->m * (result->n - 1); i < result->m * result->n; i++) {
        
         if(result->vals[i] < min) {
             min = result->vals[i];
@@ -223,6 +248,8 @@ float steiner_tree_gpu(cudagraph_t* graph, int32_t nvrt, cudaset_t* terminals, i
     }
 
     // Free
+
+    /* print_table(result); */
 
     free_cudatable(costs);
     free_table(result);

@@ -134,8 +134,9 @@ int main(int argc, char** argv) {
     cudatable_t* distances = NULL;
     cudatable_t* predecessors = NULL;
 
-    for(int32_t vrt=512; vrt <= 65536; vrt = vrt * 2) {
+    /* for(int32_t vrt=512; vrt <= 65536; vrt = vrt * 2) { */
 
+    for(int32_t vrt=512; vrt <= 512; vrt = vrt * 2) {
         graph = make_randomly_connected_graph(vrt);
 
         printf("%d\n", graph->vrt);
