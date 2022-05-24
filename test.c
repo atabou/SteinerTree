@@ -71,134 +71,170 @@ graph_t* test_graph1() {
 
 }
 
+void basictest() {
+
+    graph_t* graph = test_graph1();
+    set_t* terminals = make_set();
+
+    set_insert(terminals, 0);
+    set_insert(terminals, 5);
+    set_insert(terminals, 6);
+    set_insert(terminals, 7);
+    set_insert(terminals, 8);
+    set_insert(terminals, 9);
+
+    table_t* distances = make_table(graph->vrt, graph->vrt); 
+    table_t* parents   = make_table(graph->vrt, graph->vrt);
+       
+    apsp_gpu_graph(graph, distances, parents);
+
+    steiner_tree(graph, terminals, distances);
+
+    cudagraph_t* cuda_graph     = copy_cudagraph(graph);
+    cudaset_t*   cuda_terminals = copy_cudaset(terminals);
+    cudatable_t* cuda_distances = copy_cudatable(distances);
+
+    steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances);
+
+    free_cudatable(cuda_distances);
+    free_cudaset(cuda_terminals);
+    free_cudagraph(cuda_graph);
+
+    destroy_graph(graph);
+    destroy_set(terminals);
+    free_table(distances);
+    free_table(parents);
+
+}
+
 void load_gr_file(char* filename, graph_t** g, set_t** t, int32_t** h, int32_t* hsize, float* opt) {
 
-	FILE* fp = fopen(filename, "r");
+    FILE* fp = fopen(filename, "r");
 
     printf("%s\n", filename);
 
-	if(fp == NULL) {
+    if(fp == NULL) {
 
-		*g = NULL;
-		*t = NULL;
-		*h = NULL;
-		return;
-	
-	}
+        *g = NULL;
+        *t = NULL;
+        *h = NULL;
+        return;
 
-	*t = make_set();
-	*g = make_graph();
-	
-	*h = (int32_t*) malloc(sizeof(int32_t));
-	(*h)[0] = INT32_MAX;
-	*hsize = 1;
+    }
 
-	char* line = NULL;
-	size_t buff = 0;
-	ssize_t len = 0;
+    *t = make_set();
+    *g = make_graph();
 
-	while( (len  = getline(&line, &buff, fp)) != -1 ) {
-	
-		char* token = strtok(line, " ");
-		int type = 0;
+    *h = (int32_t*) malloc(sizeof(int32_t));
+    (*h)[0] = INT32_MAX;
+    *hsize = 1;
 
-		while(token != NULL) {
+    char* line = NULL;
+    size_t buff = 0;
+    ssize_t len = 0;
 
-			if(type == 1) {
+    while( (len  = getline(&line, &buff, fp)) != -1 ) {
 
-				int32_t x = atoi(token);
+        char* token = strtok(line, " ");
+        int type = 0;
 
-				if(x >= *hsize) {
+        while(token != NULL) {
 
-					*h = (int32_t*) realloc(*h, sizeof(int32_t) * (x + 1));
-					
-					for(uint32_t i=*hsize; i < (x+1); i++) {
-						(*h)[i] = INT32_MAX;
-					}
+            if(type == 1) {
 
-					*hsize = x + 1;
+                int32_t x = atoi(token);
 
-				}
+                if(x >= *hsize) {
 
-				if( (*h)[x] == INT32_MAX ) {
+                    *h = (int32_t*) realloc(*h, sizeof(int32_t) * (x + 1));
 
-					int32_t id = insert_vertex(*g);
-					(*h)[x] = id; 
+                    for(uint32_t i=*hsize; i < (x+1); i++) {
+                        (*h)[i] = INT32_MAX;
+                    }
 
-				}
+                    *hsize = x + 1;
 
-				token = strtok(NULL, " ");
-				int32_t y = atoi(token);
+                }
 
-				if(y >= *hsize) {
+                if( (*h)[x] == INT32_MAX ) {
 
-					*h = (int32_t*) realloc(*h, sizeof(int32_t) * (y + 1));
-					
-					for(int32_t i=*hsize; i < (y+1); i++) {
-						(*h)[i] = INT32_MAX;
-					}
+                    int32_t id = insert_vertex(*g);
+                    (*h)[x] = id; 
 
-					*hsize = y + 1;
+                }
 
-				}
+                token = strtok(NULL, " ");
+                int32_t y = atoi(token);
 
-				if( (*h)[y] == INT32_MAX ) {
+                if(y >= *hsize) {
 
-					int32_t id = insert_vertex(*g);
-					(*h)[y] = id; 
+                    *h = (int32_t*) realloc(*h, sizeof(int32_t) * (y + 1));
 
-				}
+                    for(int32_t i=*hsize; i < (y+1); i++) {
+                        (*h)[i] = INT32_MAX;
+                    }
 
-				token = strtok(NULL, " ");
-				float w = atof(token);
+                    *hsize = y + 1;
 
-				insert_edge(*g, (*h)[x], (*h)[y], w);
-				insert_edge(*g, (*h)[y], (*h)[x], w);
+                }
 
-			} else if(type == 2) {
+                if( (*h)[y] == INT32_MAX ) {
 
-				int32_t val = atoi(token);
-				set_insert(*t, (*h)[val]);
+                    int32_t id = insert_vertex(*g);
+                    (*h)[y] = id; 
 
-			} else if(type == 3) {
-                
+                }
+
+                token = strtok(NULL, " ");
+                float w = atof(token);
+
+                insert_edge(*g, (*h)[x], (*h)[y], w);
+                insert_edge(*g, (*h)[y], (*h)[x], w);
+
+            } else if(type == 2) {
+
+                int32_t val = atoi(token);
+                set_insert(*t, (*h)[val]);
+
+            } else if(type == 3) {
+
                 *opt = atof(token);
 
             }
 
-			if(token[0] == 'E' && token[1] == '\0') {
-				type = 1;
-			} else if(token[0] == 'T' && token[1] == '\0') {
-				type = 2;
-			} else if(token[0] == 'O') {
+            if(token[0] == 'E' && token[1] == '\0') {
+                type = 1;
+            } else if(token[0] == 'T' && token[1] == '\0') {
+                type = 2;
+            } else if(token[0] == 'O') {
                 type = 3;
             }
 
-			token = strtok(NULL, " ");
+            token = strtok(NULL, " ");
 
-		}
+        }
 
-	}
+    }
 
-	fclose(fp);
+    fclose(fp);
 
 }
 
 float run(graph_t* graph, set_t* terminals, table_t** distances, table_t** parents, bool gpu) {
- 
+
     if(*distances == NULL) { // All pairs shortest path.
-      
+
         *distances = make_table(graph->vrt, graph->vrt); 
         *parents   = make_table(graph->vrt, graph->vrt);
-       
+
         apsp_gpu_graph(graph, *distances, *parents);
-    
+
     }
 
     float opt;
 
     if(gpu) {
-        
+
         cudagraph_t* cuda_graph     = copy_cudagraph(graph);
         cudaset_t*   cuda_terminals = copy_cudaset(terminals);
         cudatable_t* cuda_distances = copy_cudatable(*distances);
@@ -239,14 +275,14 @@ void test(char* path) {
 
             char filename[255]; // here I am using sprintf which is safer than strcat
             sprintf(filename, "%s/%s", path, dir->d_name);
-            
+
             load_gr_file(filename, &graph, &terminals, &h, &hsize, &expected);
 
             table_t* distances = NULL;
             table_t* predecessors = NULL;
 
             float value = run(graph, terminals, &distances, &predecessors, true);
-            
+
             free_table(distances);
             free_table(predecessors);
 
@@ -274,6 +310,7 @@ void test(char* path) {
 
 int main() {
 
+    /* basictest(); */
     test("./test");
 
 }
