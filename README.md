@@ -10,7 +10,7 @@
 ### GPU Requirements:
 - CUDA 11.0+
 - NVIDIA driver 450.80.02+
-- Pascal architecture or better
+- Pascal architecture or newer
 
 ### Build tools:
 - `make`
