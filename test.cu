@@ -70,7 +70,7 @@ graph_t* test_graph1() {
 void basictest() {
 
     graph_t* graph = test_graph1();
-    set_t* terminals = make_set();
+    set::set_t* terminals = set::make_set();
 
     set_insert(terminals, 0);
     set_insert(terminals, 5);
@@ -87,13 +87,13 @@ void basictest() {
     steiner_tree_cpu(graph, terminals, distances);
 
     cudagraph_t* cuda_graph     = copy_cudagraph(graph);
-    cudaset_t*   cuda_terminals = copy_cudaset(terminals);
+    cudaset::set_t*   cuda_terminals = cudaset::copy_cudaset(terminals);
     cudatable::table_t* cuda_distances = cudatable::copy_cudatable(distances);
 
     steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances);
 
     cudatable::free_cudatable(cuda_distances);
-    free_cudaset(cuda_terminals);
+    cudaset::free_cudaset(cuda_terminals);
     free_cudagraph(cuda_graph);
 
     destroy_graph(graph);
@@ -103,7 +103,7 @@ void basictest() {
 
 }
 
-void load_gr_file(char* filename, graph_t** g, set_t** t, int32_t** h, int32_t* hsize, float* opt) {
+void load_gr_file(char* filename, graph_t** g, set::set_t** t, int32_t** h, int32_t* hsize, float* opt) {
 
     FILE* fp = fopen(filename, "r");
 
@@ -118,7 +118,7 @@ void load_gr_file(char* filename, graph_t** g, set_t** t, int32_t** h, int32_t* 
 
     }
 
-    *t = make_set();
+    *t = set::make_set();
     *g = make_graph();
 
     *h = (int32_t*) malloc(sizeof(int32_t));
@@ -216,7 +216,7 @@ void load_gr_file(char* filename, graph_t** g, set_t** t, int32_t** h, int32_t* 
 
 }
 
-float run(graph_t* graph, set_t* terminals, table::table_t** distances, table::table_t** parents, bool gpu) {
+float run(graph_t* graph, set::set_t* terminals, table::table_t** distances, table::table_t** parents, bool gpu) {
 
     if(*distances == NULL) { // All pairs shortest path.
 
@@ -232,13 +232,13 @@ float run(graph_t* graph, set_t* terminals, table::table_t** distances, table::t
     if(gpu) {
 
         cudagraph_t* cuda_graph     = copy_cudagraph(graph);
-        cudaset_t*   cuda_terminals = copy_cudaset(terminals);
+        cudaset::set_t*   cuda_terminals = cudaset::copy_cudaset(terminals);
         cudatable::table_t* cuda_distances = cudatable::copy_cudatable(*distances);
 
         opt = steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances);
 
         cudatable::free_cudatable(cuda_distances);
-        free_cudaset(cuda_terminals);
+        cudaset::free_cudaset(cuda_terminals);
         free_cudagraph(cuda_graph);
 
     } else {
@@ -264,7 +264,7 @@ void test(char* path) {
             printf("%s%s\n",NORMAL_COLOR, dir->d_name);
 
             graph_t* graph;
-            set_t* terminals;
+            set::set_t* terminals;
             int32_t* h;
             int32_t hsize;
             float expected;

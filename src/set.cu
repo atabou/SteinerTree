@@ -6,9 +6,9 @@
 #include "set.h"
 
 
-set_t* make_set() {
+set::set_t* set::make_set() {
 
-    set_t* s = (set_t*) malloc(sizeof(set_t));
+    set::set_t* s = (set::set_t*) malloc(sizeof(set::set_t));
 
     s->vals = NULL;
     s->size = 0;
@@ -18,7 +18,7 @@ set_t* make_set() {
 }
 
 
-void set_insert(set_t* set, int32_t x) {
+void set::set_insert(set::set_t* set, int32_t x) {
 
     if(set->size == 0) {
 
@@ -45,7 +45,7 @@ void set_insert(set_t* set, int32_t x) {
 }
 
 
-int32_t find_position(set_t* X, int32_t element) {
+int32_t set::find_position(set::set_t* X, int32_t element) {
 
     for(int32_t i=0; i < X->size; i++) {
 
@@ -60,7 +60,7 @@ int32_t find_position(set_t* X, int32_t element) {
 }
 
 
-int element_exists(int32_t element, set_t* set, uint64_t mask) {
+int set::element_exists(int32_t element, set::set_t* set, uint64_t mask) {
 
     for(int32_t i=0; i<set->size; i++) {
 
@@ -75,7 +75,7 @@ int element_exists(int32_t element, set_t* set, uint64_t mask) {
 }
 
 
-void print_set(set_t* X) {
+void set::print_set(set::set_t* X) {
 
     printf("{");
 
@@ -94,9 +94,9 @@ void print_set(set_t* X) {
 }
 
 
-cudaset_t* copy_cudaset(set_t* set) {
+cudaset::set_t* cudaset::copy_cudaset(set::set_t* set) {
 
-    cudaset_t tmp;
+    cudaset::set_t tmp;
 
     tmp.size = set->size;
    
@@ -125,9 +125,9 @@ cudaset_t* copy_cudaset(set_t* set) {
         exit(err);
     }
  
-    cudaset_t* cuda_set = NULL;
+    cudaset::set_t* cuda_set = NULL;
 
-    err = cudaMalloc(&cuda_set, sizeof(cudaset_t));
+    err = cudaMalloc(&cuda_set, sizeof(cudaset::set_t));
 
     if(err) {
         printf("Could not initialize cuda set. (Error code: %d)\n", err);
@@ -141,7 +141,7 @@ cudaset_t* copy_cudaset(set_t* set) {
         exit(err);
     }
 
-    cudaMemcpy(cuda_set, &tmp, sizeof(cudaset_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(cuda_set, &tmp, sizeof(cudaset::set_t), cudaMemcpyHostToDevice);
 
     err = cudaDeviceSynchronize();
 
@@ -156,11 +156,11 @@ cudaset_t* copy_cudaset(set_t* set) {
 }
 
 
-void free_cudaset(cudaset_t* set) {
+void cudaset::free_cudaset(cudaset::set_t* set) {
 
-    cudaset_t tmp;
+    cudaset::set_t tmp;
 
-    cudaMemcpy(&tmp, set, sizeof(cudaset_t), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&tmp, set, sizeof(cudaset::set_t), cudaMemcpyDeviceToHost);
 
     cudaError_t err;
 
@@ -181,7 +181,7 @@ void free_cudaset(cudaset_t* set) {
 }
 
 
-void free_set(set_t* set) {
+void set::free_set(set::set_t* set) {
 
     free(set->vals);
     set->vals = NULL;
