@@ -10,9 +10,9 @@
 #define MAX_BLOCKS 65536
 
 
-table_t* make_table(int32_t n, int32_t m) {
+table::table_t* table::make_table(int32_t n, int32_t m) {
 
-    table_t* t = (table_t*) malloc(sizeof(table_t));
+    table::table_t* t = (table::table_t*) malloc(sizeof(table::table_t));
 
     t->n = n;
     t->m = m;
@@ -24,12 +24,12 @@ table_t* make_table(int32_t n, int32_t m) {
 }
 
 
-__global__ void set_table_values_kernel(cudatable_t* table, float val);
-__host__ void set_table_values(cudatable_t* table, int32_t n, int32_t m, float val);
+__global__ void set_table_values_kernel(cudatable::table_t* table, float val);
+__host__ void set_table_values(cudatable::table_t* table, int32_t n, int32_t m, float val);
 
-cudatable_t* make_cudatable(int32_t n, int32_t m) {
+cudatable::table_t* cudatable::make_cudatable(int32_t n, int32_t m) {
 
-    cudatable_t tmp;
+    cudatable::table_t tmp;
 
     tmp.n = n;
     tmp.m = m;
@@ -50,9 +50,9 @@ cudatable_t* make_cudatable(int32_t n, int32_t m) {
         exit(err);
     }
 
-    cudatable_t* cuda_table = NULL;
+    cudatable::table_t* cuda_table = NULL;
 
-    err = cudaMalloc(&cuda_table, sizeof(cudatable_t));
+    err = cudaMalloc(&cuda_table, sizeof(cudatable::table_t));
 
     if(err) {
         printf("Could not allocate cuda table. (Error code: %d)\n", err);
@@ -66,7 +66,7 @@ cudatable_t* make_cudatable(int32_t n, int32_t m) {
         exit(err);
     }
 
-    cudaMemcpy(cuda_table, &tmp, sizeof(cudatable_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(cuda_table, &tmp, sizeof(cudatable::table_t), cudaMemcpyHostToDevice);
 
     err = cudaDeviceSynchronize();
 
@@ -84,9 +84,9 @@ cudatable_t* make_cudatable(int32_t n, int32_t m) {
 }
 
 
-cudatable_t* copy_cudatable(table_t* table) {
+cudatable::table_t* cudatable::copy_cudatable(table::table_t* table) {
 
-    cudatable_t tmp;
+    cudatable::table_t tmp;
 
     tmp.n = table->n;
     tmp.m = table->m;
@@ -115,9 +115,9 @@ cudatable_t* copy_cudatable(table_t* table) {
         exit(err);
     }
 
-    cudatable_t* cuda_table = NULL;
+    cudatable::table_t* cuda_table = NULL;
 
-    err = cudaMalloc(&cuda_table, sizeof(cudatable_t));
+    err = cudaMalloc(&cuda_table, sizeof(cudatable::table_t));
 
     if(err) {
         printf("Could not allocate cuda table. (Error code: %d)\n", err);
@@ -130,7 +130,7 @@ cudatable_t* copy_cudatable(table_t* table) {
         exit(err);
     }
 
-    cudaMemcpy(cuda_table, &tmp, sizeof(cudatable_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(cuda_table, &tmp, sizeof(cudatable::table_t), cudaMemcpyHostToDevice);
 
     err = cudaDeviceSynchronize();
 
@@ -144,7 +144,7 @@ cudatable_t* copy_cudatable(table_t* table) {
 }
 
 
-__device__ __host__ void print_table(table_t* table) {
+__device__ __host__ void table::print_table(table::table_t* table) {
     
     printf("\n\033[0;32m    |");
 
@@ -180,7 +180,7 @@ __device__ __host__ void print_table(table_t* table) {
 }
 
 
-void free_table(table_t* t) {
+void table::free_table(table::table_t* t) {
 
     free(t->vals);
 
@@ -194,7 +194,7 @@ void free_table(table_t* t) {
 
 // Helpers
 
-__global__ void set_table_values_kernel(cudatable_t* table, float val) {
+__global__ void set_table_values_kernel(cudatable::table_t* table, float val) {
 
     int32_t pos =  blockIdx.z * gridDim.y * gridDim.x * blockDim.x // Number of threads inside the 3D part of the grid coming before the thread in question.
 				 + blockIdx.y * gridDim.x * blockDim.x // Number of threads inside the 2D part of the grid coming before the thread in question.
@@ -207,7 +207,7 @@ __global__ void set_table_values_kernel(cudatable_t* table, float val) {
 
 }
 
-__host__ void set_table_values(cudatable_t* table, int32_t n, int32_t m, float val) {
+__host__ void set_table_values(cudatable::table_t* table, int32_t n, int32_t m, float val) {
 
     uint64_t num_threads = n * m;
     uint64_t num_blocks =  (num_threads + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -256,17 +256,13 @@ __host__ void set_table_values(cudatable_t* table, int32_t n, int32_t m, float v
 
 }
 
-
-
-
-
-table_t* get_table_from_gpu(cudatable_t* cuda_table) {
+void cudatable::get_table_from_gpu(table::table_t** table, cudatable::table_t* table_d) {
     
     cudaError_t err;
 
-    table_t* result = (table_t*) malloc(sizeof(table_t));
+    *table = (table::table_t*) malloc(sizeof(table::table_t));
 
-    cudaMemcpy(result, cuda_table, sizeof(cudatable_t), cudaMemcpyDeviceToHost);
+    cudaMemcpy(*table, table_d, sizeof(cudatable::table_t), cudaMemcpyDeviceToHost);
 
     err = cudaDeviceSynchronize();
 
@@ -275,11 +271,11 @@ table_t* get_table_from_gpu(cudatable_t* cuda_table) {
         exit(err);
     }
 
-    float* tmp = (float*) malloc(sizeof(float) * result->m * result->n);
+    float* tmp = (float*) malloc(sizeof(float) * (*table)->m * (*table)->n);
     
-    cudaMemcpy(tmp, result->vals, sizeof(float) * result->n * result->m, cudaMemcpyDeviceToHost);
+    cudaMemcpy(tmp, (*table)->vals, sizeof(float) * (*table)->n * (*table)->m, cudaMemcpyDeviceToHost);
 
-    result->vals = tmp;
+    (*table)->vals = tmp;
 
     err = cudaDeviceSynchronize();
 
@@ -288,17 +284,14 @@ table_t* get_table_from_gpu(cudatable_t* cuda_table) {
         exit(err);
     }
 
-    return result;
-
-
 }
 
-void free_cudatable(cudatable_t* cuda_table) {
+void cudatable::free_cudatable(cudatable::table_t* cuda_table) {
 
     cudaError_t err;
-    cudatable_t tmp;
+    cudatable::table_t tmp;
 
-    cudaMemcpy(&tmp, cuda_table, sizeof(cudatable_t), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&tmp, cuda_table, sizeof(cudatable::table_t), cudaMemcpyDeviceToHost);
 
     err = cudaDeviceSynchronize();
 

@@ -79,8 +79,8 @@ void basictest() {
     set_insert(terminals, 8);
     set_insert(terminals, 9);
 
-    table_t* distances = make_table(graph->vrt, graph->vrt); 
-    table_t* parents   = make_table(graph->vrt, graph->vrt);
+    table::table_t* distances = table::make_table(graph->vrt, graph->vrt); 
+    table::table_t* parents   = table::make_table(graph->vrt, graph->vrt);
        
     apsp_gpu_graph(graph, distances, parents);
 
@@ -88,11 +88,11 @@ void basictest() {
 
     cudagraph_t* cuda_graph     = copy_cudagraph(graph);
     cudaset_t*   cuda_terminals = copy_cudaset(terminals);
-    cudatable_t* cuda_distances = copy_cudatable(distances);
+    cudatable::table_t* cuda_distances = cudatable::copy_cudatable(distances);
 
     steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances);
 
-    free_cudatable(cuda_distances);
+    cudatable::free_cudatable(cuda_distances);
     free_cudaset(cuda_terminals);
     free_cudagraph(cuda_graph);
 
@@ -216,12 +216,12 @@ void load_gr_file(char* filename, graph_t** g, set_t** t, int32_t** h, int32_t* 
 
 }
 
-float run(graph_t* graph, set_t* terminals, table_t** distances, table_t** parents, bool gpu) {
+float run(graph_t* graph, set_t* terminals, table::table_t** distances, table::table_t** parents, bool gpu) {
 
     if(*distances == NULL) { // All pairs shortest path.
 
-        *distances = make_table(graph->vrt, graph->vrt); 
-        *parents   = make_table(graph->vrt, graph->vrt);
+        *distances = table::make_table(graph->vrt, graph->vrt); 
+        *parents   = table::make_table(graph->vrt, graph->vrt);
 
         apsp_gpu_graph(graph, *distances, *parents);
 
@@ -233,11 +233,11 @@ float run(graph_t* graph, set_t* terminals, table_t** distances, table_t** paren
 
         cudagraph_t* cuda_graph     = copy_cudagraph(graph);
         cudaset_t*   cuda_terminals = copy_cudaset(terminals);
-        cudatable_t* cuda_distances = copy_cudatable(*distances);
+        cudatable::table_t* cuda_distances = cudatable::copy_cudatable(*distances);
 
         opt = steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances);
 
-        free_cudatable(cuda_distances);
+        cudatable::free_cudatable(cuda_distances);
         free_cudaset(cuda_terminals);
         free_cudagraph(cuda_graph);
 
@@ -274,8 +274,8 @@ void test(char* path) {
 
             load_gr_file(filename, &graph, &terminals, &h, &hsize, &expected);
 
-            table_t* distances = NULL;
-            table_t* predecessors = NULL;
+            table::table_t* distances = NULL;
+            table::table_t* predecessors = NULL;
 
             float value = run(graph, terminals, &distances, &predecessors, true);
 

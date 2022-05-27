@@ -134,7 +134,7 @@ cugraph_graph_t* create_gpu_graph(cugraph_resource_handle_t* handle, int32_t* hs
 
 }
 
-void apsp_gpu_graph(graph_t* graph, table_t* distances, table_t* predecessors) {
+void apsp_gpu_graph(graph_t* graph, table::table_t* distances, table::table_t* predecessors) {
 
     cugraph_resource_handle_t* handle = cugraph_create_resource_handle(NULL);
 
