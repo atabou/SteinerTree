@@ -75,7 +75,7 @@ void fill_steiner_dp_table_cpu(table_t* costs, graph_t* g, set_t* terminals, tab
 
 }
 
-float steiner_tree_cpu(graph_t* g, set_t* terminals, table_t* distances) {
+steiner_result steiner_tree_cpu(graph_t* g, set_t* terminals, table_t* distances) {
 
     // Initialize DP table.
     
@@ -85,25 +85,27 @@ float steiner_tree_cpu(graph_t* g, set_t* terminals, table_t* distances) {
 
     fill_steiner_dp_table_cpu(costs, g, terminals, distances);
 
+    // Initialize result structure
+
+    steiner_result result;
+
     // Calculate minimum from table.
 
-    float min = FLT_MAX;
+    result.cost = FLT_MAX;
 
     for(int32_t i=costs->m - 1; i < costs->m * distances->n; i+=costs->m) {
         
-        if(costs->vals[i] < min) {
-            min = costs->vals[i];
+        if(costs->vals[i] < result.cost) {
+            result.cost = costs->vals[i];
         }
 
     }
 
     // Free table
-
-    // print_table(costs);
    
     free(costs);
 
-    return min;
+    return result;
 
 }
 
@@ -257,7 +259,7 @@ void fill_steiner_tree_cuda_table(cudatable_t* table, cudagraph_t* g, int32_t g_
 
 }
 
-float steiner_tree_gpu(cudagraph_t* graph, int32_t nvrt, cudaset_t* terminals, int32_t nterm, cudatable_t* distances) {
+steiner_result steiner_tree_gpu(cudagraph_t* graph, int32_t nvrt, cudaset_t* terminals, int32_t nterm, cudatable_t* distances) {
 
     // Construct the costs table.
 
@@ -271,25 +273,27 @@ float steiner_tree_gpu(cudagraph_t* graph, int32_t nvrt, cudaset_t* terminals, i
 
     table_t* result = get_table_from_gpu(costs);
 
+    // Initialize result structure
+
+    steiner_result res;
+
     // Extract the minimum from the table.
 
-    float min = INT32_MAX;
+    res.cost = FLT_MAX;
     
     for(int32_t i=result->m - 1; i < result->m * result->n; i = i + result->m) {
        
-        if(result->vals[i] < min) {
-            min = result->vals[i];
+        if(result->vals[i] < res.cost) {
+            res.cost = result->vals[i];
         }
 
     }
 
     // Free
 
-    // print_table(result);
-
     free_cudatable(costs);
     free_table(result);
 
-    return min;
+    return res;
 
 }
