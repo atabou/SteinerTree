@@ -19,9 +19,9 @@ clock_t CLOCKMACRO;
 #define BLUE  "\x1B[34m"
 #define RED   "\033[31m"
 
-graph_t* test_graph1() {
+graph::graph_t* test_graph1() {
 
-    graph_t* g = make_graph();
+    graph::graph_t* g = graph::make_graph();
 
     insert_vertex(g);
     insert_vertex(g);
@@ -63,13 +63,14 @@ graph_t* test_graph1() {
     insert_edge(g, 9, 3, 1);
     insert_edge(g, 6, 4, 1);
     insert_edge(g, 9, 4, 1);
+
     return g;
 
 }
 
 void basictest() {
 
-    graph_t* graph = test_graph1();
+    graph::graph_t* graph = test_graph1();
     set::set_t* terminals = set::make_set();
 
     set_insert(terminals, 0);
@@ -86,7 +87,7 @@ void basictest() {
 
     steiner_tree_cpu(graph, terminals, distances);
 
-    cudagraph_t* cuda_graph     = copy_cudagraph(graph);
+    cudagraph::graph_t* cuda_graph     = cudagraph::copy_cudagraph(graph);
     cudaset::set_t*   cuda_terminals = cudaset::copy_cudaset(terminals);
     cudatable::table_t* cuda_distances = cudatable::copy_cudatable(distances);
 
@@ -94,7 +95,7 @@ void basictest() {
 
     cudatable::free_cudatable(cuda_distances);
     cudaset::free_cudaset(cuda_terminals);
-    free_cudagraph(cuda_graph);
+    cudagraph::free_cudagraph(cuda_graph);
 
     destroy_graph(graph);
     free_set(terminals);
@@ -103,7 +104,7 @@ void basictest() {
 
 }
 
-void load_gr_file(char* filename, graph_t** g, set::set_t** t, int32_t** h, int32_t* hsize, float* opt) {
+void load_gr_file(char* filename, graph::graph_t** g, set::set_t** t, int32_t** h, int32_t* hsize, float* opt) {
 
     FILE* fp = fopen(filename, "r");
 
@@ -119,7 +120,7 @@ void load_gr_file(char* filename, graph_t** g, set::set_t** t, int32_t** h, int3
     }
 
     *t = set::make_set();
-    *g = make_graph();
+    *g = graph::make_graph();
 
     *h = (int32_t*) malloc(sizeof(int32_t));
     (*h)[0] = INT32_MAX;
@@ -216,7 +217,7 @@ void load_gr_file(char* filename, graph_t** g, set::set_t** t, int32_t** h, int3
 
 }
 
-float run(graph_t* graph, set::set_t* terminals, table::table_t** distances, table::table_t** parents, bool gpu) {
+float run(graph::graph_t* graph, set::set_t* terminals, table::table_t** distances, table::table_t** parents, bool gpu) {
 
     if(*distances == NULL) { // All pairs shortest path.
 
@@ -231,7 +232,7 @@ float run(graph_t* graph, set::set_t* terminals, table::table_t** distances, tab
 
     if(gpu) {
 
-        cudagraph_t* cuda_graph     = copy_cudagraph(graph);
+        cudagraph::graph_t* cuda_graph     = cudagraph::copy_cudagraph(graph);
         cudaset::set_t*   cuda_terminals = cudaset::copy_cudaset(terminals);
         cudatable::table_t* cuda_distances = cudatable::copy_cudatable(*distances);
 
@@ -239,7 +240,7 @@ float run(graph_t* graph, set::set_t* terminals, table::table_t** distances, tab
 
         cudatable::free_cudatable(cuda_distances);
         cudaset::free_cudaset(cuda_terminals);
-        free_cudagraph(cuda_graph);
+        cudagraph::free_cudagraph(cuda_graph);
 
     } else {
 
@@ -263,7 +264,7 @@ void test(char* path) {
 
             printf("%s%s\n",NORMAL_COLOR, dir->d_name);
 
-            graph_t* graph;
+            graph::graph_t* graph;
             set::set_t* terminals;
             int32_t* h;
             int32_t hsize;

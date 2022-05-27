@@ -5,9 +5,9 @@
 
 #include "graph.h"
 
-graph_t* make_graph() {
+graph::graph_t* graph::make_graph() {
 
-    graph_t* g = (graph_t*) malloc(sizeof(graph_t));
+    graph::graph_t* g = (graph::graph_t*) malloc(sizeof(graph::graph_t));
 
     g->max = 0;
     g->vrt = 0;
@@ -21,7 +21,7 @@ graph_t* make_graph() {
 
 }
 
-uint32_t insert_vertex(graph_t* g) {
+uint32_t graph::insert_vertex(graph::graph_t* g) {
 
     if(g->vrt < INT32_MAX) {
 
@@ -67,7 +67,7 @@ uint32_t insert_vertex(graph_t* g) {
 
 }
 
-void insert_edge(graph_t* g, int32_t src, int32_t dest, float w) {
+void graph::insert_edge(graph::graph_t* g, int32_t src, int32_t dest, float w) {
 
     if(src < g->vrt && dest < g->vrt && g->deg[src] < INT32_MAX) {
 
@@ -104,7 +104,7 @@ void insert_edge(graph_t* g, int32_t src, int32_t dest, float w) {
 }
 
 
-void to_graphviz(graph_t* g, char* filename) {
+void graph::to_graphviz(graph::graph_t* g, char* filename) {
 
 	FILE* fp = fopen(filename, "w");
 
@@ -142,7 +142,7 @@ void to_graphviz(graph_t* g, char* filename) {
 }
 
 
-void destroy_graph(graph_t* g) {
+void graph::destroy_graph(graph::graph_t* g) {
 
     if(g == NULL) {
         return;
@@ -172,13 +172,13 @@ void destroy_graph(graph_t* g) {
 }
 
 
-cudagraph_t* make_cudagraph() {
+cudagraph::graph_t* make_cudagraph() {
 
     cudaError_t err;
 
-    cudagraph_t* cuda_graph = NULL;
+    cudagraph::graph_t* cuda_graph = NULL;
 
-    err = cudaMalloc(&cuda_graph, sizeof(cudagraph_t));
+    err = cudaMalloc(&cuda_graph, sizeof(cudagraph::graph_t));
 
     if(err) {
         printf("Error initializing memory for cuda graph. (Error code: %d)\n", err);
@@ -196,10 +196,10 @@ cudagraph_t* make_cudagraph() {
 
 }
 
-cudagraph_t* copy_cudagraph(graph_t* cpu_graph) {
+cudagraph::graph_t* cudagraph::copy_cudagraph(graph::graph_t* cpu_graph) {
 
     cudaError_t err;
-    cudagraph_t tmp;
+    cudagraph::graph_t tmp;
 
     // Set cuda graph max capacity
 
@@ -272,9 +272,9 @@ cudagraph_t* copy_cudagraph(graph_t* cpu_graph) {
 
     // Copy cuda graph struct to gpu
 
-    cudagraph_t* cuda_graph = make_cudagraph();
+    cudagraph::graph_t* cuda_graph = make_cudagraph();
 
-    cudaMemcpy(cuda_graph, &tmp, sizeof(cudagraph_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(cuda_graph, &tmp, sizeof(cudagraph::graph_t), cudaMemcpyHostToDevice);
 
     err = cudaDeviceSynchronize();
 
@@ -287,12 +287,12 @@ cudagraph_t* copy_cudagraph(graph_t* cpu_graph) {
 
 }
 
-void free_cudagraph(cudagraph_t* g) {
+void cudagraph::free_cudagraph(cudagraph::graph_t* g) {
  
     cudaError_t err;
-    cudagraph_t tmp;
+    cudagraph::graph_t tmp;
 
-    cudaMemcpy(&tmp, g, sizeof(cudagraph_t), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&tmp, g, sizeof(cudagraph::graph_t), cudaMemcpyDeviceToHost);
  
     err = cudaDeviceSynchronize();
 

@@ -12,7 +12,7 @@
     
     typedef struct steiner_result {
 
-        graph_t* mst; /** The minimum steiner tree extracted. */
+        graph::graph_t* mst; /** The minimum steiner tree extracted. */
         float cost; /** The cost of the minimum steiner tree. */
 
     } steiner_result;
@@ -25,7 +25,7 @@
      * @param [in] terminals A pointer to a set_t on the CPU representing the number of terminal vertices.
      * @param [in] distances A pointer to a table_t containing the all pairs shortest path of the provided graph_t
      */
-    steiner_result steiner_tree_cpu(graph_t* graph, set::set_t* terminals, table::table_t* distances);
+    steiner_result steiner_tree_cpu(graph::graph_t* graph, set::set_t* terminals, table::table_t* distances);
 
     /**
      * @brief Calculates the minimum steiner tree of the provided graph on the GPU.
@@ -36,7 +36,7 @@
      * @param [in] terminals_size The number of terminals in the cudaset_t t.
      * @param [in] distances A pointer to a cudatable_t containing the all pairs shortest path of the supplied cudagraph_t on the GPU.
      */
-    steiner_result steiner_tree_gpu( cudagraph_t*        graph, 
+    steiner_result steiner_tree_gpu( cudagraph::graph_t* graph, 
                                      int32_t             graph_size, 
                                      cudaset::set_t*     terminals, 
                                      int32_t             terminals_size, 

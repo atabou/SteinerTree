@@ -9,7 +9,7 @@
 #include "cugraph_c/graph.h"
 #include "cugraph_c/algorithms.h"
 
-void toCOO(graph_t* graph, int32_t** src, int32_t** dst, float** wgt, int32_t* nedg) {
+void toCOO(graph::graph_t* graph, int32_t** src, int32_t** dst, float** wgt, int32_t* nedg) {
 
     *nedg = 0;
 
@@ -134,7 +134,7 @@ cugraph_graph_t* create_gpu_graph(cugraph_resource_handle_t* handle, int32_t* hs
 
 }
 
-void apsp_gpu_graph(graph_t* graph, table::table_t* distances, table::table_t* predecessors) {
+void apsp_gpu_graph(graph::graph_t* graph, table::table_t* distances, table::table_t* predecessors) {
 
     cugraph_resource_handle_t* handle = cugraph_create_resource_handle(NULL);
 
@@ -142,7 +142,7 @@ void apsp_gpu_graph(graph_t* graph, table::table_t* distances, table::table_t* p
 
     int32_t* src = NULL;
     int32_t* dst = NULL;
-    float* wgt = NULL;
+    float*   wgt = NULL;
  
     /* clock_t c = clock(); */
     toCOO(graph, &src, &dst, &wgt, &nedg);
