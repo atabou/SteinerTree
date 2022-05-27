@@ -25,9 +25,9 @@
         /**
          * @brief Creates an empty graph_t.
          *  
-         * @return A pointer to an empty graph_t.
+         * @param [out] graph A pointer to a graph_t pointer to initialize.
          */
-        __host__ graph_t* make();
+        __host__ void make(graph_t** graph);
 
 
         /**
@@ -88,7 +88,7 @@
          *
          * @param [in] graph A pointer to a graph_t on the CPU.
          */
-        __host__ graph_t* transfer_to_gpu(graph::graph_t* graph);
+        __host__ void transfer_to_gpu(graph_t** graph_d, graph::graph_t* graph);
         
 
         /**

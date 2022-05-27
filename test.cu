@@ -21,48 +21,50 @@ clock_t CLOCKMACRO;
 
 graph::graph_t* test_graph1() {
 
-    graph::graph_t* g = graph::make();
+    graph::graph_t* g;
+    
+    graph::make(&g);
 
-    insert_vertex(g);
-    insert_vertex(g);
-    insert_vertex(g);
-    insert_vertex(g);
-    insert_vertex(g);
-    insert_vertex(g);
-    insert_vertex(g);
-    insert_vertex(g);
-    insert_vertex(g);
-    insert_vertex(g);
+    graph::insert_vertex(g);
+    graph::insert_vertex(g);
+    graph::insert_vertex(g);
+    graph::insert_vertex(g);
+    graph::insert_vertex(g);
+    graph::insert_vertex(g);
+    graph::insert_vertex(g);
+    graph::insert_vertex(g);
+    graph::insert_vertex(g);
+    graph::insert_vertex(g);
 
-    insert_edge(g, 0, 1, 1);
-    insert_edge(g, 0, 1, 1);
-    insert_edge(g, 0, 2, 1);
-    insert_edge(g, 0, 3, 1);
-    insert_edge(g, 0, 4, 1);
-    insert_edge(g, 1, 5, 1);
-    insert_edge(g, 1, 6, 1);
-    insert_edge(g, 1, 8, 1);
-    insert_edge(g, 2, 5, 1);
-    insert_edge(g, 2, 7, 1);
-    insert_edge(g, 3, 7, 1);
-    insert_edge(g, 3, 9, 1);
-    insert_edge(g, 4, 6, 1);
-    insert_edge(g, 4, 9, 1);
+    graph::insert_edge(g, 0, 1, 1);
+    graph::insert_edge(g, 0, 1, 1);
+    graph::insert_edge(g, 0, 2, 1);
+    graph::insert_edge(g, 0, 3, 1);
+    graph::insert_edge(g, 0, 4, 1);
+    graph::insert_edge(g, 1, 5, 1);
+    graph::insert_edge(g, 1, 6, 1);
+    graph::insert_edge(g, 1, 8, 1);
+    graph::insert_edge(g, 2, 5, 1);
+    graph::insert_edge(g, 2, 7, 1);
+    graph::insert_edge(g, 3, 7, 1);
+    graph::insert_edge(g, 3, 9, 1);
+    graph::insert_edge(g, 4, 6, 1);
+    graph::insert_edge(g, 4, 9, 1);
 
-    insert_edge(g, 1, 0, 1);
-    insert_edge(g, 1, 0, 1);
-    insert_edge(g, 2, 0, 1);
-    insert_edge(g, 3, 0, 1);
-    insert_edge(g, 4, 0, 1);
-    insert_edge(g, 5, 1, 1);
-    insert_edge(g, 6, 1, 1);
-    insert_edge(g, 8, 1, 1);
-    insert_edge(g, 5, 2, 1);
-    insert_edge(g, 7, 2, 1);
-    insert_edge(g, 7, 3, 1);
-    insert_edge(g, 9, 3, 1);
-    insert_edge(g, 6, 4, 1);
-    insert_edge(g, 9, 4, 1);
+    graph::insert_edge(g, 1, 0, 1);
+    graph::insert_edge(g, 1, 0, 1);
+    graph::insert_edge(g, 2, 0, 1);
+    graph::insert_edge(g, 3, 0, 1);
+    graph::insert_edge(g, 4, 0, 1);
+    graph::insert_edge(g, 5, 1, 1);
+    graph::insert_edge(g, 6, 1, 1);
+    graph::insert_edge(g, 8, 1, 1);
+    graph::insert_edge(g, 5, 2, 1);
+    graph::insert_edge(g, 7, 2, 1);
+    graph::insert_edge(g, 7, 3, 1);
+    graph::insert_edge(g, 9, 3, 1);
+    graph::insert_edge(g, 6, 4, 1);
+    graph::insert_edge(g, 9, 4, 1);
 
     return g;
 
@@ -87,7 +89,9 @@ void basictest() {
 
     steiner_tree_cpu(graph, terminals, distances);
 
-    cudagraph::graph_t* cuda_graph     = cudagraph::transfer_to_gpu(graph);
+    cudagraph::graph_t* cuda_graph = NULL;
+
+    cudagraph::transfer_to_gpu(&cuda_graph, graph);
     cudatable::table_t* cuda_distances = cudatable::transfer_to_gpu(distances);
     cudaset::set_t*   cuda_terminals = cudaset::transfer_to_gpu(terminals);
 
@@ -119,8 +123,8 @@ void load_gr_file(char* filename, graph::graph_t** g, set::set_t** t, int32_t** 
 
     }
 
+    graph::make(g);
     *t = set::make();
-    *g = graph::make();
 
     *h = (int32_t*) malloc(sizeof(int32_t));
     (*h)[0] = INT32_MAX;
@@ -232,7 +236,9 @@ float run(graph::graph_t* graph, set::set_t* terminals, table::table_t** distanc
 
     if(gpu) {
 
-        cudagraph::graph_t* cuda_graph     = cudagraph::transfer_to_gpu(graph);
+        cudagraph::graph_t* cuda_graph = NULL; 
+
+        cudagraph::transfer_to_gpu(&cuda_graph, graph);
         cudaset::set_t*   cuda_terminals = cudaset::transfer_to_gpu(terminals);
         cudatable::table_t* cuda_distances = cudatable::transfer_to_gpu(*distances);
 

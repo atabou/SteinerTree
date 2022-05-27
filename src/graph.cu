@@ -5,19 +5,17 @@
 
 #include "graph.h"
 
-graph::graph_t* graph::make() {
+void graph::make(graph::graph_t** g) {
 
-    graph::graph_t* g = (graph::graph_t*) malloc(sizeof(graph::graph_t));
+    *g = (graph::graph_t*) malloc(sizeof(graph::graph_t));
 
-    g->max = 0;
-    g->vrt = 0;
+    (*g)->max = 0;
+    (*g)->vrt = 0;
     
-    g->deg = NULL;
+    (*g)->deg = NULL;
     
-    g->dst = NULL;    
-    g->wgt = NULL;
-
-    return g;
+    (*g)->dst = NULL;    
+    (*g)->wgt = NULL;
 
 }
 
@@ -196,22 +194,22 @@ cudagraph::graph_t* make_cudagraph() {
 
 }
 
-cudagraph::graph_t* cudagraph::transfer_to_gpu(graph::graph_t* cpu_graph) {
+void cudagraph::transfer_to_gpu(cudagraph::graph_t** graph_d, graph::graph_t* graph) {
 
     cudaError_t err;
     cudagraph::graph_t tmp;
 
     // Set cuda graph max capacity
 
-    tmp.max = cpu_graph->vrt;
+    tmp.max = graph->vrt;
 
     // Set cuda graph number of vertices
 
-    tmp.vrt = cpu_graph->vrt;
+    tmp.vrt = graph->vrt;
 
     // Create and set cuda graph degree array
 
-    err = cudaMalloc(&(tmp.deg), sizeof(int32_t) * cpu_graph->vrt);
+    err = cudaMalloc(&(tmp.deg), sizeof(int32_t) * graph->vrt);
     
     if(err) { 
         printf("Could not allocate memory for graph degree array. (Error code: %d)\n", err);
@@ -220,8 +218,8 @@ cudagraph::graph_t* cudagraph::transfer_to_gpu(graph::graph_t* cpu_graph) {
 
     // Create and set cuda graph adjacency array
 
-    err = cudaMalloc(&(tmp.dst), sizeof(int32_t*) * cpu_graph->vrt);
-    err = cudaMalloc(&(tmp.wgt), sizeof( float* ) * cpu_graph->vrt);
+    err = cudaMalloc(&(tmp.dst), sizeof(int32_t*) * graph->vrt);
+    err = cudaMalloc(&(tmp.wgt), sizeof( float* ) * graph->vrt);
 
     if(err) {
         printf("Could not allocate memory for graph adjacency lists. (Error code: %d)\n", err);
@@ -239,7 +237,7 @@ cudagraph::graph_t* cudagraph::transfer_to_gpu(graph::graph_t* cpu_graph) {
 
     // Copy degrees into degree array
 
-    cudaMemcpy(tmp.deg, cpu_graph->deg, sizeof(int32_t) * cpu_graph->vrt, cudaMemcpyHostToDevice);
+    cudaMemcpy(tmp.deg, graph->deg, sizeof(int32_t) * graph->vrt, cudaMemcpyHostToDevice);
 
     err = cudaDeviceSynchronize();
 
@@ -250,18 +248,18 @@ cudagraph::graph_t* cudagraph::transfer_to_gpu(graph::graph_t* cpu_graph) {
 
     // Create and set cuda graph adjacency list
 
-    int32_t* dst[cpu_graph->vrt];
-    float*   wgt[cpu_graph->vrt];
+    int32_t* dst[graph->vrt];
+    float*   wgt[graph->vrt];
 
-    for(int32_t i=0; i<cpu_graph->vrt; i++) {
+    for(int32_t i=0; i<graph->vrt; i++) {
 
-        cudaMemcpy(&dst[i], cpu_graph->dst[i], sizeof(int32_t) * cpu_graph->deg[i], cudaMemcpyHostToDevice);
-        cudaMemcpy(&wgt[i], cpu_graph->wgt[i], sizeof( float ) * cpu_graph->deg[i], cudaMemcpyHostToDevice);
+        cudaMemcpy(&dst[i], graph->dst[i], sizeof(int32_t) * graph->deg[i], cudaMemcpyHostToDevice);
+        cudaMemcpy(&wgt[i], graph->wgt[i], sizeof( float ) * graph->deg[i], cudaMemcpyHostToDevice);
 
     }
 
-    cudaMemcpy(tmp.dst, dst, sizeof(int32_t*) * cpu_graph->vrt, cudaMemcpyHostToDevice);
-    cudaMemcpy(tmp.wgt, wgt, sizeof( float* ) * cpu_graph->vrt, cudaMemcpyHostToDevice);
+    cudaMemcpy(tmp.dst, dst, sizeof(int32_t*) * graph->vrt, cudaMemcpyHostToDevice);
+    cudaMemcpy(tmp.wgt, wgt, sizeof( float* ) * graph->vrt, cudaMemcpyHostToDevice);
     
     err = cudaDeviceSynchronize();
 
@@ -272,9 +270,9 @@ cudagraph::graph_t* cudagraph::transfer_to_gpu(graph::graph_t* cpu_graph) {
 
     // Copy cuda graph struct to gpu
 
-    cudagraph::graph_t* cuda_graph = make_cudagraph();
+    *graph_d = make_cudagraph();
 
-    cudaMemcpy(cuda_graph, &tmp, sizeof(cudagraph::graph_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(*graph_d, &tmp, sizeof(cudagraph::graph_t), cudaMemcpyHostToDevice);
 
     err = cudaDeviceSynchronize();
 
@@ -282,8 +280,6 @@ cudagraph::graph_t* cudagraph::transfer_to_gpu(graph::graph_t* cpu_graph) {
         printf("Could not synchronize cuda device after graph memory copy. (Error code: %d)\n", err);
         exit(err);
     }
-
-    return cuda_graph;
 
 }
 
