@@ -9,13 +9,9 @@
 #include "graph.h"
 #include "set.h"
 #include "table.h"
-#include "table.cuda.h"
-#include "set.cuda.h"
-#include "graph.cuda.h"
 #include "util.h"
 clock_t CLOCKMACRO;
 #include "steiner.h"
-#include "steiner.cuda.h"
 #include "shortestpath.h"
 
 #define NORMAL_COLOR  "\x1B[0m"
@@ -88,7 +84,7 @@ void basictest() {
        
     apsp_gpu_graph(graph, distances, parents);
 
-    steiner_tree(graph, terminals, distances);
+    steiner_tree_cpu(graph, terminals, distances);
 
     cudagraph_t* cuda_graph     = copy_cudagraph(graph);
     cudaset_t*   cuda_terminals = copy_cudaset(terminals);
@@ -101,7 +97,7 @@ void basictest() {
     free_cudagraph(cuda_graph);
 
     destroy_graph(graph);
-    destroy_set(terminals);
+    free_set(terminals);
     free_table(distances);
     free_table(parents);
 
@@ -247,7 +243,7 @@ float run(graph_t* graph, set_t* terminals, table_t** distances, table_t** paren
 
     } else {
 
-        opt = steiner_tree(graph, terminals, *distances);
+        opt = steiner_tree_cpu(graph, terminals, *distances);
 
     }
 
@@ -310,7 +306,7 @@ void test(char* path) {
 
 int main() {
 
-    /* basictest(); */
+    // basictest();
     test("./test");
 
 }

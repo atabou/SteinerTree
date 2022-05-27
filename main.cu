@@ -17,9 +17,7 @@ clock_t CLOCKMACRO;
 #include "table.h"
 
 #include "graph.cuda.h"
-#include "set.cuda.h"
-#include "table.cuda.h"
-#include "steiner.cuda.h"
+
 
 graph_t* make_randomly_connected_graph(uint32_t v) {
 
@@ -108,7 +106,7 @@ void run(graph_t* graph, set_t* terminals, table_t** distances, table_t** parent
     }
 
     if(cpu) {
-        steiner_tree(graph, terminals, *distances);
+        steiner_tree_cpu(graph, terminals, *distances);
     }
 
     cudagraph_t* cuda_graph     = copy_cudagraph(graph);
@@ -150,7 +148,7 @@ int main(int argc, char** argv) {
 
             run(graph, terminals, &distances, &predecessors, false, true);
 
-            destroy_set(terminals);
+            free_set(terminals);
 
         }
 

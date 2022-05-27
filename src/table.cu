@@ -1,76 +1,31 @@
 
 #include <stdio.h>
-
+#include <stdlib.h>
 #include <float.h>
 
-extern "C" {
-    #include "table.cuda.h"
-}
+#include "table.h"
 
+#include <float.h>
 #define BLOCK_SIZE 1024
 #define MAX_BLOCKS 65536
 
-__global__ void set_table_values_kernel(cudatable_t* table, float val) {
 
-    int32_t pos =  blockIdx.z * gridDim.y * gridDim.x * blockDim.x // Number of threads inside the 3D part of the grid coming before the thread in question.
-				 + blockIdx.y * gridDim.x * blockDim.x // Number of threads inside the 2D part of the grid coming before the thread in question.
-				 + blockIdx.x * blockDim.x  // Number of threads inside the 1D part of the grid coming before the thread in question.
-				 + threadIdx.x; // The position of the thread in the block
+table_t* make_table(int32_t n, int32_t m) {
 
-    if(pos < table->m * table->n) {
-        table->vals[pos] = val;
-    }
+    table_t* t = (table_t*) malloc(sizeof(table_t));
 
-}
+    t->n = n;
+    t->m = m;
 
-void set_table_values(cudatable_t* table, int32_t n, int32_t m, float val) {
+    t->vals = (float*) malloc(sizeof(float) * n * m);
 
-    uint64_t num_threads = n * m;
-    uint64_t num_blocks =  (num_threads + BLOCK_SIZE - 1) / BLOCK_SIZE;
-
-    if(num_blocks <= MAX_BLOCKS) {
-
-        dim3 vblock(num_blocks, 1, 1);
-        set_table_values_kernel<<<vblock, BLOCK_SIZE>>>(table, val);
-
-    } else {
-
-        num_blocks = (num_blocks + BLOCK_SIZE - 1) / BLOCK_SIZE;
-
-        if(num_blocks <= MAX_BLOCKS) {
-
-            dim3 vblock(MAX_BLOCKS, num_blocks, 1);
-            set_table_values_kernel<<<vblock, BLOCK_SIZE>>>(table, val);
-
-        } else {
-
-            num_blocks = (num_blocks + BLOCK_SIZE - 1) / BLOCK_SIZE;
-
-            if(num_blocks <= MAX_BLOCKS) {
-
-                dim3 vblock(MAX_BLOCKS, MAX_BLOCKS, num_blocks);
-                set_table_values_kernel<<<vblock, BLOCK_SIZE>>>(table, val);
-
-            } else {
-
-                // TODO handle this case.
-
-            }
-
-        }
-
-    }
-
-    cudaError_t err = cudaDeviceSynchronize();
-
-    if(err) {
-        printf("Could not set initial values of table. (Error code: %d)\n", err);
-        exit(err);
-    }
-
-
+	return t;
 
 }
+
+
+__global__ void set_table_values_kernel(cudatable_t* table, float val);
+__host__ void set_table_values(cudatable_t* table, int32_t n, int32_t m, float val);
 
 cudatable_t* make_cudatable(int32_t n, int32_t m) {
 
@@ -128,12 +83,13 @@ cudatable_t* make_cudatable(int32_t n, int32_t m) {
 
 }
 
-cudatable_t* copy_cudatable(table_t* cpu_table) {
+
+cudatable_t* copy_cudatable(table_t* table) {
 
     cudatable_t tmp;
 
-    tmp.n = cpu_table->n;
-    tmp.m = cpu_table->m;
+    tmp.n = table->n;
+    tmp.m = table->m;
 
     cudaError_t err;
 
@@ -150,7 +106,7 @@ cudatable_t* copy_cudatable(table_t* cpu_table) {
         exit(err);
     }
 
-    cudaMemcpy(tmp.vals, cpu_table->vals, sizeof(float) * tmp.n * tmp.m, cudaMemcpyHostToDevice);
+    cudaMemcpy(tmp.vals, table->vals, sizeof(float) * tmp.n * tmp.m, cudaMemcpyHostToDevice);
 
     err = cudaDeviceSynchronize();
 
@@ -186,6 +142,123 @@ cudatable_t* copy_cudatable(table_t* cpu_table) {
     return cuda_table;
 
 }
+
+
+__device__ __host__ void print_table(table_t* table) {
+    
+    printf("\n\033[0;32m    |");
+
+    for(int32_t i=0; i<table->m; i++) {
+        printf("%3d|", i);
+    }
+
+    printf("\n");
+    for(int32_t i=0; i<table->m; i++) {
+        printf("+---");
+    }
+    printf("+---+\033[0m\n");
+
+    for(int32_t i=0; i<table->n; i++) {
+        printf("\033[0;32m %3d|\033[0m", i);
+        for(int32_t j=0; j<table->m; j++) {
+
+            if(table->vals[i * table->m + j] == FLT_MAX) {
+                printf("\033[0;31m%3d\033[0m|", -1);
+            } else {
+                printf("%.1f|", table->vals[i * table->m + j]);
+            }
+            
+        }
+        printf("\n\033[0;32m+---+\033[0m");
+        for(int32_t j=0; j<table->m; j++) {
+            printf("---+");
+        }
+        printf("\n");
+    }
+    printf("\n");
+
+}
+
+
+void free_table(table_t* t) {
+
+    free(t->vals);
+
+    t->vals = NULL;
+    t->n = 0;
+    t->m = 0;
+
+    free(t);
+    
+}
+
+// Helpers
+
+__global__ void set_table_values_kernel(cudatable_t* table, float val) {
+
+    int32_t pos =  blockIdx.z * gridDim.y * gridDim.x * blockDim.x // Number of threads inside the 3D part of the grid coming before the thread in question.
+				 + blockIdx.y * gridDim.x * blockDim.x // Number of threads inside the 2D part of the grid coming before the thread in question.
+				 + blockIdx.x * blockDim.x  // Number of threads inside the 1D part of the grid coming before the thread in question.
+				 + threadIdx.x; // The position of the thread in the block
+
+    if(pos < table->m * table->n) {
+        table->vals[pos] = val;
+    }
+
+}
+
+__host__ void set_table_values(cudatable_t* table, int32_t n, int32_t m, float val) {
+
+    uint64_t num_threads = n * m;
+    uint64_t num_blocks =  (num_threads + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+    if(num_blocks <= MAX_BLOCKS) {
+
+        dim3 vblock(num_blocks, 1, 1);
+        set_table_values_kernel<<<vblock, BLOCK_SIZE>>>(table, val);
+
+    } else {
+
+        num_blocks = (num_blocks + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+        if(num_blocks <= MAX_BLOCKS) {
+
+            dim3 vblock(MAX_BLOCKS, num_blocks, 1);
+            set_table_values_kernel<<<vblock, BLOCK_SIZE>>>(table, val);
+
+        } else {
+
+            num_blocks = (num_blocks + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+            if(num_blocks <= MAX_BLOCKS) {
+
+                dim3 vblock(MAX_BLOCKS, MAX_BLOCKS, num_blocks);
+                set_table_values_kernel<<<vblock, BLOCK_SIZE>>>(table, val);
+
+            } else {
+
+                // TODO handle this case.
+
+            }
+
+        }
+
+    }
+
+    cudaError_t err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not set initial values of table. (Error code: %d)\n", err);
+        exit(err);
+    }
+
+
+
+}
+
+
+
+
 
 table_t* get_table_from_gpu(cudatable_t* cuda_table) {
     

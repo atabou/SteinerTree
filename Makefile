@@ -1,6 +1,6 @@
 
 CC=nvcc
-COMMON= -g -G --Werror all-warnings -rdc=true -lcudadevrt -O3 -I./include -I${CONDA_PREFIX}/include
+COMMON= -g -G -rdc=true -lcudadevrt -O3 -I./include -I${CONDA_PREFIX}/include
 SRC=./src
 INC=./include
 OBJ=./obj
@@ -11,17 +11,13 @@ GREEN=\033[0;32m
 YELLOW=\033[1;33m
 NOCOLOR=\033[0m
 
-COMPILE=steiner.o \
-        graph.o \
+COMPILE=combination.o \
+		graph.o \
 	 	set.o \
         shortestpath.o \
-		util.o \
+		steiner.o \
 		table.o \
-		combination.cu.o \
-		graph.cu.o \
-		set.cu.o \
-		table.cu.o \
-		steiner.cu.o \
+		util.o \
 
 all: | pre-build ${BIN}/main
 	@echo "${GREEN}Compilation done.${NOCOLOR}"
@@ -33,18 +29,15 @@ pre-build:
 	@echo "Creating bin and obj folders if they don't exist."
 	@mkdir -p "${OBJ}" "${BIN}"
 
-${BIN}/main: ./main.c $(patsubst %,${OBJ}/%,${COMPILE})
-	${CC} ./main.c ${COMMON} -I/opt/cuda/include -o ${BIN}/main $(patsubst %,${OBJ}/%,${COMPILE}) ${LNK}
+${BIN}/main: ./main.cu $(patsubst %,${OBJ}/%,${COMPILE})
+	${CC} ./main.cu ${COMMON} -I/opt/cuda/include -o ${BIN}/main $(patsubst %,${OBJ}/%,${COMPILE}) ${LNK}
 	@echo "${YELLOW}Ignore Warnings${NOCOLOR}"
 
-${BIN}/test: ./test.c $(patsubst %,${OBJ}/%,${COMPILE})
-	${CC} ./test.c ${COMMON} -I/opt/cuda/include -o ${BIN}/test $(patsubst %,${OBJ}/%,${COMPILE}) ${LNK}
+${BIN}/test: ./test.cu $(patsubst %,${OBJ}/%,${COMPILE})
+	${CC} ./test.cu ${COMMON} -I/opt/cuda/include -o ${BIN}/test $(patsubst %,${OBJ}/%,${COMPILE}) ${LNK}
 	@echo "${YELLOW}Ignore Warnings${NOCOLOR}"
 
-${OBJ}/%.cu.o: ${SRC}/%.cu ${INC}/%.cuda.h
-	${CC} ${COMMON} -c $< -o $@
-
-${OBJ}/%.o: ${SRC}/%.c ${INC}/%.h
+${OBJ}/%.o: ${SRC}/%.cu ${INC}/%.h
 	${CC} ${COMMON} -c $< -o $@
 
 clean:
