@@ -24,7 +24,7 @@
          *
          * @return set_t* the created set.
          */
-        __host__ set_t* make_set();
+        __host__ set_t* make();
 
 
         /**
@@ -35,7 +35,7 @@
          * @param [in] set A pointer to the set to insert in.
          * @param [in] x The element to insert in the set.
          */
-        __host__ void set_insert(set_t* set, int32_t x);
+        __host__ void insert(set_t* set, int32_t x);
 
 
         /**
@@ -61,20 +61,19 @@
 
 
         /**
-         * @brief Destroys and frees the set.
-         *
-         * @param [in] set A pointer to a set_t.
-         */
-        __host__ void free_set(set_t* set);
-
-
-        /**
          * @brief Prints the set in a formatted way.
          *
          * @param [in] X A pointer to a set_t.
          */
-        __device__ __host__ void print_set(set_t* X);
+        __device__ __host__ void print(set_t* X);
 
+
+        /**
+         * @brief Destroys and frees the set.
+         *
+         * @param [in] set A pointer to a set_t.
+         */
+        __host__ void destroy(set_t* set);
 
     }
 
@@ -90,7 +89,7 @@
          * @param [in] set A pointer to the set_t to copy to the GPU.
          * @return A pointer to cudaset_t on the GPU.
          */
-        __host__ set_t* copy_cudaset(set::set_t* set);
+        __host__ set_t* transfer_to_gpu(set::set_t* set);
 
 
         /**
@@ -98,7 +97,7 @@
          *
          * @param [in] set A pointer to a cudaset_t on the GPU.
          */
-        __host__ void free_cudaset(set_t* set);
+        __host__ void destroy(set_t* set);
 
 
     }   

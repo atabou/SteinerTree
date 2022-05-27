@@ -6,7 +6,7 @@
 #include "set.h"
 
 
-set::set_t* set::make_set() {
+set::set_t* set::make() {
 
     set::set_t* s = (set::set_t*) malloc(sizeof(set::set_t));
 
@@ -18,7 +18,7 @@ set::set_t* set::make_set() {
 }
 
 
-void set::set_insert(set::set_t* set, int32_t x) {
+void set::insert(set::set_t* set, int32_t x) {
 
     if(set->size == 0) {
 
@@ -75,7 +75,7 @@ int set::element_exists(int32_t element, set::set_t* set, uint64_t mask) {
 }
 
 
-void set::print_set(set::set_t* X) {
+void set::print(set::set_t* X) {
 
     printf("{");
 
@@ -94,7 +94,7 @@ void set::print_set(set::set_t* X) {
 }
 
 
-cudaset::set_t* cudaset::copy_cudaset(set::set_t* set) {
+cudaset::set_t* cudaset::transfer_to_gpu(set::set_t* set) {
 
     cudaset::set_t tmp;
 
@@ -156,7 +156,7 @@ cudaset::set_t* cudaset::copy_cudaset(set::set_t* set) {
 }
 
 
-void cudaset::free_cudaset(cudaset::set_t* set) {
+void cudaset::destroy(cudaset::set_t* set) {
 
     cudaset::set_t tmp;
 
@@ -181,7 +181,7 @@ void cudaset::free_cudaset(cudaset::set_t* set) {
 }
 
 
-void set::free_set(set::set_t* set) {
+void set::destroy(set::set_t* set) {
 
     free(set->vals);
     set->vals = NULL;

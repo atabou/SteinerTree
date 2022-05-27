@@ -28,7 +28,7 @@
          * @param [in] m The number of elements in one row.
          * @return A pointer to the newly created table_t.
          */
-        __host__ table_t* make_table(int32_t n, int32_t m);
+        __host__ table_t* make(int32_t n, int32_t m);
 
 
         /**
@@ -36,7 +36,7 @@
          *
          * @param [in] table_t* A pointer to the table_t to print.
          */
-        __device__ __host__ void print_table(table_t* table);
+        __device__ __host__ void print(table_t* table);
 
 
         /**
@@ -44,7 +44,7 @@
          *
          * @param [in] table_t* A pointer to the table_t that you need to free.
          */
-        __host__ void free_table(table_t* t);
+        __host__ void destroy(table_t* t);
 
     }
 
@@ -68,7 +68,7 @@
          * @param [in] m The number of elements in one row.
          * @return A pointer to the created cudatable_t.
          */
-        __host__ table_t* make_cudatable(int32_t n, int32_t m);
+        __host__ table_t* make(int32_t n, int32_t m);
         
 
         /**
@@ -77,7 +77,7 @@
          * @param [out] table A pointer to a pointer which will contain the copied table from the GPU.
          * @param [in] table_d A pointer to a table on the GPU.
          */
-        __host__ void get_table_from_gpu(table::table_t** table, table_t* table_d);
+        __host__ void transfer_from_gpu(table::table_t** table, table_t* table_d);
         
 
         /**
@@ -86,7 +86,7 @@
          * @param [in] table A pointer to a table_t on the CPU.
          * @return A pointed to a newly created and filled cudatable_t on the GPU.
          */
-        __host__ table_t* copy_cudatable(table::table_t* table);
+        __host__ table_t* transfer_to_gpu(table::table_t* table);
         
 
         /**
@@ -94,7 +94,7 @@
          *
          * @param [in] table A pointer to a table_t to free on the GPU.
          */
-        __host__ void free_cudatable(table_t* table);        
+        __host__ void destroy(table_t* table);        
 
     }
 

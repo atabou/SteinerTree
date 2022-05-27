@@ -79,7 +79,7 @@ steiner_result steiner_tree_cpu(graph::graph_t* g, set::set_t* terminals, table:
 
     // Initialize DP table.
     
-    table::table_t* costs = table::make_table(g->vrt, (int32_t) pow(2, terminals->size) - 1);
+    table::table_t* costs = table::make(g->vrt, (int32_t) pow(2, terminals->size) - 1);
 
     // Fill dp table.
 
@@ -267,7 +267,7 @@ steiner_result steiner_tree_gpu(cudagraph::graph_t* graph, int32_t nvrt, cudaset
 
     // Construct the costs table.
 
-    cudatable::table_t* costs_d = cudatable::make_cudatable(nvrt, (int32_t) pow(2, nterm) - 1);
+    cudatable::table_t* costs_d = cudatable::make(nvrt, (int32_t) pow(2, nterm) - 1);
 
     // Fill the costs table.
 
@@ -275,7 +275,7 @@ steiner_result steiner_tree_gpu(cudagraph::graph_t* graph, int32_t nvrt, cudaset
 
     // Get the filled table from the GPU.
 
-    cudatable::get_table_from_gpu(&costs, costs_d);
+    cudatable::transfer_from_gpu(&costs, costs_d);
 
     // Initialize result structure
 
@@ -295,8 +295,8 @@ steiner_result steiner_tree_gpu(cudagraph::graph_t* graph, int32_t nvrt, cudaset
 
     // Free
 
-    cudatable::free_cudatable(costs_d);
-    table::free_table(costs);
+    cudatable::destroy(costs_d);
+    table::destroy(costs);
 
     return result;
 

@@ -5,7 +5,7 @@
 
 #include "graph.h"
 
-graph::graph_t* graph::make_graph() {
+graph::graph_t* graph::make() {
 
     graph::graph_t* g = (graph::graph_t*) malloc(sizeof(graph::graph_t));
 
@@ -142,7 +142,7 @@ void graph::to_graphviz(graph::graph_t* g, char* filename) {
 }
 
 
-void graph::destroy_graph(graph::graph_t* g) {
+void graph::destroy(graph::graph_t* g) {
 
     if(g == NULL) {
         return;
@@ -196,7 +196,7 @@ cudagraph::graph_t* make_cudagraph() {
 
 }
 
-cudagraph::graph_t* cudagraph::copy_cudagraph(graph::graph_t* cpu_graph) {
+cudagraph::graph_t* cudagraph::transfer_to_gpu(graph::graph_t* cpu_graph) {
 
     cudaError_t err;
     cudagraph::graph_t tmp;
@@ -287,7 +287,7 @@ cudagraph::graph_t* cudagraph::copy_cudagraph(graph::graph_t* cpu_graph) {
 
 }
 
-void cudagraph::free_cudagraph(cudagraph::graph_t* g) {
+void cudagraph::destroy(cudagraph::graph_t* g) {
  
     cudaError_t err;
     cudagraph::graph_t tmp;

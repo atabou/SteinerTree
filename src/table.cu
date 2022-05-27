@@ -10,7 +10,7 @@
 #define MAX_BLOCKS 65536
 
 
-table::table_t* table::make_table(int32_t n, int32_t m) {
+table::table_t* table::make(int32_t n, int32_t m) {
 
     table::table_t* t = (table::table_t*) malloc(sizeof(table::table_t));
 
@@ -27,7 +27,7 @@ table::table_t* table::make_table(int32_t n, int32_t m) {
 __global__ void set_table_values_kernel(cudatable::table_t* table, float val);
 __host__ void set_table_values(cudatable::table_t* table, int32_t n, int32_t m, float val);
 
-cudatable::table_t* cudatable::make_cudatable(int32_t n, int32_t m) {
+cudatable::table_t* cudatable::make(int32_t n, int32_t m) {
 
     cudatable::table_t tmp;
 
@@ -84,7 +84,7 @@ cudatable::table_t* cudatable::make_cudatable(int32_t n, int32_t m) {
 }
 
 
-cudatable::table_t* cudatable::copy_cudatable(table::table_t* table) {
+cudatable::table_t* cudatable::transfer_to_gpu(table::table_t* table) {
 
     cudatable::table_t tmp;
 
@@ -144,7 +144,7 @@ cudatable::table_t* cudatable::copy_cudatable(table::table_t* table) {
 }
 
 
-__device__ __host__ void table::print_table(table::table_t* table) {
+__device__ __host__ void table::print(table::table_t* table) {
     
     printf("\n\033[0;32m    |");
 
@@ -180,7 +180,7 @@ __device__ __host__ void table::print_table(table::table_t* table) {
 }
 
 
-void table::free_table(table::table_t* t) {
+void table::destroy(table::table_t* t) {
 
     free(t->vals);
 
@@ -256,7 +256,7 @@ __host__ void set_table_values(cudatable::table_t* table, int32_t n, int32_t m, 
 
 }
 
-void cudatable::get_table_from_gpu(table::table_t** table, cudatable::table_t* table_d) {
+void cudatable::transfer_from_gpu(table::table_t** table, cudatable::table_t* table_d) {
     
     cudaError_t err;
 
@@ -286,7 +286,7 @@ void cudatable::get_table_from_gpu(table::table_t** table, cudatable::table_t* t
 
 }
 
-void cudatable::free_cudatable(cudatable::table_t* cuda_table) {
+void cudatable::destroy(cudatable::table_t* cuda_table) {
 
     cudaError_t err;
     cudatable::table_t tmp;

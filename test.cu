@@ -21,7 +21,7 @@ clock_t CLOCKMACRO;
 
 graph::graph_t* test_graph1() {
 
-    graph::graph_t* g = graph::make_graph();
+    graph::graph_t* g = graph::make();
 
     insert_vertex(g);
     insert_vertex(g);
@@ -71,36 +71,36 @@ graph::graph_t* test_graph1() {
 void basictest() {
 
     graph::graph_t* graph = test_graph1();
-    set::set_t* terminals = set::make_set();
+    set::set_t* terminals = set::make();
 
-    set_insert(terminals, 0);
-    set_insert(terminals, 5);
-    set_insert(terminals, 6);
-    set_insert(terminals, 7);
-    set_insert(terminals, 8);
-    set_insert(terminals, 9);
+    set::insert(terminals, 0);
+    set::insert(terminals, 5);
+    set::insert(terminals, 6);
+    set::insert(terminals, 7);
+    set::insert(terminals, 8);
+    set::insert(terminals, 9);
 
-    table::table_t* distances = table::make_table(graph->vrt, graph->vrt); 
-    table::table_t* parents   = table::make_table(graph->vrt, graph->vrt);
+    table::table_t* distances = table::make(graph->vrt, graph->vrt); 
+    table::table_t* parents   = table::make(graph->vrt, graph->vrt);
        
     apsp_gpu_graph(graph, distances, parents);
 
     steiner_tree_cpu(graph, terminals, distances);
 
-    cudagraph::graph_t* cuda_graph     = cudagraph::copy_cudagraph(graph);
-    cudaset::set_t*   cuda_terminals = cudaset::copy_cudaset(terminals);
-    cudatable::table_t* cuda_distances = cudatable::copy_cudatable(distances);
+    cudagraph::graph_t* cuda_graph     = cudagraph::transfer_to_gpu(graph);
+    cudatable::table_t* cuda_distances = cudatable::transfer_to_gpu(distances);
+    cudaset::set_t*   cuda_terminals = cudaset::transfer_to_gpu(terminals);
 
     steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances);
 
-    cudatable::free_cudatable(cuda_distances);
-    cudaset::free_cudaset(cuda_terminals);
-    cudagraph::free_cudagraph(cuda_graph);
+    cudatable::destroy(cuda_distances);
+    cudagraph::destroy(cuda_graph);
+    cudaset::destroy(cuda_terminals);
 
-    destroy_graph(graph);
-    free_set(terminals);
-    free_table(distances);
-    free_table(parents);
+    graph::destroy(graph);
+    set::destroy(terminals);
+    table::destroy(distances);
+    table::destroy(parents);
 
 }
 
@@ -119,8 +119,8 @@ void load_gr_file(char* filename, graph::graph_t** g, set::set_t** t, int32_t** 
 
     }
 
-    *t = set::make_set();
-    *g = graph::make_graph();
+    *t = set::make();
+    *g = graph::make();
 
     *h = (int32_t*) malloc(sizeof(int32_t));
     (*h)[0] = INT32_MAX;
@@ -191,7 +191,7 @@ void load_gr_file(char* filename, graph::graph_t** g, set::set_t** t, int32_t** 
             } else if(type == 2) {
 
                 int32_t val = atoi(token);
-                set_insert(*t, (*h)[val]);
+                set::insert(*t, (*h)[val]);
 
             } else if(type == 3) {
 
@@ -221,8 +221,8 @@ float run(graph::graph_t* graph, set::set_t* terminals, table::table_t** distanc
 
     if(*distances == NULL) { // All pairs shortest path.
 
-        *distances = table::make_table(graph->vrt, graph->vrt); 
-        *parents   = table::make_table(graph->vrt, graph->vrt);
+        *distances = table::make(graph->vrt, graph->vrt); 
+        *parents   = table::make(graph->vrt, graph->vrt);
 
         apsp_gpu_graph(graph, *distances, *parents);
 
@@ -232,15 +232,15 @@ float run(graph::graph_t* graph, set::set_t* terminals, table::table_t** distanc
 
     if(gpu) {
 
-        cudagraph::graph_t* cuda_graph     = cudagraph::copy_cudagraph(graph);
-        cudaset::set_t*   cuda_terminals = cudaset::copy_cudaset(terminals);
-        cudatable::table_t* cuda_distances = cudatable::copy_cudatable(*distances);
+        cudagraph::graph_t* cuda_graph     = cudagraph::transfer_to_gpu(graph);
+        cudaset::set_t*   cuda_terminals = cudaset::transfer_to_gpu(terminals);
+        cudatable::table_t* cuda_distances = cudatable::transfer_to_gpu(*distances);
 
         opt = steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances);
 
-        cudatable::free_cudatable(cuda_distances);
-        cudaset::free_cudaset(cuda_terminals);
-        cudagraph::free_cudagraph(cuda_graph);
+        cudatable::destroy(cuda_distances);
+        cudaset::destroy(cuda_terminals);
+        cudagraph::destroy(cuda_graph);
 
     } else {
 
@@ -280,8 +280,8 @@ void test(char* path) {
 
             float value = run(graph, terminals, &distances, &predecessors, true);
 
-            free_table(distances);
-            free_table(predecessors);
+            table::destroy(distances);
+            table::destroy(predecessors);
 
             if(fabs(value - expected) < 1e-4) {
                 printf("%sTEST SUCCEEDED.%s\n", GREEN, NORMAL_COLOR);

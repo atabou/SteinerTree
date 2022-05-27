@@ -27,7 +27,7 @@
          *  
          * @return A pointer to an empty graph_t.
          */
-        __host__ graph_t* make_graph();
+        __host__ graph_t* make();
 
 
         /**
@@ -71,7 +71,7 @@
          * 
          * @param [in] graph a pointer to the graph_t to destroy.
          */
-        __host__ void destroy_graph(graph_t* graph);
+        __host__ void destroy(graph_t* graph);
 
 
     }
@@ -88,7 +88,7 @@
          *
          * @param [in] graph A pointer to a graph_t on the CPU.
          */
-        __host__ graph_t* copy_cudagraph(graph::graph_t* graph);
+        __host__ graph_t* transfer_to_gpu(graph::graph_t* graph);
         
 
         /**
@@ -96,7 +96,7 @@
          *
          * @param [in] graph A pointer to a cudagraph_t on the GPU.
          */
-        __host__ void free_cudagraph(graph_t* graph);
+        __host__ void destroy(graph_t* graph);
 
 
     }
