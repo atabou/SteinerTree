@@ -227,7 +227,7 @@ float run(graph_t* graph, set_t* terminals, table_t** distances, table_t** paren
 
     }
 
-    float opt;
+    steiner_result opt;
 
     if(gpu) {
 
@@ -247,7 +247,7 @@ float run(graph_t* graph, set_t* terminals, table_t** distances, table_t** paren
 
     }
 
-    return opt;
+    return opt.cost;
 
 }
 
