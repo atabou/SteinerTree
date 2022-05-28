@@ -13,7 +13,7 @@ NOCOLOR=\033[0m
 
 COMPILE=combination.o \
 		graph.o \
-	 	set.o \
+	 	query.o \
         shortestpath.o \
 		steiner.o \
 		table.o \

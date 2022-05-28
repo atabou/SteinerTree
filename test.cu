@@ -7,7 +7,7 @@
 #include <math.h>
 
 #include "graph.h"
-#include "set.h"
+#include "query.h"
 #include "table.h"
 #include "util.h"
 clock_t CLOCKMACRO;

@@ -6,7 +6,7 @@
 
     #define STEINER_H
 
-    #include "set.h"
+    #include "query.h"
     #include "graph.h"
     #include "table.h"
     
