@@ -9,17 +9,6 @@
     #include <stdint.h>
 
 
-    // /**
-    //  * @brief Returns the ith combination of size k in the lexicographic order of combinations.
-    //  * 
-    //  * @param [in] n The number of elements to choose from.
-    //  * @param [in] k The number of elements to choose.
-    //  * @param [in] i The index of the wanted combination.
-    //  * @return The ith combination of size k from the total n.
-    //  */
-    // __device__ uint64_t ith_combination(uint64_t n, uint64_t k, uint64_t i);
-
-
     /**
      * @brief Prints the bits in the bitmask in a formatted way.
      * 
@@ -27,6 +16,7 @@
      * @param size The number of elements from the bitmask to print.
      */    
     __device__ __host__ void print_mask(uint64_t mask, int32_t size);
+
 
     /**
      * @brief Given a pointer to a 64-bit bitmask, updates the content of the bitmask to the next combination n choose k,
@@ -41,7 +31,6 @@
      * @return 0 if no next combination of size exists, 1 otherwise.
      */
     __device__ __host__ int next_combination(uint32_t n, uint32_t k, uint64_t* mask);
-
 
 
 #endif
