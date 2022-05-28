@@ -24,7 +24,7 @@
          *
          * @return set_t* the created set.
          */
-        __host__ set_t* make();
+        __host__ void make(set_t** set);
 
 
         /**
@@ -89,7 +89,7 @@
          * @param [in] set A pointer to the set_t to copy to the GPU.
          * @return A pointer to cudaset_t on the GPU.
          */
-        __host__ set_t* transfer_to_gpu(set::set_t* set);
+        __host__ void transfer_to_gpu(set_t** set_d, set::set_t* set);
 
 
         /**

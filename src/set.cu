@@ -6,14 +6,12 @@
 #include "set.h"
 
 
-set::set_t* set::make() {
+void set::make(set_t** s) {
 
-    set::set_t* s = (set::set_t*) malloc(sizeof(set::set_t));
+    *s = (set::set_t*) malloc(sizeof(set::set_t));
 
-    s->vals = NULL;
-    s->size = 0;
-
-    return s;
+    (*s)->vals = NULL;
+    (*s)->size = 0;
 
 }
 
@@ -94,7 +92,7 @@ void set::print(set::set_t* X) {
 }
 
 
-cudaset::set_t* cudaset::transfer_to_gpu(set::set_t* set) {
+void cudaset::transfer_to_gpu(cudaset::set_t** set_d, set::set_t* set) {
 
     cudaset::set_t tmp;
 
@@ -124,10 +122,8 @@ cudaset::set_t* cudaset::transfer_to_gpu(set::set_t* set) {
         printf("Could not synchronize after cuda set element memory copy. (Error code: %d)\n", err);
         exit(err);
     }
- 
-    cudaset::set_t* cuda_set = NULL;
 
-    err = cudaMalloc(&cuda_set, sizeof(cudaset::set_t));
+    err = cudaMalloc(set_d, sizeof(cudaset::set_t));
 
     if(err) {
         printf("Could not initialize cuda set. (Error code: %d)\n", err);
@@ -141,7 +137,7 @@ cudaset::set_t* cudaset::transfer_to_gpu(set::set_t* set) {
         exit(err);
     }
 
-    cudaMemcpy(cuda_set, &tmp, sizeof(cudaset::set_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(*set_d, &tmp, sizeof(cudaset::set_t), cudaMemcpyHostToDevice);
 
     err = cudaDeviceSynchronize();
 
@@ -149,9 +145,6 @@ cudaset::set_t* cudaset::transfer_to_gpu(set::set_t* set) {
         printf("Could not synchronize after cuda set element memory copy. (Error code: %d)\n", err);
         exit(err);
     }
-
-    return cuda_set;
-
 
 }
 
