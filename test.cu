@@ -74,16 +74,16 @@ void basictest() {
 
     graph::graph_t* graph = test_graph1();
     
-    set::set_t* terminals = NULL;
+    query::query_t* terminals = NULL;
     
-    set::make(&terminals);
+    query::make(&terminals);
 
-    set::insert(terminals, 0);
-    set::insert(terminals, 5);
-    set::insert(terminals, 6);
-    set::insert(terminals, 7);
-    set::insert(terminals, 8);
-    set::insert(terminals, 9);
+    query::insert(terminals, 0);
+    query::insert(terminals, 5);
+    query::insert(terminals, 6);
+    query::insert(terminals, 7);
+    query::insert(terminals, 8);
+    query::insert(terminals, 9);
 
     table::table_t* distances = NULL;
     table::table_t* parents = NULL;
@@ -97,26 +97,26 @@ void basictest() {
 
     cudagraph::graph_t* cuda_graph = NULL;
     cudatable::table_t* cuda_distances = NULL;
-    cudaset::set_t* cuda_terminals = NULL;
+    cudaquery::query_t* cuda_terminals = NULL;
 
     cudagraph::transfer_to_gpu(&cuda_graph, graph);
     cudatable::transfer_to_gpu(&cuda_distances, distances);
-    cudaset::transfer_to_gpu(&cuda_terminals, terminals);
+    cudaquery::transfer_to_gpu(&cuda_terminals, terminals);
 
     steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances);
 
     cudatable::destroy(cuda_distances);
     cudagraph::destroy(cuda_graph);
-    cudaset::destroy(cuda_terminals);
+    cudaquery::destroy(cuda_terminals);
 
     graph::destroy(graph);
-    set::destroy(terminals);
+    query::destroy(terminals);
     table::destroy(distances);
     table::destroy(parents);
 
 }
 
-void load_gr_file(char* filename, graph::graph_t** g, set::set_t** t, int32_t** h, int32_t* hsize, float* opt) {
+void load_gr_file(char* filename, graph::graph_t** g, query::query_t** t, int32_t** h, int32_t* hsize, float* opt) {
 
     FILE* fp = fopen(filename, "r");
 
@@ -132,7 +132,7 @@ void load_gr_file(char* filename, graph::graph_t** g, set::set_t** t, int32_t** 
     }
 
     graph::make(g);
-    set::make(t);
+    query::make(t);
 
     *h = (int32_t*) malloc(sizeof(int32_t));
     (*h)[0] = INT32_MAX;
@@ -203,7 +203,7 @@ void load_gr_file(char* filename, graph::graph_t** g, set::set_t** t, int32_t** 
             } else if(type == 2) {
 
                 int32_t val = atoi(token);
-                set::insert(*t, (*h)[val]);
+                query::insert(*t, (*h)[val]);
 
             } else if(type == 3) {
 
@@ -229,7 +229,7 @@ void load_gr_file(char* filename, graph::graph_t** g, set::set_t** t, int32_t** 
 
 }
 
-float run(graph::graph_t* graph, set::set_t* terminals, table::table_t** distances, table::table_t** parents, bool gpu) {
+float run(graph::graph_t* graph, query::query_t* terminals, table::table_t** distances, table::table_t** parents, bool gpu) {
 
     if(*distances == NULL) { // All pairs shortest path.
 
@@ -246,15 +246,15 @@ float run(graph::graph_t* graph, set::set_t* terminals, table::table_t** distanc
 
         cudagraph::graph_t* cuda_graph = NULL; 
         cudatable::table_t* cuda_distances = NULL;
-        cudaset::set_t* cuda_terminals = NULL;
+        cudaquery::query_t* cuda_terminals = NULL;
 
         cudagraph::transfer_to_gpu(&cuda_graph, graph);
         cudatable::transfer_to_gpu(&cuda_distances, *distances);
-        cudaset::transfer_to_gpu(&cuda_terminals, terminals);
+        cudaquery::transfer_to_gpu(&cuda_terminals, terminals);
 
         opt = steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances);
 
-        cudaset::destroy(cuda_terminals);
+        cudaquery::destroy(cuda_terminals);
         cudatable::destroy(cuda_distances);
         cudagraph::destroy(cuda_graph);
 
@@ -281,7 +281,7 @@ void test(char* path) {
             printf("%s%s\n",NORMAL_COLOR, dir->d_name);
 
             graph::graph_t* graph;
-            set::set_t* terminals;
+            query::query_t* terminals;
             int32_t* h;
             int32_t hsize;
             float expected;

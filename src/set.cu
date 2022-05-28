@@ -6,9 +6,9 @@
 #include "set.h"
 
 
-void set::make(set_t** s) {
+void query::make(query::query_t** s) {
 
-    *s = (set::set_t*) malloc(sizeof(set::set_t));
+    *s = (query::query_t*) malloc(sizeof(query::query_t));
 
     (*s)->vals = NULL;
     (*s)->size = 0;
@@ -16,7 +16,7 @@ void set::make(set_t** s) {
 }
 
 
-void set::insert(set::set_t* set, int32_t x) {
+void query::insert(query::query_t* set, int32_t x) {
 
     if(set->size == 0) {
 
@@ -43,7 +43,7 @@ void set::insert(set::set_t* set, int32_t x) {
 }
 
 
-int32_t set::find_position(set::set_t* X, int32_t element) {
+int32_t query::find_position(query::query_t* X, int32_t element) {
 
     for(int32_t i=0; i < X->size; i++) {
 
@@ -58,7 +58,7 @@ int32_t set::find_position(set::set_t* X, int32_t element) {
 }
 
 
-int set::element_exists(int32_t element, set::set_t* set, uint64_t mask) {
+int query::element_exists(int32_t element, query::query_t* set, uint64_t mask) {
 
     for(int32_t i=0; i<set->size; i++) {
 
@@ -73,7 +73,7 @@ int set::element_exists(int32_t element, set::set_t* set, uint64_t mask) {
 }
 
 
-void set::print(set::set_t* X) {
+void query::print(query::query_t* X) {
 
     printf("{");
 
@@ -92,9 +92,9 @@ void set::print(set::set_t* X) {
 }
 
 
-void cudaset::transfer_to_gpu(cudaset::set_t** set_d, set::set_t* set) {
+void cudaquery::transfer_to_gpu(cudaquery::query_t** set_d, query::query_t* set) {
 
-    cudaset::set_t tmp;
+    cudaquery::query_t tmp;
 
     tmp.size = set->size;
    
@@ -123,7 +123,7 @@ void cudaset::transfer_to_gpu(cudaset::set_t** set_d, set::set_t* set) {
         exit(err);
     }
 
-    err = cudaMalloc(set_d, sizeof(cudaset::set_t));
+    err = cudaMalloc(set_d, sizeof(cudaquery::query_t));
 
     if(err) {
         printf("Could not initialize cuda set. (Error code: %d)\n", err);
@@ -137,7 +137,7 @@ void cudaset::transfer_to_gpu(cudaset::set_t** set_d, set::set_t* set) {
         exit(err);
     }
 
-    cudaMemcpy(*set_d, &tmp, sizeof(cudaset::set_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(*set_d, &tmp, sizeof(cudaquery::query_t), cudaMemcpyHostToDevice);
 
     err = cudaDeviceSynchronize();
 
@@ -149,11 +149,11 @@ void cudaset::transfer_to_gpu(cudaset::set_t** set_d, set::set_t* set) {
 }
 
 
-void cudaset::destroy(cudaset::set_t* set) {
+void cudaquery::destroy(cudaquery::query_t* set) {
 
-    cudaset::set_t tmp;
+    cudaquery::query_t tmp;
 
-    cudaMemcpy(&tmp, set, sizeof(cudaset::set_t), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&tmp, set, sizeof(cudaquery::query_t), cudaMemcpyDeviceToHost);
 
     cudaError_t err;
 
@@ -174,7 +174,7 @@ void cudaset::destroy(cudaset::set_t* set) {
 }
 
 
-void set::destroy(set::set_t* set) {
+void query::destroy(query::query_t* set) {
 
     free(set->vals);
     set->vals = NULL;
