@@ -85,18 +85,22 @@ void basictest() {
     set::insert(terminals, 8);
     set::insert(terminals, 9);
 
-    table::table_t* distances = table::make(graph->vrt, graph->vrt); 
-    table::table_t* parents   = table::make(graph->vrt, graph->vrt);
+    table::table_t* distances = NULL;
+    table::table_t* parents = NULL;
+
+    table::make(&distances, graph->vrt, graph->vrt); 
+    table::make(&parents, graph->vrt, graph->vrt);
        
     apsp_gpu_graph(graph, distances, parents);
 
     steiner_tree_cpu(graph, terminals, distances);
 
     cudagraph::graph_t* cuda_graph = NULL;
+    cudatable::table_t* cuda_distances = NULL;
     cudaset::set_t* cuda_terminals = NULL;
 
     cudagraph::transfer_to_gpu(&cuda_graph, graph);
-    cudatable::table_t* cuda_distances = cudatable::transfer_to_gpu(distances);
+    cudatable::transfer_to_gpu(&cuda_distances, distances);
     cudaset::transfer_to_gpu(&cuda_terminals, terminals);
 
     steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances);
@@ -229,8 +233,8 @@ float run(graph::graph_t* graph, set::set_t* terminals, table::table_t** distanc
 
     if(*distances == NULL) { // All pairs shortest path.
 
-        *distances = table::make(graph->vrt, graph->vrt); 
-        *parents   = table::make(graph->vrt, graph->vrt);
+        table::make(distances, graph->vrt, graph->vrt); 
+        table::make(parents, graph->vrt, graph->vrt);
 
         apsp_gpu_graph(graph, *distances, *parents);
 
@@ -241,16 +245,17 @@ float run(graph::graph_t* graph, set::set_t* terminals, table::table_t** distanc
     if(gpu) {
 
         cudagraph::graph_t* cuda_graph = NULL; 
+        cudatable::table_t* cuda_distances = NULL;
         cudaset::set_t* cuda_terminals = NULL;
 
         cudagraph::transfer_to_gpu(&cuda_graph, graph);
+        cudatable::transfer_to_gpu(&cuda_distances, *distances);
         cudaset::transfer_to_gpu(&cuda_terminals, terminals);
-        cudatable::table_t* cuda_distances = cudatable::transfer_to_gpu(*distances);
 
         opt = steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances);
 
-        cudatable::destroy(cuda_distances);
         cudaset::destroy(cuda_terminals);
+        cudatable::destroy(cuda_distances);
         cudagraph::destroy(cuda_graph);
 
     } else {

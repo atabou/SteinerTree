@@ -77,9 +77,13 @@ void fill_steiner_dp_table_cpu(table::table_t* costs, graph::graph_t* g, set::se
 
 steiner_result steiner_tree_cpu(graph::graph_t* g, set::set_t* terminals, table::table_t* distances) {
 
+    // Declare used variables
+
+    table::table_t* costs = NULL;
+
     // Initialize DP table.
     
-    table::table_t* costs = table::make(g->vrt, (int32_t) pow(2, terminals->size) - 1);
+    table::make(&costs, g->vrt, (int32_t) pow(2, terminals->size) - 1);
 
     // Fill dp table.
 
@@ -124,8 +128,6 @@ __global__ void dw_fill_base_cases(cudatable::table_t* costs, cudagraph::graph_t
 
         int32_t v = thread_id / terminals->size;
         uint64_t mask = 1llu << (thread_id % terminals->size);
-
-        // uint64_t mask = ith_combination(terminals->size, 1, thread_id % terminals->size);
         
         int32_t u = terminals->vals[terminals->size - __ffsll(mask)];
         
@@ -264,10 +266,11 @@ steiner_result steiner_tree_gpu(cudagraph::graph_t* graph, int32_t nvrt, cudaset
     // Declare required variables
 
     table::table_t* costs = NULL;
+    cudatable::table_t* costs_d = NULL;
 
     // Construct the costs table.
 
-    cudatable::table_t* costs_d = cudatable::make(nvrt, (int32_t) pow(2, nterm) - 1);
+    cudatable::make(&costs_d, nvrt, (int32_t) pow(2, nterm) - 1);
 
     // Fill the costs table.
 

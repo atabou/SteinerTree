@@ -28,7 +28,7 @@
          * @param [in] m The number of elements in one row.
          * @return A pointer to the newly created table_t.
          */
-        __host__ table_t* make(int32_t n, int32_t m);
+        __host__ void make(table_t** table, int32_t n, int32_t m);
 
 
         /**
@@ -68,7 +68,7 @@
          * @param [in] m The number of elements in one row.
          * @return A pointer to the created cudatable_t.
          */
-        __host__ table_t* make(int32_t n, int32_t m);
+        __host__ void make(table_t** table, int32_t n, int32_t m);
         
 
         /**
@@ -86,7 +86,7 @@
          * @param [in] table A pointer to a table_t on the CPU.
          * @return A pointed to a newly created and filled cudatable_t on the GPU.
          */
-        __host__ table_t* transfer_to_gpu(table::table_t* table);
+        __host__ void transfer_to_gpu(table_t** table_d, table::table_t* table);
         
 
         /**
