@@ -75,7 +75,7 @@ void fill_steiner_dp_table_cpu(table::table_t* costs, graph::graph_t* g, query::
 
 }
 
-steiner_result steiner_tree_cpu(graph::graph_t* g, query::query_t* terminals, table::table_t* distances) {
+void steiner_tree_cpu(graph::graph_t* g, query::query_t* terminals, table::table_t* distances, steiner_result** result) {
 
     // Declare used variables
 
@@ -89,18 +89,18 @@ steiner_result steiner_tree_cpu(graph::graph_t* g, query::query_t* terminals, ta
 
     fill_steiner_dp_table_cpu(costs, g, terminals, distances);
 
-    // Initialize result structure
+    // Initialize the steiner tree pointer.
 
-    steiner_result result;
+    *result = (steiner_result*) malloc(sizeof(steiner_result));
 
     // Calculate minimum from table.
 
-    result.cost = FLT_MAX;
+    (*result)->cost = FLT_MAX;
 
     for(int32_t i=costs->m - 1; i < costs->m * distances->n; i+=costs->m) {
         
-        if(costs->vals[i] < result.cost) {
-            result.cost = costs->vals[i];
+        if(costs->vals[i] < (*result)->cost) {
+            (*result)->cost = costs->vals[i];
         }
 
     }
@@ -108,8 +108,6 @@ steiner_result steiner_tree_cpu(graph::graph_t* g, query::query_t* terminals, ta
     // Free table
    
     free(costs);
-
-    return result;
 
 }
 
@@ -261,7 +259,7 @@ void fill_steiner_tree_cuda_table(cudatable::table_t* table, cudagraph::graph_t*
 
 }
 
-steiner_result steiner_tree_gpu(cudagraph::graph_t* graph, int32_t nvrt, cudaquery::query_t* terminals, int32_t nterm, cudatable::table_t* distances) {
+void steiner_tree_gpu(cudagraph::graph_t* graph, int32_t nvrt, cudaquery::query_t* terminals, int32_t nterm, cudatable::table_t* distances, steiner_result** result) {
 
     // Declare required variables
 
@@ -280,18 +278,18 @@ steiner_result steiner_tree_gpu(cudagraph::graph_t* graph, int32_t nvrt, cudaque
 
     cudatable::transfer_from_gpu(&costs, costs_d);
 
-    // Initialize result structure
+    // Initialize steiner result structure
 
-    steiner_result result;
+    *result = (steiner_result*) malloc(sizeof(steiner_result));
 
     // Extract the minimum from the table.
 
-    result.cost = FLT_MAX;
+    (*result)->cost = FLT_MAX;
     
     for(int32_t i=costs->m - 1; i < costs->m * costs->n; i = i + costs->m) {
        
-        if(costs->vals[i] < result.cost) {
-            result.cost = costs->vals[i];
+        if(costs->vals[i] < (*result)->cost) {
+            (*result)->cost = costs->vals[i];
         }
 
     }
@@ -300,7 +298,5 @@ steiner_result steiner_tree_gpu(cudagraph::graph_t* graph, int32_t nvrt, cudaque
 
     cudatable::destroy(costs_d);
     table::destroy(costs);
-
-    return result;
 
 }
