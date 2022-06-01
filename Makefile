@@ -1,6 +1,6 @@
 
 CC=nvcc
-COMMON= -g -G -rdc=true -lcudadevrt -O3 -I./include -I${CONDA_PREFIX}/include
+COMMON= -g -G -rdc=true -lcudadevrt -O3 -I./include
 SRC=./src
 INC=./include
 OBJ=./obj
@@ -23,6 +23,8 @@ all: | pre-build ${BIN}/main
 	@echo "${GREEN}Compilation done.${NOCOLOR}"
 
 test: | pre-build ${BIN}/test
+	@echo "${GREEN}Test build done.${NOCOLOR}"
+	@./bin/test
 	@echo "${GREEN}Testing done.${NOCOLOR}"
 
 pre-build:
@@ -37,7 +39,25 @@ ${BIN}/test: ./test.cu $(patsubst %,${OBJ}/%,${COMPILE})
 	${CC} ./test.cu ${COMMON} -I/opt/cuda/include -o ${BIN}/test $(patsubst %,${OBJ}/%,${COMPILE}) ${LNK}
 	@echo "${YELLOW}Ignore Warnings${NOCOLOR}"
 
-${OBJ}/%.o: ${SRC}/%.cu ${INC}/%.h
+${OBJ}/combination.o: ${SRC}/combination.cu ${INC}/combination.h
+	${CC} ${COMMON} -c $< -o $@
+
+${OBJ}/graph.o: ${SRC}/graph.cu ${INC}/graph.h
+	${CC} ${COMMON} -c $< -o $@
+
+${OBJ}/query.o: ${SRC}/query.cu ${INC}/query.h ${INC}/graph.h ${INC}/table.h
+	${CC} ${COMMON} -c $< -o $@
+
+${OBJ}/shortestpath.o: ${SRC}/shortestpath.cu ${INC}/shortestpath.h
+	${CC} ${COMMON} -I${CONDA_PREFIX}/include -c $< -o $@
+
+${OBJ}/steiner.o: ${SRC}/steiner.cu ${INC}/steiner.h ${INC}/combination.h ${INC}/util.h ${INC}/graph.h ${INC}/table.h ${INC}/query.h
+	${CC} ${COMMON} -c $< -o $@
+
+${OBJ}/table.o: ${SRC}/table.cu ${INC}/table.h
+	${CC} ${COMMON} -c $< -o $@
+
+${OBJ}/util.o: ${SRC}/util.cu ${INC}/util.h
 	${CC} ${COMMON} -c $< -o $@
 
 clean:
