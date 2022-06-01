@@ -19,100 +19,106 @@ clock_t CLOCKMACRO;
 #define BLUE  "\x1B[34m"
 #define RED   "\033[31m"
 
-graph::graph_t* test_graph1() {
-
-    graph::graph_t* g;
+void make_basic_graph(graph::graph_t** graph) {
     
-    graph::make(&g);
+    graph::make(graph);
 
-    graph::insert_vertex(g);
-    graph::insert_vertex(g);
-    graph::insert_vertex(g);
-    graph::insert_vertex(g);
-    graph::insert_vertex(g);
-    graph::insert_vertex(g);
-    graph::insert_vertex(g);
-    graph::insert_vertex(g);
-    graph::insert_vertex(g);
-    graph::insert_vertex(g);
+    graph::insert_vertex(*graph);
+    graph::insert_vertex(*graph);
+    graph::insert_vertex(*graph);
+    graph::insert_vertex(*graph);
+    graph::insert_vertex(*graph);
+    graph::insert_vertex(*graph);
+    graph::insert_vertex(*graph);
+    graph::insert_vertex(*graph);
+    graph::insert_vertex(*graph);
+    graph::insert_vertex(*graph);
 
-    graph::insert_edge(g, 0, 1, 1);
-    graph::insert_edge(g, 0, 1, 1);
-    graph::insert_edge(g, 0, 2, 1);
-    graph::insert_edge(g, 0, 3, 1);
-    graph::insert_edge(g, 0, 4, 1);
-    graph::insert_edge(g, 1, 5, 1);
-    graph::insert_edge(g, 1, 6, 1);
-    graph::insert_edge(g, 1, 8, 1);
-    graph::insert_edge(g, 2, 5, 1);
-    graph::insert_edge(g, 2, 7, 1);
-    graph::insert_edge(g, 3, 7, 1);
-    graph::insert_edge(g, 3, 9, 1);
-    graph::insert_edge(g, 4, 6, 1);
-    graph::insert_edge(g, 4, 9, 1);
+    graph::insert_edge(*graph, 0, 1, 1);
+    graph::insert_edge(*graph, 0, 1, 1);
+    graph::insert_edge(*graph, 0, 2, 1);
+    graph::insert_edge(*graph, 0, 3, 1);
+    graph::insert_edge(*graph, 0, 4, 1);
+    graph::insert_edge(*graph, 1, 5, 1);
+    graph::insert_edge(*graph, 1, 6, 1);
+    graph::insert_edge(*graph, 1, 8, 1);
+    graph::insert_edge(*graph, 2, 5, 1);
+    graph::insert_edge(*graph, 2, 7, 1);
+    graph::insert_edge(*graph, 3, 7, 1);
+    graph::insert_edge(*graph, 3, 9, 1);
+    graph::insert_edge(*graph, 4, 6, 1);
+    graph::insert_edge(*graph, 4, 9, 1);
 
-    graph::insert_edge(g, 1, 0, 1);
-    graph::insert_edge(g, 1, 0, 1);
-    graph::insert_edge(g, 2, 0, 1);
-    graph::insert_edge(g, 3, 0, 1);
-    graph::insert_edge(g, 4, 0, 1);
-    graph::insert_edge(g, 5, 1, 1);
-    graph::insert_edge(g, 6, 1, 1);
-    graph::insert_edge(g, 8, 1, 1);
-    graph::insert_edge(g, 5, 2, 1);
-    graph::insert_edge(g, 7, 2, 1);
-    graph::insert_edge(g, 7, 3, 1);
-    graph::insert_edge(g, 9, 3, 1);
-    graph::insert_edge(g, 6, 4, 1);
-    graph::insert_edge(g, 9, 4, 1);
+    graph::insert_edge(*graph, 1, 0, 1);
+    graph::insert_edge(*graph, 1, 0, 1);
+    graph::insert_edge(*graph, 2, 0, 1);
+    graph::insert_edge(*graph, 3, 0, 1);
+    graph::insert_edge(*graph, 4, 0, 1);
+    graph::insert_edge(*graph, 5, 1, 1);
+    graph::insert_edge(*graph, 6, 1, 1);
+    graph::insert_edge(*graph, 8, 1, 1);
+    graph::insert_edge(*graph, 5, 2, 1);
+    graph::insert_edge(*graph, 7, 2, 1);
+    graph::insert_edge(*graph, 7, 3, 1);
+    graph::insert_edge(*graph, 9, 3, 1);
+    graph::insert_edge(*graph, 6, 4, 1);
+    graph::insert_edge(*graph, 9, 4, 1);
 
-    return g;
+}
+
+void make_basic_query(query::query_t** terms) {
+
+    query::make(terms);
+
+    query::insert(*terms, 0);
+    query::insert(*terms, 5);
+    query::insert(*terms, 6);
+    query::insert(*terms, 7);
+    query::insert(*terms, 8);
+    query::insert(*terms, 9);
 
 }
 
 void basictest() {
 
-    graph::graph_t* graph = test_graph1();
+    graph::graph_t* graph = NULL;
+    query::query_t* terms = NULL;
     
-    query::query_t* terminals = NULL;
-    
-    query::make(&terminals);
+    make_basic_graph(&graph);
+    make_basic_query(&terms);
 
-    query::insert(terminals, 0);
-    query::insert(terminals, 5);
-    query::insert(terminals, 6);
-    query::insert(terminals, 7);
-    query::insert(terminals, 8);
-    query::insert(terminals, 9);
+    table::table_t* dists = NULL;
+    table::table_t* preds = NULL;
 
-    table::table_t* distances = NULL;
-    table::table_t* parents = NULL;
-
-    table::make(&distances, graph->vrt, graph->vrt); 
-    table::make(&parents, graph->vrt, graph->vrt);
+    table::make(&dists, graph->vrt, graph->vrt); 
+    table::make(&preds, graph->vrt, graph->vrt);
        
-    apsp_gpu_graph(graph, distances, parents);
+    apsp_gpu_graph(graph, dists, preds);
 
-    steiner_tree_cpu(graph, terminals, distances);
+    steiner_result* result1 = NULL;
+
+    steiner_tree_cpu(graph, terms, dists, &result1);
 
     cudagraph::graph_t* cuda_graph = NULL;
-    cudatable::table_t* cuda_distances = NULL;
-    cudaquery::query_t* cuda_terminals = NULL;
+    cudatable::table_t* cuda_dists = NULL;
+    cudaquery::query_t* cuda_terms = NULL;
 
     cudagraph::transfer_to_gpu(&cuda_graph, graph);
-    cudatable::transfer_to_gpu(&cuda_distances, distances);
-    cudaquery::transfer_to_gpu(&cuda_terminals, terminals);
+    cudatable::transfer_to_gpu(&cuda_dists, dists);
+    cudaquery::transfer_to_gpu(&cuda_terms, terms);
 
-    steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances);
+    steiner_result* result2 = NULL;
 
-    cudatable::destroy(cuda_distances);
+    steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terms, terms->size, cuda_dists, &result2);
+
+    cudatable::destroy(cuda_dists);
     cudagraph::destroy(cuda_graph);
-    cudaquery::destroy(cuda_terminals);
+    cudaquery::destroy(cuda_terms);
 
     graph::destroy(graph);
-    query::destroy(terminals);
-    table::destroy(distances);
-    table::destroy(parents);
+    query::destroy(terms);
+    table::destroy(dists);
+    table::destroy(preds);
 
 }
 
@@ -240,7 +246,7 @@ float run(graph::graph_t* graph, query::query_t* terminals, table::table_t** dis
 
     }
 
-    steiner_result opt;
+    steiner_result* opt;
 
     if(gpu) {
 
@@ -252,7 +258,7 @@ float run(graph::graph_t* graph, query::query_t* terminals, table::table_t** dis
         cudatable::transfer_to_gpu(&cuda_distances, *distances);
         cudaquery::transfer_to_gpu(&cuda_terminals, terminals);
 
-        opt = steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances);
+        steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances, &opt);
 
         cudaquery::destroy(cuda_terminals);
         cudatable::destroy(cuda_distances);
@@ -260,11 +266,15 @@ float run(graph::graph_t* graph, query::query_t* terminals, table::table_t** dis
 
     } else {
 
-        opt = steiner_tree_cpu(graph, terminals, *distances);
+        steiner_tree_cpu(graph, terminals, *distances, &opt);
 
     }
 
-    return opt.cost;
+    float min = opt->cost;
+
+    free(opt);
+
+    return min;
 
 }
 
