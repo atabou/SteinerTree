@@ -5,7 +5,7 @@
 
 #include "table.h"
 
-#include <float.h>
+
 #define BLOCK_SIZE 1024
 #define MAX_BLOCKS 65536
 
