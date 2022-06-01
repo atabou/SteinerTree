@@ -10,12 +10,14 @@
 
     namespace query {
 
+
         typedef struct query_t {
 
             int32_t* vals;
             int32_t  size;
 
         } query_t;
+
 
         /**
          * @brief Creates a new empty set.
