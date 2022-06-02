@@ -46,27 +46,77 @@ __global__ void dw_fill_kth_combination(cudatable::table_t* costs, cudagraph::gr
 
     // Declare and initialize minimum shared memory array.
 
-    __shared__ float minimums[BLOCK_SIZE];
-    
+    __shared__ float   minimums[BLOCK_SIZE];
+    __shared__ int32_t vertices[BLOCK_SIZE];
+    __shared__ int64_t subtrees[BLOCK_SIZE];
+
     minimums[threadIdx.x] = FLT_MAX;
+    vertices[threadIdx.x] = -1;
+    subtrees[threadIdx.x] = -1;
 
     // Compute the mask of the current block
 
     uint64_t mask = ith_combination(terminals->size, k, i);
 
+    __syncthreads();
+
     // Compute the minimum steiner tree
 
-    for(int32_t w = threadIdx.x; w<gridDim.x; w+=blockDim.x) {
+    if(threadIdx.x < gridDim.x) {
 
-        int32_t exists = 0;
-        int32_t position = 0;
+        for(int32_t w = threadIdx.x; w<gridDim.x; w+=blockDim.x) {
 
-        for(int32_t i=0; i<terminals->size; i++) {
+            int32_t exists = 0;
+            int32_t position = 0;
 
-            if(w == terminals->vals[i] && ((mask >> (terminals->size - i - 1)) & 1) == 1 ) {
+            for(int32_t i=0; i<terminals->size; i++) {
 
-                exists = 1;
-                position = i;
+                if(w == terminals->vals[i] && ((mask >> (terminals->size - i - 1)) & 1) == 1 ) {
+
+                    exists = 1;
+                    position = i;
+
+                }
+
+                __syncthreads();
+
+            }
+
+            if(exists) {
+
+                uint64_t submask = 1ll << (terminals->size - position - 1);
+
+                float cost = distances->vals[v * distances->m + w] 
+                            + costs->vals[((mask & ~submask) - 1) * costs->m + w];
+
+                if(cost < minimums[threadIdx.x]) {
+
+                    minimums[threadIdx.x] = cost;
+                    vertices[threadIdx.x] = w;
+                    subtrees[threadIdx.x] = w;
+
+                }
+
+            } else if(g->deg[w] >= 3) {
+
+                for(uint64_t submask = (mask - 1) & mask; submask != 0; submask = (submask - 1) & mask) {
+
+                    float cost = distances->vals[v * distances->m + w]
+                                + costs->vals[(submask - 1) * costs->m + w]
+                                + costs->vals[((mask & ~submask) - 1) * costs->m + w];
+
+                    if(cost < minimums[threadIdx.x]) {
+
+                        minimums[threadIdx.x] = cost;
+                        vertices[threadIdx.x] = w;
+                        subtrees[threadIdx.x] = submask;
+
+                    }
+
+                    //TODO: Do I need to syncthreads here?
+
+
+                }
 
             }
 
@@ -74,51 +124,34 @@ __global__ void dw_fill_kth_combination(cudatable::table_t* costs, cudagraph::gr
 
         }
 
-        if(exists) {
+        // Parallel minimum reduction
 
-            uint64_t submask = 1ll << (terminals->size - position - 1);
+        for(int i=2; i<BLOCK_SIZE; i*=2) {
 
-            float cost = distances->vals[v * distances->m + w] 
-                           + costs->vals[((mask & ~submask) - 1) * costs->m + w];
+            if(threadIdx.x % i == 0) {
 
-            minimums[threadIdx.x] = (cost < minimums[threadIdx.x]) ? cost : minimums[threadIdx.x];
+                if(minimums[threadIdx.x + i / 2] < minimums[threadIdx.x]) {
 
-        } else if(g->deg[w] >= 3) {
+                    minimums[threadIdx.x] = minimums[threadIdx.x + i / 2];
+                    vertices[threadIdx.x] = vertices[threadIdx.x + i / 2];
+                    subtrees[threadIdx.x] = subtrees[threadIdx.x + i / 2];
 
-            for(uint64_t submask = (mask - 1) & mask; submask != 0; submask = (submask - 1) & mask) {
-
-                float cost = distances->vals[v * distances->m + w]
-                               + costs->vals[(submask - 1) * costs->m + w]
-                               + costs->vals[((mask & ~submask) - 1) * costs->m + w];
-
-                minimums[threadIdx.x] = (cost < minimums[threadIdx.x]) ? cost : minimums[threadIdx.x]; //TODO: Do I need to syncthreads here?
+                }
 
             }
 
-        }
-
-        __syncthreads();
-
-    }
-
-    // Parallel minimum reduction
-
-    for(int i=2; i<BLOCK_SIZE; i*=2) {
-
-        if(threadIdx.x % i == 0) {
-
-            minimums[threadIdx.x] = (minimums[threadIdx.x] < minimums[threadIdx.x + i / 2]) ? minimums[threadIdx.x] : minimums[threadIdx.x + i / 2];
+            __syncthreads();
 
         }
 
-    }
+        // Assign the minimum to the corresponding slot in the table.
 
-    // Assign the minimum to the corresponding slot in the table.
+        if(threadIdx.x == 0) {
+        
+            costs->vals[(mask - 1) * costs->m + v] = minimums[0];
+        
+        }
 
-    if(threadIdx.x == 0) {
-    
-        costs->vals[(mask - 1) * costs->m + v] = minimums[0];
-    
     }
 
 }
@@ -216,7 +249,9 @@ void steiner_tree_gpu(cudagraph::graph_t* graph, int32_t nvrt, cudaquery::query_
     for(int32_t i=0; i < costs->m; i++) {
 
         if(costs->vals[costs->m *(costs->n - 1) + i] < (*result)->cost) {
+            
             (*result)->cost = costs->vals[costs->m *(costs->n - 1) + i];
+        
         }
 
     }
