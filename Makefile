@@ -17,7 +17,6 @@ COMPILE=combination.o \
         shortestpath.o \
 		steiner.cpu.o \
 		steiner.gpu.o \
-		table.o \
 		util.o \
 
 all: | pre-build ${BIN}/main

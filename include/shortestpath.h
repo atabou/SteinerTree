@@ -17,7 +17,7 @@
      * @param [out] distances A pointer to a table_t to fill the respective distances in.
      * @param [out] predecessors A pointer to a table to fill the respective predecessors in.
      */
-    __host__ void apsp_gpu_graph(graph::graph_t* graph, table::table_t* distances, table::table_t* predecessors);
+    __host__ void apsp_gpu_graph(graph::graph_t* graph, table::table_t<float>* distances, table::table_t<int32_t>* predecessors);
 
 
 #endif

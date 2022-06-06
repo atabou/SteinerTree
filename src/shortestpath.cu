@@ -134,7 +134,7 @@ cugraph_graph_t* create_gpu_graph(cugraph_resource_handle_t* handle, int32_t* hs
 
 }
 
-void apsp_gpu_graph(graph::graph_t* graph, table::table_t* distances, table::table_t* predecessors) {
+void apsp_gpu_graph(graph::graph_t* graph, table::table_t<float>* distances, table::table_t<int32_t>* predecessors) {
 
     cugraph_resource_handle_t* handle = cugraph_create_resource_handle(NULL);
 
@@ -180,7 +180,7 @@ void apsp_gpu_graph(graph::graph_t* graph, table::table_t* distances, table::tab
 
         cugraph_type_erased_device_array_view_t* predv = cugraph_paths_result_get_predecessors(result);
 
-        status = cugraph_type_erased_device_array_view_copy_to_host(handle, (byte_t*) &(predecessors->vals[source * distances->m]), predv, &error);
+        status = cugraph_type_erased_device_array_view_copy_to_host(handle, (byte_t*) &(predecessors->vals[source * predecessors->m]), predv, &error);
 
         if(status != CUGRAPH_SUCCESS) {
             printf("%s\n", cugraph_error_message(error));

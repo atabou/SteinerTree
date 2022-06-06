@@ -87,8 +87,8 @@ void basictest() {
     make_basic_graph(&graph);
     make_basic_query(&terms);
 
-    table::table_t* dists = NULL;
-    table::table_t* preds = NULL;
+    table::table_t< float >* dists = NULL;
+    table::table_t<int32_t>* preds = NULL;
 
     table::make(&dists, graph->vrt, graph->vrt); 
     table::make(&preds, graph->vrt, graph->vrt);
@@ -99,9 +99,9 @@ void basictest() {
 
     steiner_tree_cpu(graph, terms, dists, &result1);
 
-    cudagraph::graph_t* cuda_graph = NULL;
-    cudatable::table_t* cuda_dists = NULL;
-    cudaquery::query_t* cuda_terms = NULL;
+    cudagraph::graph_t*        cuda_graph = NULL;
+    cudatable::table_t<float>* cuda_dists = NULL;
+    cudaquery::query_t*        cuda_terms = NULL;
 
     cudagraph::transfer_to_gpu(&cuda_graph, graph);
     cudatable::transfer_to_gpu(&cuda_dists, dists);
@@ -109,7 +109,7 @@ void basictest() {
 
     steiner_result* result2 = NULL;
 
-    steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terms, terms->size, cuda_dists, &result2);
+    steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terms, terms->size, cuda_dists, preds, &result2);
 
     cudatable::destroy(cuda_dists);
     cudagraph::destroy(cuda_graph);
@@ -235,7 +235,7 @@ void load_gr_file(char* filename, graph::graph_t** g, query::query_t** t, int32_
 
 }
 
-float run(graph::graph_t* graph, query::query_t* terminals, table::table_t** distances, table::table_t** parents, bool gpu) {
+float run(graph::graph_t* graph, query::query_t* terminals, table::table_t<float>** distances, table::table_t<int32_t>** parents, bool gpu) {
 
     if(*distances == NULL) { // All pairs shortest path.
 
@@ -250,15 +250,15 @@ float run(graph::graph_t* graph, query::query_t* terminals, table::table_t** dis
 
     if(gpu) {
 
-        cudagraph::graph_t* cuda_graph = NULL; 
-        cudatable::table_t* cuda_distances = NULL;
-        cudaquery::query_t* cuda_terminals = NULL;
+        cudagraph::graph_t*        cuda_graph = NULL; 
+        cudatable::table_t<float>* cuda_distances = NULL;
+        cudaquery::query_t*        cuda_terminals = NULL;
 
         cudagraph::transfer_to_gpu(&cuda_graph, graph);
         cudatable::transfer_to_gpu(&cuda_distances, *distances);
         cudaquery::transfer_to_gpu(&cuda_terminals, terminals);
 
-        steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances, &opt);
+        steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances, *parents, &opt);
 
         cudaquery::destroy(cuda_terminals);
         cudatable::destroy(cuda_distances);
@@ -301,8 +301,8 @@ void test(char* path) {
 
             load_gr_file(filename, &graph, &terminals, &h, &hsize, &expected);
 
-            table::table_t* distances = NULL;
-            table::table_t* predecessors = NULL;
+            table::table_t< float >* distances = NULL;
+            table::table_t<int32_t>* predecessors = NULL;
 
             float value = run(graph, terminals, &distances, &predecessors, true);
 
@@ -333,7 +333,7 @@ void test(char* path) {
 
 int main() {
 
-    // basictest();
+    /* basictest(); */
     test("./test");
 
 }

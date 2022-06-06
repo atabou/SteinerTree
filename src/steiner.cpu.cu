@@ -9,7 +9,7 @@
 #include "util.h"
 
 
-void fill_steiner_dp_table_cpu(table::table_t* costs, graph::graph_t* g, query::query_t* terminals, table::table_t* distances) {
+void fill_steiner_dp_table_cpu(table::table_t<float>* costs, graph::graph_t* g, query::query_t* terminals, table::table_t<float>* distances) {
 
     for(int32_t k=1; k <= terminals->size; k++) {
 
@@ -76,11 +76,11 @@ void fill_steiner_dp_table_cpu(table::table_t* costs, graph::graph_t* g, query::
 }
 
 
-void steiner_tree_cpu(graph::graph_t* g, query::query_t* terminals, table::table_t* distances, steiner_result** result) {
+void steiner_tree_cpu(graph::graph_t* g, query::query_t* terminals, table::table_t<float>* distances, steiner_result** result) {
 
     // Declare used variables
 
-    table::table_t* costs = NULL;
+    table::table_t<float>* costs = NULL;
 
     // Initialize DP table.
     

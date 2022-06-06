@@ -26,7 +26,7 @@
      * @param [in] distances A pointer to a table_t containing the all pairs shortest path of the provided graph_t
      * @param [out] result The address of a pointer to the result object of the steiner tree computation.
      */
-    void steiner_tree_cpu(graph::graph_t* graph, query::query_t* terminals, table::table_t* distances, steiner_result** result);
+    void steiner_tree_cpu(graph::graph_t* graph, query::query_t* terminals, table::table_t<float>* distances, steiner_result** result);
 
 
     /**
@@ -43,7 +43,8 @@
                            int32_t             graph_size, 
                            cudaquery::query_t* terminals_d, 
                            int32_t             terminals_size, 
-                           cudatable::table_t* distances,
+                           cudatable::table_t<float>* distances,
+                           table::table_t<int32_t>* predecessors,
                            steiner_result**    result );
 
 
