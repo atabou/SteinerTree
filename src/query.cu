@@ -147,6 +147,35 @@ void cudaquery::transfer_to_gpu(cudaquery::query_t** set_d, query::query_t* set)
 
 }
 
+void cudaquery::transfer_from_gpu(query::query_t** query, cudaquery::query_t* query_d) {
+    
+    cudaError_t err;
+
+    *query = (query::query_t*) malloc(sizeof(query::query_t));
+
+    cudaMemcpy(*query, query_d, sizeof(cudaquery::query_t), cudaMemcpyDeviceToHost);
+
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not copy cuda table data before free. (Error code: %d).\n", err);
+        exit(err);
+    }
+
+    int32_t* tmp = (int32_t*) malloc(sizeof(int32_t) * (*query)->size);
+    
+    cudaMemcpy(tmp, (*query)->vals, sizeof(int32_t) * (*query)->size, cudaMemcpyDeviceToHost);
+
+    (*query)->vals = tmp;
+
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not complete cuda table deallocation. (Error code: %d)\n", err);
+        exit(err);
+    }
+
+}
 
 void cudaquery::destroy(cudaquery::query_t* set) {
 

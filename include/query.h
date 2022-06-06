@@ -93,6 +93,7 @@
          */
         __host__ void transfer_to_gpu(query_t** set_d, query::query_t* set);
 
+        __host__ void transfer_from_gpu(query::query_t** query, query_t* query_d);
 
         /**
          * @brief Frees a given cudaset_t from the GPU memory.
