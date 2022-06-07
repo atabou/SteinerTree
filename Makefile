@@ -15,6 +15,7 @@ COMPILE=combination.o \
 		graph.o \
 	 	query.o \
         shortestpath.o \
+		tree.o \
 		steiner.cpu.o \
 		steiner.gpu.o \
 		util.o \
@@ -51,13 +52,13 @@ ${OBJ}/query.o: ${SRC}/query.cu ${INC}/query.h ${INC}/graph.h ${INC}/table.h
 ${OBJ}/shortestpath.o: ${SRC}/shortestpath.cu ${INC}/shortestpath.h
 	${CC} ${COMMON} -I${CONDA_PREFIX}/include -c $< -o $@
 
-${OBJ}/steiner.o: ${SRC}/steiner.cu ${INC}/steiner.h ${INC}/combination.h ${INC}/util.h ${INC}/graph.h ${INC}/table.h ${INC}/query.h
+${OBJ}/tree.o: ${SRC}/tree.cu ${INC}/tree.hpp
 	${CC} ${COMMON} -c $< -o $@
 
-${OBJ}/steiner.cpu.o: ${SRC}/steiner.cpu.cu ${INC}/steiner.h ${INC}/combination.h ${INC}/util.h ${INC}/graph.h ${INC}/table.h ${INC}/query.h
+${OBJ}/steiner.cpu.o: ${SRC}/steiner.cpu.cu ${INC}/steiner.h ${INC}/combination.h ${INC}/util.h ${INC}/graph.h ${INC}/table.h ${INC}/query.h ${INC}/tree.hpp
 	${CC} ${COMMON} -c $< -o $@
 
-${OBJ}/steiner.gpu.o: ${SRC}/steiner.gpu.cu ${INC}/steiner.h ${INC}/combination.h ${INC}/util.h ${INC}/graph.h ${INC}/table.h ${INC}/query.h
+${OBJ}/steiner.gpu.o: ${SRC}/steiner.gpu.cu ${INC}/steiner.h ${INC}/combination.h ${INC}/util.h ${INC}/graph.h ${INC}/table.h ${INC}/query.h ${INC}/tree.hpp
 	${CC} ${COMMON} -c $< -o $@
 
 ${OBJ}/table.o: ${SRC}/table.cu ${INC}/table.h
