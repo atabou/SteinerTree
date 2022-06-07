@@ -95,7 +95,7 @@ void basictest() {
        
     apsp_gpu_graph(graph, dists, preds);
 
-    steiner_result* result1 = NULL;
+    steiner::result_t* result1 = NULL;
 
     steiner_tree_cpu(graph, terms, dists, &result1);
 
@@ -107,9 +107,13 @@ void basictest() {
     cudatable::transfer_to_gpu(&cuda_dists, dists);
     cudaquery::transfer_to_gpu(&cuda_terms, terms);
 
-    steiner_result* result2 = NULL;
+    steiner::result_t* result2 = NULL;
 
     steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terms, terms->size, cuda_dists, preds, &result2);
+
+    steiner::backtrack(terms, result2); 
+    steiner::branch_and_clean(preds, result2);
+    steiner::build_subgraph(graph, result2);
 
     cudatable::destroy(cuda_dists);
     cudagraph::destroy(cuda_graph);
@@ -235,7 +239,7 @@ void load_gr_file(char* filename, graph::graph_t** g, query::query_t** t, int32_
 
 }
 
-float run(graph::graph_t* graph, query::query_t* terminals, table::table_t<float>** distances, table::table_t<int32_t>** parents, bool gpu) {
+steiner::result_t* run(graph::graph_t* graph, query::query_t* terminals, table::table_t<float>** distances, table::table_t<int32_t>** parents, bool gpu) {
 
     if(*distances == NULL) { // All pairs shortest path.
 
@@ -246,7 +250,7 @@ float run(graph::graph_t* graph, query::query_t* terminals, table::table_t<float
 
     }
 
-    steiner_result* opt;
+    steiner::result_t* opt;
 
     if(gpu) {
 
@@ -260,6 +264,10 @@ float run(graph::graph_t* graph, query::query_t* terminals, table::table_t<float
 
         steiner_tree_gpu(cuda_graph, graph->vrt, cuda_terminals, terminals->size, cuda_distances, *parents, &opt);
 
+        steiner::backtrack(terminals, opt);
+        steiner::branch_and_clean(*parents, opt);
+        steiner::build_subgraph(graph, opt);
+
         cudaquery::destroy(cuda_terminals);
         cudatable::destroy(cuda_distances);
         cudagraph::destroy(cuda_graph);
@@ -270,11 +278,7 @@ float run(graph::graph_t* graph, query::query_t* terminals, table::table_t<float
 
     }
 
-    float min = opt->cost;
-
-    free(opt);
-
-    return min;
+    return opt;
 
 }
 
@@ -304,10 +308,14 @@ void test(char* path) {
             table::table_t< float >* distances = NULL;
             table::table_t<int32_t>* predecessors = NULL;
 
-            float value = run(graph, terminals, &distances, &predecessors, true);
+            steiner::result_t* opt = run(graph, terminals, &distances, &predecessors, true);
+            
+            float value = opt->cost; 
 
             table::destroy(distances);
             table::destroy(predecessors);
+            
+            steiner::destroy(opt);
 
             if(fabs(value - expected) < 1e-4) {
                 printf("%sTEST SUCCEEDED.%s\n", GREEN, NORMAL_COLOR);

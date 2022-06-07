@@ -3,11 +3,9 @@
 #include <stdlib.h>
 #include <float.h>
 
-
 #include "steiner.h"
 #include "combination.h"
 #include "util.h"
-
 
 #define BLOCK_SIZE 1024
 #define MAX_BLOCKS 65536
@@ -219,145 +217,57 @@ void fill_steiner_tree_cuda_table(cudatable::table_t<float>* costs, cudatable::t
 
 }
 
-typedef struct tree {
-
-    int32_t vertex;
-    struct tree** subtrees;
-    int32_t size;
-
-} tree;
-
-void backtrack_steiner_tree_cuda_table(table::table_t<int32_t>* roots, table::table_t<int64_t>* trees, query::query_t* terminals, int32_t start_root, int64_t start_tree, tree* steiner) {
-
-    int32_t root = roots->vals[roots->m * (start_tree - 1) + start_root];
-    int32_t path = trees->vals[trees->m * (start_tree - 1) + start_root];
-
-    tree* subtree = (tree*) malloc(sizeof(tree));
-
-    subtree->vertex   = root;
-    subtree->subtrees = NULL;
-    subtree->size     = 0; 
-
-    if(steiner->size == 0) {
-
-        steiner->subtrees = (tree**) malloc(sizeof(tree*));
-
-    } else {
-
-        steiner->subtrees = (tree**) realloc(steiner->subtrees, sizeof(tree*) * (steiner->size + 1));
-
-    }
-
-    steiner->subtrees[steiner->size] = subtree; 
-    steiner->size = steiner->size + 1;
-
-    if(path > 0 && query::element_exists(root, terminals, start_tree)) {
-
-        backtrack_steiner_tree_cuda_table(roots, trees, terminals, root, path, subtree);
-    
-    } else if(path > 0) {
-
-        backtrack_steiner_tree_cuda_table(roots, trees, terminals, root, path, subtree);
-        backtrack_steiner_tree_cuda_table(roots, trees, terminals, root, start_tree & ~path, subtree);
-    
-    }
-
-}
-
-void print_tree(tree* t) {
-
-    printf("%d", t->vertex);
-    
-    for(int i=0; i<t->size; i++) {
-        printf(" (");
-        print_tree(t->subtrees[i]);
-        printf(")");
-    }
-
-}
 
 
-void steiner_tree_gpu(cudagraph::graph_t* graph, int32_t nvrt, cudaquery::query_t* terminals, int32_t nterm, cudatable::table_t<float>* distances, table::table_t<int32_t>* predecessors, steiner_result** result) {
+
+void steiner_tree_gpu(cudagraph::graph_t* graph, int32_t nvrt, cudaquery::query_t* terminals, int32_t nterm, cudatable::table_t<float>* distances, table::table_t<int32_t>* predecessors, steiner::result_t** result) {
 
     // Declare required variables
 
-    table::table_t< float >* costs = NULL;
-    table::table_t<int32_t>* vbacklinks = NULL;
-    table::table_t<int64_t>* tbacklinks = NULL;
-
     cudatable::table_t< float >* costs_d = NULL;
-    cudatable::table_t<int32_t>* vbacklinks_d = NULL;
-    cudatable::table_t<int64_t>* tbacklinks_d = NULL;
+    cudatable::table_t<int32_t>* roots_d = NULL;
+    cudatable::table_t<int64_t>* trees_d = NULL;
 
-    // Construct the costs table.
+    // Construct the results table for the GPU.
 
-    cudatable::make(&costs_d     , (int32_t) pow(2, nterm) - 1, nvrt);
-    cudatable::make(&vbacklinks_d, (int32_t) pow(2, nterm) - 1, nvrt);
-    cudatable::make(&tbacklinks_d, (int32_t) pow(2, nterm) - 1, nvrt);
+    cudatable::make(&costs_d, (int32_t) pow(2, nterm) - 1, nvrt);
+    cudatable::make(&roots_d, (int32_t) pow(2, nterm) - 1, nvrt);
+    cudatable::make(&trees_d, (int32_t) pow(2, nterm) - 1, nvrt);
 
     // Fill the costs table.
 
-    TIME(fill_steiner_tree_cuda_table(costs_d, vbacklinks_d, tbacklinks_d, graph, nvrt, terminals, nterm, distances), "\tDW GPU:");
-
-    // Get the filled table from the GPU.
-
-    cudatable::transfer_from_gpu(&costs, costs_d);
-    cudatable::transfer_from_gpu(&vbacklinks, vbacklinks_d);
-    cudatable::transfer_from_gpu(&tbacklinks, tbacklinks_d);
+    TIME(fill_steiner_tree_cuda_table(costs_d, roots_d, trees_d, graph, nvrt, terminals, nterm, distances), "\tDW GPU:");
 
     // Initialize steiner result structure
 
-    *result = (steiner_result*) malloc(sizeof(steiner_result));
-    
-    // Initialize root and subtree variables
+    *result = (steiner::result_t*) malloc(sizeof(steiner::result_t));
 
-    int32_t root;
-    int64_t subtree;
+    // Get the filled tables from the GPU.
 
+    cudatable::transfer_from_gpu(&((*result)->costs), costs_d);
+    cudatable::transfer_from_gpu(&((*result)->roots), roots_d);
+    cudatable::transfer_from_gpu(&((*result)->trees), trees_d);
+     
     // Extract the minimum from the table.
 
     (*result)->cost = FLT_MAX;
     
-    for(int32_t i=0; i < costs->m; i++) {
+    for(int32_t i=0; i < (*result)->costs->m; i++) {
 
-        if(costs->vals[costs->m *(costs->n - 1) + i] < (*result)->cost) {
+        if((*result)->costs->vals[(*result)->costs->m * ((*result)->costs->n - 1) + i] < (*result)->cost) {
             
-            (*result)->cost = costs->vals[costs->m * (costs->n - 1) + i];
-            root = i;
-            subtree = costs->n;
+            (*result)->cost = (*result)->costs->vals[(*result)->costs->m * ((*result)->costs->n - 1) + i];
+            (*result)->root = i;
+            (*result)->tree = (*result)->costs->n;
 
         }
 
     }
 
-    // Copy query from GPU
-
-    query::query_t* query = NULL;
-    cudaquery::transfer_from_gpu(&query, terminals);
-
-    // Construct initial tree frame
-
-    tree* t = (tree*) malloc(sizeof(tree));
-    
-    t->vertex = root;
-    t->subtrees = NULL;
-    t->size = 0;
-
-    backtrack_steiner_tree_cuda_table(vbacklinks, tbacklinks, query, root, subtree, t);
-    
-    print_tree(t);
-    printf("\n");
-
     // Free
 
-    query::destroy(query);
-
-    cudatable::destroy(vbacklinks_d);
-    cudatable::destroy(tbacklinks_d);
+    cudatable::destroy(trees_d);
+    cudatable::destroy(roots_d);
     cudatable::destroy(costs_d);
-
-    table::destroy(vbacklinks);
-    table::destroy(tbacklinks);
-    table::destroy(costs);
 
 }
