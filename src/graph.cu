@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "graph.h"
+#include "graph.hpp"
 
 void graph::make(graph::graph_t** g) {
 

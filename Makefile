@@ -40,31 +40,31 @@ ${BIN}/test: ./test.cu $(patsubst %,${OBJ}/%,${COMPILE})
 	${CC} ./test.cu ${COMMON} -I/opt/cuda/include -o ${BIN}/test $(patsubst %,${OBJ}/%,${COMPILE}) ${LNK}
 	@echo "${YELLOW}Ignore Warnings${NOCOLOR}"
 
-${OBJ}/combination.o: ${SRC}/combination.cu ${INC}/combination.h
+${OBJ}/combination.o: ${SRC}/combination.cu ${INC}/combination.hpp
 	${CC} ${COMMON} -c $< -o $@
 
-${OBJ}/graph.o: ${SRC}/graph.cu ${INC}/graph.h
+${OBJ}/graph.o: ${SRC}/graph.cu ${INC}/graph.hpp
 	${CC} ${COMMON} -c $< -o $@
 
-${OBJ}/query.o: ${SRC}/query.cu ${INC}/query.h ${INC}/graph.h ${INC}/table.h
+${OBJ}/query.o: ${SRC}/query.cu ${INC}/query.hpp ${INC}/graph.hpp ${INC}/table.hpp
 	${CC} ${COMMON} -c $< -o $@
 
-${OBJ}/shortestpath.o: ${SRC}/shortestpath.cu ${INC}/shortestpath.h
+${OBJ}/shortestpath.o: ${SRC}/shortestpath.cu ${INC}/shortestpath.hpp
 	${CC} ${COMMON} -I${CONDA_PREFIX}/include -c $< -o $@
 
 ${OBJ}/tree.o: ${SRC}/tree.cu ${INC}/tree.hpp
 	${CC} ${COMMON} -c $< -o $@
 
-${OBJ}/steiner.cpu.o: ${SRC}/steiner.cpu.cu ${INC}/steiner.h ${INC}/combination.h ${INC}/util.h ${INC}/graph.h ${INC}/table.h ${INC}/query.h ${INC}/tree.hpp
+${OBJ}/steiner.cpu.o: ${SRC}/steiner.cpu.cu ${INC}/steiner.hpp ${INC}/combination.hpp ${INC}/util.hpp ${INC}/graph.hpp ${INC}/table.hpp ${INC}/query.hpp ${INC}/tree.hpp
 	${CC} ${COMMON} -c $< -o $@
 
-${OBJ}/steiner.gpu.o: ${SRC}/steiner.gpu.cu ${INC}/steiner.h ${INC}/combination.h ${INC}/util.h ${INC}/graph.h ${INC}/table.h ${INC}/query.h ${INC}/tree.hpp
+${OBJ}/steiner.gpu.o: ${SRC}/steiner.gpu.cu ${INC}/steiner.hpp ${INC}/combination.hpp ${INC}/util.hpp ${INC}/graph.hpp ${INC}/table.hpp ${INC}/query.hpp ${INC}/tree.hpp
 	${CC} ${COMMON} -c $< -o $@
 
-${OBJ}/table.o: ${SRC}/table.cu ${INC}/table.h
+${OBJ}/table.o: ${SRC}/table.cu ${INC}/table.hpp
 	${CC} ${COMMON} -c $< -o $@
 
-${OBJ}/util.o: ${SRC}/util.cu ${INC}/util.h
+${OBJ}/util.o: ${SRC}/util.cu ${INC}/util.hpp
 	${CC} ${COMMON} -c $< -o $@
 
 clean:

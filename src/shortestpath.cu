@@ -5,7 +5,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "shortestpath.h"
+#include "shortestpath.hpp"
 #include "cugraph_c/graph.h"
 #include "cugraph_c/algorithms.h"
 

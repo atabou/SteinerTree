@@ -7,9 +7,9 @@
 #include <queue>
 #include <unordered_map>
 
-#include "steiner.h"
-#include "combination.h"
-#include "util.h"
+#include "steiner.hpp"
+#include "combination.hpp"
+#include "util.hpp"
 #include "tree.hpp"
 
 

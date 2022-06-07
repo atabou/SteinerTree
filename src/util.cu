@@ -1,4 +1,4 @@
-#include "util.h"
+#include "util.hpp"
 
 __device__ float atomicMin(float* target, float val) {
 

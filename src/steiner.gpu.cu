@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <float.h>
 
-#include "steiner.h"
-#include "combination.h"
-#include "util.h"
+#include "steiner.hpp"
+#include "combination.hpp"
+#include "util.hpp"
 
 #define BLOCK_SIZE 1024
 #define MAX_BLOCKS 65536

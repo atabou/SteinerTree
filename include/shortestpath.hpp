@@ -6,8 +6,8 @@
 
     #define SHORTESTPATH_H
 
-    #include "graph.h"
-    #include "table.h"
+    #include "graph.hpp"
+    #include "table.hpp"
 
 
     /**

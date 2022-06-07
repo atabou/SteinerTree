@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "query.h"
+#include "query.hpp"
 
 
 void query::make(query::query_t** s) {

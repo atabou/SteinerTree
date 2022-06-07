@@ -6,9 +6,9 @@
 
     #define STEINER_H
 
-    #include "query.h"
-    #include "graph.h"
-    #include "table.h"
+    #include "query.hpp"
+    #include "graph.hpp"
+    #include "table.hpp"
     #include "tree.hpp"
 
     namespace steiner {

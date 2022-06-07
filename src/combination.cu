@@ -1,7 +1,7 @@
 
 #include <stdio.h>
 
-#include "combination.h"
+#include "combination.hpp"
 
 __constant__ double factorial[65];
 double factorial_h[65];

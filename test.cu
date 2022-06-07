@@ -6,13 +6,13 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include "graph.h"
-#include "query.h"
-#include "table.h"
-#include "util.h"
+#include "graph.hpp"
+#include "query.hpp"
+#include "table.hpp"
+#include "util.hpp"
 clock_t CLOCKMACRO;
-#include "steiner.h"
-#include "shortestpath.h"
+#include "steiner.hpp"
+#include "shortestpath.hpp"
 
 #define NORMAL_COLOR  "\x1B[0m"
 #define GREEN  "\x1B[32m"
