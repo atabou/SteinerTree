@@ -19,7 +19,7 @@ void graph::make(graph::graph_t** g) {
 
 }
 
-uint32_t graph::insert_vertex(graph::graph_t* g) {
+int32_t graph::insert_vertex(graph::graph_t* g) {
 
     if(g->vrt < INT32_MAX) {
 
@@ -101,6 +101,25 @@ void graph::insert_edge(graph::graph_t* g, int32_t src, int32_t dest, float w) {
 
 }
 
+__host__ float graph::weight(graph_t* graph, int32_t src, int32_t dst) {
+
+    if(src >= 0 && dst >= 0 && src < graph->vrt && src < graph->vrt) {
+
+        for(int i=0; i<graph->deg[src]; i++) {
+
+            if(graph->dst[src][i] == dst) {
+
+                return graph->wgt[src][i];
+
+            }
+
+        }
+
+    }
+
+    return NAN;
+
+}
 
 void graph::to_graphviz(graph::graph_t* g, char* filename) {
 

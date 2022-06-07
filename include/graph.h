@@ -40,7 +40,7 @@
          * @param [in] graph A pointer to the graph to insert a vertex in.
          * @return The id of the vertex that was inserted.
          */
-        __host__ uint32_t insert_vertex(graph_t* graph);
+        __host__ int32_t insert_vertex(graph_t* graph);
 
 
         /**
@@ -56,6 +56,7 @@
          */
         __host__ void insert_edge(graph_t* graph, int32_t src, int32_t dst, float wgt);
 
+        __host__ float weight(graph_t* graph, int32_t src, int32_t dst);
 
         /** 
          * @brief Prints the specified graph_t to a file in the graphviz format.
@@ -79,9 +80,7 @@
 
     namespace cudagraph {
 
-
         typedef graph::graph_t graph_t; /** @brief Redefinition of graph_t to make it clear that a given graph_t is stored on the GPU. */
-
 
         /**
          * @brief Copies the given graph on the GPU.
@@ -98,10 +97,7 @@
          */
         __host__ void destroy(graph_t* graph);
 
-
     }
-
-    
 
 
 #endif
