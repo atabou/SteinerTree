@@ -80,7 +80,7 @@ void fill_steiner_dp_table_cpu(table::table_t<float>* costs, graph::graph_t* g, 
 }
 
 
-void steiner_tree_cpu(graph::graph_t* g, query::query_t* terminals, table::table_t<float>* distances, steiner::result_t** result) {
+void steiner::fill(graph::graph_t* g, query::query_t* terminals, table::table_t<float>* distances, steiner::result_t** result) {
 
     // Declare used variables
 

@@ -97,7 +97,7 @@ void basictest() {
 
     steiner::result_t* result1 = NULL;
 
-    steiner_tree_cpu(graph, terms, dists, &result1);
+    steiner::fill(graph, terms, dists, &result1);
 
     cudagraph::graph_t*        cuda_graph = NULL;
     cudatable::table_t<float>* cuda_dists = NULL;
@@ -109,8 +109,7 @@ void basictest() {
 
     steiner::result_t* result2 = NULL;
 
-    steiner_tree_gpu(cuda_graph, cuda_terms, cuda_dists, &result2);
-
+    steiner::fill(cuda_graph, cuda_terms, cuda_dists, &result2);
     steiner::backtrack(terms, result2); 
     steiner::branch_and_clean(preds, result2);
     steiner::build_subgraph(graph, result2);
@@ -262,8 +261,7 @@ steiner::result_t* run(graph::graph_t* graph, query::query_t* terminals, table::
         cudatable::transfer_to_gpu(&cuda_distances, *distances);
         cudaquery::transfer_to_gpu(&cuda_terminals, terminals);
 
-        steiner_tree_gpu(cuda_graph, cuda_terminals, cuda_distances, &opt);
-
+        steiner::fill(cuda_graph, cuda_terminals, cuda_distances, &opt);
         steiner::backtrack(terminals, opt);
         steiner::branch_and_clean(*parents, opt);
         steiner::build_subgraph(graph, opt);
@@ -274,7 +272,7 @@ steiner::result_t* run(graph::graph_t* graph, query::query_t* terminals, table::
 
     } else {
 
-        steiner_tree_cpu(graph, terminals, *distances, &opt);
+        steiner::fill(graph, terminals, *distances, &opt);
 
     }
 

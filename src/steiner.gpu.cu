@@ -220,7 +220,7 @@ void fill_steiner_tree_cuda_table(cudatable::table_t<float>* costs, cudatable::t
 
 
 
-void steiner_tree_gpu(cudagraph::graph_t* graph, cudaquery::query_t* terminals, cudatable::table_t<float>* distances, steiner::result_t** result) {
+void steiner::fill(cudagraph::graph_t* graph, cudaquery::query_t* terminals, cudatable::table_t<float>* distances, steiner::result_t** result) {
 
     // Declare required variables
 
