@@ -13,7 +13,7 @@
 #include "tree.hpp"
 
 
-void fill_steiner_dp_table_cpu(table::table_t<float>* costs, graph::graph_t* g, query::query_t* terminals, table::table_t<float>* distances) {
+void fill_steiner_dp_table_cpu( graph::graph_t* g, query::query_t* terminals, table::table_t<float>* distances, table::table_t<float>* costs, table::table_t<int32_t>* roots, table::table_t<int64_t>* trees) {
 
     for(int32_t k=1; k <= terminals->size; k++) {
 
@@ -26,11 +26,16 @@ void fill_steiner_dp_table_cpu(table::table_t<float>* costs, graph::graph_t* g, 
                 if(k == 1) {
 
                     int32_t u = terminals->vals[terminals->size - __builtin_ffsll(mask)];
+
                     costs->vals[v * costs->m + (mask - 1)] = distances->vals[v * distances->m + u];
-                    
+                    roots->vals[v * costs->m + (mask - 1)] = u;
+                    trees->vals[v * costs->m + (mask - 1)] = -1; 
+
                 } else {
                     
-                    float min = FLT_MAX;
+                    float   min_cost = FLT_MAX;
+                    int32_t min_root = -1;
+                    int64_t min_tree = -1;
                     
                     for(int32_t w=0; w < costs->n; w++) { // O(T * 2^T * (V+E))
 
@@ -41,9 +46,11 @@ void fill_steiner_dp_table_cpu(table::table_t<float>* costs, graph::graph_t* g, 
                             float cost = distances->vals[v * distances->m + w] 
                                        + costs->vals[w * costs->m + ((mask & ~submask) - 1)];
 
-                            if(cost < min) {
+                            if(cost < min_cost) {
 
-                                min = cost;
+                                min_cost = cost;
+                                min_root = w;
+                                min_tree = mask * ~submask;
 
                             }
 
@@ -55,9 +62,11 @@ void fill_steiner_dp_table_cpu(table::table_t<float>* costs, graph::graph_t* g, 
                                            + costs->vals[w * costs->m + submask - 1] 
                                            + costs->vals[w * costs->m + (mask & ~submask) - 1];
 
-                                if(cost < min) {
+                                if(cost < min_cost) {
 
-                                    min = cost;
+                                    min_cost = cost;
+                                    min_root = w;
+                                    min_tree = submask;
 
                                 }
 
@@ -67,7 +76,9 @@ void fill_steiner_dp_table_cpu(table::table_t<float>* costs, graph::graph_t* g, 
 
                     }
 
-                    costs->vals[v * costs->m + mask - 1] = min;
+                    costs->vals[v * costs->m + mask - 1] = min_cost;
+                    roots->vals[v * costs->m + mask - 1] = min_root;
+                    trees->vals[v * costs->m + mask - 1] = min_tree;
 
                 }
                 
@@ -82,21 +93,31 @@ void fill_steiner_dp_table_cpu(table::table_t<float>* costs, graph::graph_t* g, 
 
 void steiner::fill(graph::graph_t* g, query::query_t* terminals, table::table_t<float>* distances, steiner::result_t** result) {
 
-    // Declare used variables
+    // Declare DP tables
 
-    table::table_t<float>* costs = NULL;
+    table::table_t< float >* costs = NULL;
+    table::table_t<int32_t>* roots = NULL;
+    table::table_t<int64_t>* trees = NULL;
 
-    // Initialize DP table.
+    // Initialize DP tables.
     
     table::make(&costs, g->vrt, (int32_t) pow(2, terminals->size) - 1);
+    table::make(&roots, g->vrt, (int32_t) pow(2, terminals->size) - 1);
+    table::make(&trees, g->vrt, (int32_t) pow(2, terminals->size) - 1);
 
     // Fill dp table.
 
-    fill_steiner_dp_table_cpu(costs, g, terminals, distances);
+    fill_steiner_dp_table_cpu(g, terminals, distances, costs, roots, trees);
 
     // Initialize the steiner tree pointer.
 
     *result = (steiner::result_t*) malloc(sizeof(steiner::result_t));
+
+    // Assign tables to result
+
+    (*result)->costs = costs;
+    (*result)->roots = roots;
+    (*result)->trees = trees;
 
     // Calculate minimum from table.
 
@@ -105,14 +126,14 @@ void steiner::fill(graph::graph_t* g, query::query_t* terminals, table::table_t<
     for(int32_t i=costs->m - 1; i < costs->m * distances->n; i+=costs->m) {
         
         if(costs->vals[i] < (*result)->cost) {
+
             (*result)->cost = costs->vals[i];
+            (*result)->root = i;
+            (*result)->tree = (*result)->costs->m;
+
         }
 
-    }
-
-    // Free table
-   
-    free(costs);
+    } 
 
 }
 
