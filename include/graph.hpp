@@ -80,8 +80,13 @@
 
     namespace cudagraph {
 
-        typedef graph::graph_t graph_t; /** @brief Redefinition of graph_t to make it clear that a given graph_t is stored on the GPU. */
+        struct graph_t {
 
+            graph::graph_t* graph;
+            int32_t vrt;
+
+        };
+        
         /**
          * @brief Copies the given graph on the GPU.
          *

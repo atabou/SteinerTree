@@ -291,9 +291,7 @@ void steiner::destroy(steiner::result_t* result) {
     table::destroy(result->costs);
     table::destroy(result->roots);
     table::destroy(result->trees);
-
     tree::destroy(result->mst);
-
     graph::destroy(result->subgraph);
 
     free(result);

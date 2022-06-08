@@ -189,13 +189,13 @@ void graph::destroy(graph::graph_t* g) {
 }
 
 
-cudagraph::graph_t* make_cudagraph() {
+graph::graph_t* make_cudagraph() {
 
     cudaError_t err;
 
-    cudagraph::graph_t* cuda_graph = NULL;
+    graph::graph_t* graph = NULL;
 
-    err = cudaMalloc(&cuda_graph, sizeof(cudagraph::graph_t));
+    err = cudaMalloc(&graph, sizeof(graph::graph_t));
 
     if(err) {
         printf("Error initializing memory for cuda graph. (Error code: %d)\n", err);
@@ -209,14 +209,19 @@ cudagraph::graph_t* make_cudagraph() {
         exit(err);
     }
 
-    return cuda_graph;
+    return graph;
 
 }
 
 void cudagraph::transfer_to_gpu(cudagraph::graph_t** graph_d, graph::graph_t* graph) {
 
+    // Initialize cuda graph
+
+    *graph_d = (cudagraph::graph_t*) malloc(sizeof(cudagraph::graph_t));
+    (*graph_d)->vrt = graph->vrt;
+
     cudaError_t err;
-    cudagraph::graph_t tmp;
+    graph::graph_t tmp;
 
     // Set cuda graph max capacity
 
@@ -267,8 +272,8 @@ void cudagraph::transfer_to_gpu(cudagraph::graph_t** graph_d, graph::graph_t* gr
 
     // Create and set cuda graph adjacency list
 
-    int32_t* dst[graph->vrt];
-    float*   wgt[graph->vrt];
+    int32_t** dst[graph->vrt];
+    float**   wgt[graph->vrt];
 
     for(int32_t i=0; i<graph->vrt; i++) {
 
@@ -289,9 +294,9 @@ void cudagraph::transfer_to_gpu(cudagraph::graph_t** graph_d, graph::graph_t* gr
 
     // Copy cuda graph struct to gpu
 
-    *graph_d = make_cudagraph();
+    (*graph_d)->graph = make_cudagraph();
 
-    cudaMemcpy(*graph_d, &tmp, sizeof(cudagraph::graph_t), cudaMemcpyHostToDevice);
+    cudaMemcpy((*graph_d)->graph, &tmp, sizeof(graph::graph_t), cudaMemcpyHostToDevice);
 
     err = cudaDeviceSynchronize();
 
@@ -299,15 +304,17 @@ void cudagraph::transfer_to_gpu(cudagraph::graph_t** graph_d, graph::graph_t* gr
         printf("Could not synchronize cuda device after graph memory copy. (Error code: %d)\n", err);
         exit(err);
     }
-
+    
+    cudaMemcpy(&tmp, (*graph_d)->graph, sizeof(graph::graph_t), cudaMemcpyDeviceToHost);
+    
 }
 
 void cudagraph::destroy(cudagraph::graph_t* g) {
  
     cudaError_t err;
-    cudagraph::graph_t tmp;
+    graph::graph_t tmp;
 
-    cudaMemcpy(&tmp, g, sizeof(cudagraph::graph_t), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&tmp, g->graph, sizeof(graph::graph_t), cudaMemcpyDeviceToHost);
  
     err = cudaDeviceSynchronize();
 
@@ -315,8 +322,8 @@ void cudagraph::destroy(cudagraph::graph_t* g) {
         printf("Could not copy graph data before free. (Error code: %d)\n", err);
         exit(err);
     }
-
-    err = cudaFree(g);
+    
+    err = cudaFree(g->graph);
 
     if(err) {
         printf("Could not deallocate cuda graph structure. (Error code: %d)\n", err);
@@ -337,11 +344,11 @@ void cudagraph::destroy(cudagraph::graph_t* g) {
         exit(err);
     }
 
-    int32_t* del1[tmp.vrt];
-    float*   del2[tmp.vrt];
+    int32_t** del1[tmp.vrt];
+    float**   del2[tmp.vrt];
 
     cudaMemcpy(del1, tmp.dst, sizeof(int32_t*) * tmp.vrt, cudaMemcpyDeviceToHost);
-    cudaMemcpy(del2, tmp.wgt, sizeof(float*) * tmp.vrt, cudaMemcpyDeviceToHost);
+    cudaMemcpy(del2, tmp.wgt, sizeof( float* ) * tmp.vrt, cudaMemcpyDeviceToHost);
 
     err = cudaDeviceSynchronize();
 
@@ -352,7 +359,7 @@ void cudagraph::destroy(cudagraph::graph_t* g) {
 
     err = cudaFree(tmp.dst);
     err = cudaFree(tmp.wgt);
-
+    
     if(err) {
         printf("Could not deallocate cuda lst arrays. (Error code: %d)\n", err);
         exit(err);
@@ -366,9 +373,20 @@ void cudagraph::destroy(cudagraph::graph_t* g) {
     }
  
     for(int32_t i=0; i<tmp.vrt; i++) {
+
         cudaFree(del1[i]);
         cudaFree(del2[i]);
+    
     }
+
+    err = cudaDeviceSynchronize();
+
+    if(err) {
+        printf("Could not synchronize after sub-list free from device. (Error code: %d)\n", err);
+        exit(err);
+    }
+
+    free(g);
     
 }
 

@@ -61,7 +61,6 @@
      * @param [out] result The address of a pointer to the result object of the steiner tree computation.
      */
     void steiner_tree_gpu( cudagraph::graph_t*        graph_d, 
-                int32_t                    graph_size, 
                 cudaquery::query_t*        terminals_d, 
                 int32_t                    terminals_size, 
                 cudatable::table_t<float>* distances,
