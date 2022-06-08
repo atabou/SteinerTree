@@ -60,12 +60,7 @@
      * @param [in] distances A pointer to a cudatable_t containing the all pairs shortest path of the supplied cudagraph_t on the GPU.
      * @param [out] result The address of a pointer to the result object of the steiner tree computation.
      */
-    void steiner_tree_gpu( cudagraph::graph_t*        graph_d, 
-                cudaquery::query_t*        terminals_d, 
-                int32_t                    terminals_size, 
-                cudatable::table_t<float>* distances,
-                table::table_t<int32_t>*   predecessors,
-                steiner::result_t**                 result );
+    void steiner_tree_gpu( cudagraph::graph_t* graph_d, cudaquery::query_t* terminals_d, cudatable::table_t<float>* distances, steiner::result_t** result);
 
 
 #endif

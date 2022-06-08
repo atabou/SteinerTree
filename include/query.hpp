@@ -81,9 +81,12 @@
 
     namespace cudaquery {
 
+        struct query_t {
 
-        typedef query::query_t query_t; /** @brief Renames set_t to cudaset_t to make it clear that a set_t is stored on the GPU. */
-
+            query::query_t* query;
+            int32_t size;
+        
+        };
 
         /**
          * @brief Copies a given set_t to the GPU, and returns a pointer to it.

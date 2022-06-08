@@ -109,7 +109,7 @@ void basictest() {
 
     steiner::result_t* result2 = NULL;
 
-    steiner_tree_gpu(cuda_graph, cuda_terms, terms->size, cuda_dists, preds, &result2);
+    steiner_tree_gpu(cuda_graph, cuda_terms, cuda_dists, &result2);
 
     steiner::backtrack(terms, result2); 
     steiner::branch_and_clean(preds, result2);
@@ -262,7 +262,7 @@ steiner::result_t* run(graph::graph_t* graph, query::query_t* terminals, table::
         cudatable::transfer_to_gpu(&cuda_distances, *distances);
         cudaquery::transfer_to_gpu(&cuda_terminals, terminals);
 
-        steiner_tree_gpu(cuda_graph, cuda_terminals, terminals->size, cuda_distances, *parents, &opt);
+        steiner_tree_gpu(cuda_graph, cuda_terminals, cuda_distances, &opt);
 
         steiner::backtrack(terminals, opt);
         steiner::branch_and_clean(*parents, opt);

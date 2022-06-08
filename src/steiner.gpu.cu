@@ -11,7 +11,7 @@
 #define MAX_BLOCKS 65536
 
 
-__global__ void dw_fill_base_cases(table::table_t<float>* costs, table::table_t<int32_t>* roots, table::table_t<int64_t>* trees, graph::graph_t* g, table::table_t<float>* distances, cudaquery::query_t* terminals) {
+__global__ void dw_fill_base_cases(table::table_t<float>* costs, table::table_t<int32_t>* roots, table::table_t<int64_t>* trees, graph::graph_t* g, table::table_t<float>* distances, query::query_t* terminals) {
 
     uint64_t thread_id = blockIdx.z * gridDim.y * gridDim.x * blockDim.x // Number of threads inside the 3D part of the grid coming before the thread in question.
         + blockIdx.y * gridDim.x * blockDim.x // Number of threads inside the 2D part of the grid coming before the thread in question.
@@ -34,7 +34,7 @@ __global__ void dw_fill_base_cases(table::table_t<float>* costs, table::table_t<
 }
 
 
-__global__ void dw_fill_kth_combination(table::table_t<float>* costs, table::table_t<int32_t>* roots, table::table_t<int64_t>* trees, graph::graph_t* g, table::table_t<float>* distances, cudaquery::query_t* terminals, int32_t k) {
+__global__ void dw_fill_kth_combination(table::table_t<float>* costs, table::table_t<int32_t>* roots, table::table_t<int64_t>* trees, graph::graph_t* g, table::table_t<float>* distances, query::query_t* terminals, int32_t k) {
 
     // Assign the position in the table that the block will update.
 
@@ -160,12 +160,12 @@ __global__ void dw_fill_kth_combination(table::table_t<float>* costs, table::tab
  * Works for any values of T and V satisfying the following equation 2^T * V < 2^26
  * This could be improved to 2^T * V < 2^58
  */
-void base_case(cudatable::table_t<float>* costs, cudatable::table_t<int32_t>* roots, cudatable::table_t<int64_t>* trees, cudagraph::graph_t* graph, cudaquery::query_t* t, int32_t t_size, cudatable::table_t<float>* distances) {
+void base_case(cudatable::table_t<float>* costs, cudatable::table_t<int32_t>* roots, cudatable::table_t<int64_t>* trees, cudagraph::graph_t* graph, cudaquery::query_t* terminals, cudatable::table_t<float>* distances) {
 
-    uint64_t num_thread = graph->vrt * t_size;
+    uint64_t num_thread = graph->vrt * terminals->size;
     uint64_t num_blocks = (num_thread + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
-    dw_fill_base_cases<<<num_blocks, BLOCK_SIZE>>>(costs->table, roots->table, trees->table, graph->graph, distances->table, t);
+    dw_fill_base_cases<<<num_blocks, BLOCK_SIZE>>>(costs->table, roots->table, trees->table, graph->graph, distances->table, terminals->query);
 
     cudaError_t err = cudaDeviceSynchronize();
 
@@ -178,18 +178,18 @@ void base_case(cudatable::table_t<float>* costs, cudatable::table_t<int32_t>* ro
 }
 
 
-void fill_kth_combination(cudatable::table_t<float>* costs, cudatable::table_t<int32_t>* roots, cudatable::table_t<int64_t>* trees, cudagraph::graph_t* graph, cudaquery::query_t* t, int32_t t_size, cudatable::table_t<float>* distances, int32_t k) {
+void fill_kth_combination(cudatable::table_t<float>* costs, cudatable::table_t<int32_t>* roots, cudatable::table_t<int64_t>* trees, cudagraph::graph_t* graph, cudaquery::query_t* terminals, cudatable::table_t<float>* distances, int32_t k) {
 
     initialize_factorial_table();
 
     dim3 num_threads_per_block(BLOCK_SIZE);
 
     int64_t num_blocks_x = graph->vrt;
-    int64_t num_blocks_y = nCr(t_size, k);
+    int64_t num_blocks_y = nCr(terminals->size, k);
 
     dim3 num_blocks(num_blocks_x, num_blocks_y);
 
-    dw_fill_kth_combination<<<num_blocks, num_threads_per_block>>>(costs->table, roots->table, trees->table, graph->graph, distances->table, t, k);
+    dw_fill_kth_combination<<<num_blocks, num_threads_per_block>>>(costs->table, roots->table, trees->table, graph->graph, distances->table, terminals->query, k);
 
     cudaError_t err = cudaDeviceSynchronize();
 
@@ -201,17 +201,17 @@ void fill_kth_combination(cudatable::table_t<float>* costs, cudatable::table_t<i
 }
 
 
-void fill_steiner_tree_cuda_table(cudatable::table_t<float>* costs, cudatable::table_t<int32_t>* roots, cudatable::table_t<int64_t>* trees, cudagraph::graph_t* graph, cudaquery::query_t* t, int32_t t_size, cudatable::table_t<float>* distances) {
+void fill_steiner_tree_cuda_table(cudatable::table_t<float>* costs, cudatable::table_t<int32_t>* roots, cudatable::table_t<int64_t>* trees, cudagraph::graph_t* graph, cudaquery::query_t* terminals, cudatable::table_t<float>* distances) {
 
     // Calculate base case
 
-    base_case(costs, roots, trees, graph, t, t_size, distances);
+    base_case(costs, roots, trees, graph, terminals, distances);
 
     // Fill table by multiple subsequent kernel calls
 
-    for(int32_t k=2; k <= t_size; k++) {
+    for(int32_t k=2; k <= terminals->size; k++) {
 
-        fill_kth_combination(costs, roots, trees, graph, t, t_size, distances, k);
+        fill_kth_combination(costs, roots, trees, graph, terminals, distances, k);
 
     }
 
@@ -220,7 +220,7 @@ void fill_steiner_tree_cuda_table(cudatable::table_t<float>* costs, cudatable::t
 
 
 
-void steiner_tree_gpu(cudagraph::graph_t* graph, cudaquery::query_t* terminals, int32_t nterm, cudatable::table_t<float>* distances, table::table_t<int32_t>* predecessors, steiner::result_t** result) {
+void steiner_tree_gpu(cudagraph::graph_t* graph, cudaquery::query_t* terminals, cudatable::table_t<float>* distances, steiner::result_t** result) {
 
     // Declare required variables
 
@@ -230,13 +230,13 @@ void steiner_tree_gpu(cudagraph::graph_t* graph, cudaquery::query_t* terminals, 
 
     // Construct the results table for the GPU.
 
-    cudatable::make(&costs_d, (int32_t) pow(2, nterm) - 1, graph->vrt);
-    cudatable::make(&roots_d, (int32_t) pow(2, nterm) - 1, graph->vrt);
-    cudatable::make(&trees_d, (int32_t) pow(2, nterm) - 1, graph->vrt);
+    cudatable::make(&costs_d, (int32_t) pow(2, terminals->size) - 1, graph->vrt);
+    cudatable::make(&roots_d, (int32_t) pow(2, terminals->size) - 1, graph->vrt);
+    cudatable::make(&trees_d, (int32_t) pow(2, terminals->size) - 1, graph->vrt);
 
     // Fill the costs table.
 
-    TIME(fill_steiner_tree_cuda_table(costs_d, roots_d, trees_d, graph, terminals, nterm, distances), "\tDW GPU:");
+    TIME(fill_steiner_tree_cuda_table(costs_d, roots_d, trees_d, graph, terminals, distances), "\tDW GPU:");
 
     // Initialize steiner result structure
 
