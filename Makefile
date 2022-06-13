@@ -15,6 +15,7 @@ NOCOLOR=\033[0m
 COMPILE=combination.o \
 		graph.o \
 	 	query.o \
+		table.o \
         shortestpath.o \
 		tree.o \
 		steiner.cpu.o \
@@ -53,6 +54,9 @@ ${OBJ}/graph.o: ${SRC}/graph.cu ${INC}/graph.hpp
 ${OBJ}/query.o: ${SRC}/query.cu ${INC}/query.hpp ${INC}/graph.hpp ${INC}/table.hpp
 	${CC} ${COMMON} -c $< -o $@
 
+${OBJ}/table.o: ${SRC}/table.cu ${INC}/table.hpp
+	${CC} ${COMMON} -c $< -o $@
+
 ${OBJ}/shortestpath.o: ${SRC}/shortestpath.cu ${INC}/shortestpath.hpp
 	${CC} ${COMMON} -I${CONDA_PREFIX}/include -c $< -o $@
 
@@ -63,9 +67,6 @@ ${OBJ}/steiner.cpu.o: ${SRC}/steiner.cpu.cu ${INC}/steiner.hpp ${INC}/combinatio
 	${CC} ${COMMON} -c $< -o $@
 
 ${OBJ}/steiner.gpu.o: ${SRC}/steiner.gpu.cu ${INC}/steiner.hpp ${INC}/combination.hpp ${INC}/util.hpp ${INC}/graph.hpp ${INC}/table.hpp ${INC}/query.hpp ${INC}/tree.hpp
-	${CC} ${COMMON} -c $< -o $@
-
-${OBJ}/table.o: ${SRC}/table.cu ${INC}/table.hpp
 	${CC} ${COMMON} -c $< -o $@
 
 ${OBJ}/util.o: ${SRC}/util.cu ${INC}/util.hpp
