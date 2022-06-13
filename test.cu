@@ -1,10 +1,12 @@
 
+
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
+
 
 #include "graph.hpp"
 #include "query.hpp"
@@ -14,10 +16,12 @@ clock_t CLOCKMACRO;
 #include "steiner.hpp"
 #include "shortestpath.hpp"
 
+
 #define NORMAL_COLOR  "\x1B[0m"
 #define GREEN  "\x1B[32m"
 #define BLUE  "\x1B[34m"
 #define RED   "\033[31m"
+
 
 void make_basic_graph(graph::graph_t** graph) {
     
@@ -66,6 +70,7 @@ void make_basic_graph(graph::graph_t** graph) {
 
 }
 
+
 void make_basic_query(query::query_t** terms) {
 
     query::make(terms);
@@ -78,6 +83,7 @@ void make_basic_query(query::query_t** terms) {
     query::insert(*terms, 9);
 
 }
+
 
 void basictest() {
 
@@ -125,27 +131,35 @@ void basictest() {
 
 }
 
+
 void load_gr_file(char* filename, graph::graph_t** g, query::query_t** t, int32_t** h, int32_t* hsize, float* opt) {
 
-    FILE* fp = fopen(filename, "r");
+    // Open file
 
-    printf("%s\n", filename);
+    FILE* fp = fopen(filename, "r");
 
     if(fp == NULL) {
 
         *g = NULL;
         *t = NULL;
         *h = NULL;
+
         return;
 
     }
 
+    // Initialize graph and terms
+
     graph::make(g);
     query::make(t);
+
+    // Initialize hash table
 
     *h = (int32_t*) malloc(sizeof(int32_t));
     (*h)[0] = INT32_MAX;
     *hsize = 1;
+
+    // Start parser
 
     char* line = NULL;
     size_t buff = 0;
@@ -154,6 +168,7 @@ void load_gr_file(char* filename, graph::graph_t** g, query::query_t** t, int32_
     while( (len  = getline(&line, &buff, fp)) != -1 ) {
 
         char* token = strtok(line, " ");
+
         int type = 0;
 
         while(token != NULL) {
@@ -167,7 +182,9 @@ void load_gr_file(char* filename, graph::graph_t** g, query::query_t** t, int32_
                     *h = (int32_t*) realloc(*h, sizeof(int32_t) * (x + 1));
 
                     for(uint32_t i=*hsize; i < (x+1); i++) {
+        
                         (*h)[i] = INT32_MAX;
+                    
                     }
 
                     *hsize = x + 1;
@@ -189,7 +206,9 @@ void load_gr_file(char* filename, graph::graph_t** g, query::query_t** t, int32_
                     *h = (int32_t*) realloc(*h, sizeof(int32_t) * (y + 1));
 
                     for(int32_t i=*hsize; i < (y+1); i++) {
+
                         (*h)[i] = INT32_MAX;
+                    
                     }
 
                     *hsize = y + 1;
@@ -238,14 +257,15 @@ void load_gr_file(char* filename, graph::graph_t** g, query::query_t** t, int32_
 
 }
 
-steiner::result_t* run(graph::graph_t* graph, query::query_t* terminals, table::table_t<float>** distances, table::table_t<int32_t>** parents, bool gpu) {
 
-    if(*distances == NULL) { // All pairs shortest path.
+steiner::result_t* run(graph::graph_t* graph, query::query_t* terms, table::table_t<float>** dists, table::table_t<int32_t>** preds, bool gpu) {
 
-        table::make(distances, graph->vrt, graph->vrt); 
-        table::make(parents, graph->vrt, graph->vrt);
+    if(*dists == NULL) { // All pairs shortest path.
 
-        apsp_gpu_graph(graph, *distances, *parents);
+        table::make(dists, graph->vrt, graph->vrt); 
+        table::make(preds, graph->vrt, graph->vrt);
+
+        apsp_gpu_graph(graph, *dists, *preds);
 
     }
 
@@ -253,32 +273,36 @@ steiner::result_t* run(graph::graph_t* graph, query::query_t* terminals, table::
 
     if(gpu) {
 
-        cudagraph::graph_t*        cuda_graph = NULL; 
-        cudatable::table_t<float>* cuda_distances = NULL;
-        cudaquery::query_t*        cuda_terminals = NULL;
+        cudagraph::graph_t*        graph_d = NULL; 
+        cudatable::table_t<float>* dists_d = NULL;
+        cudaquery::query_t*        terms_d = NULL;
 
-        cudagraph::transfer_to_gpu(&cuda_graph, graph);
-        cudatable::transfer_to_gpu(&cuda_distances, *distances);
-        cudaquery::transfer_to_gpu(&cuda_terminals, terminals);
+        cudagraph::transfer_to_gpu(&graph_d, graph);
+        cudatable::transfer_to_gpu(&dists_d,*dists);
+        cudaquery::transfer_to_gpu(&terms_d, terms);
 
-        steiner::fill(cuda_graph, cuda_terminals, cuda_distances, &opt);
-        steiner::backtrack(terminals, opt);
-        steiner::branch_and_clean(*parents, opt);
-        steiner::build_subgraph(graph, opt);
+        TIME(steiner::fill(graph_d, terms_d, dists_d, &opt), "\tTable fill:");
+        TIME(steiner::backtrack(terms, opt), "\tBacktracking:");
+        TIME(steiner::branch_and_clean(*preds, opt), "\tBranch and clean:");
+        TIME(steiner::build_subgraph(graph, opt), "\tBuild subgraph:");
 
-        cudaquery::destroy(cuda_terminals);
-        cudatable::destroy(cuda_distances);
-        cudagraph::destroy(cuda_graph);
+        cudaquery::destroy(terms_d);
+        cudatable::destroy(dists_d);
+        cudagraph::destroy(graph_d);
 
     } else {
 
-        steiner::fill(graph, terminals, *distances, &opt);
+        steiner::fill(graph, terms, *dists, &opt);
+        steiner::backtrack(terms, opt);
+        steiner::branch_and_clean(*preds, opt);
+        steiner::build_subgraph(graph, opt);
 
     }
 
     return opt;
 
 }
+
 
 void test(char* path) {
 
@@ -325,17 +349,18 @@ void test(char* path) {
 
         } else if(dir -> d_type == DT_DIR && strcmp(dir->d_name,".")!=0 && strcmp(dir->d_name,"..")!=0 ) { // if it is a directory
 
-            char d_path[255]; // here I am using sprintf which is safer than strcat
+            char d_path[255];
             sprintf(d_path, "%s/%s", path, dir->d_name);
-            test(d_path); // recall with the new path
+            test(d_path);
 
         }
+
     }
 
     closedir(d); // finally close the directory
 
-
 }
+
 
 int main() {
 

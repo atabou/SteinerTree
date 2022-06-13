@@ -236,7 +236,7 @@ void steiner::fill(cudagraph::graph_t* graph, cudaquery::query_t* terminals, cud
 
     // Fill the costs table.
 
-    TIME(fill_steiner_tree_cuda_table(costs_d, roots_d, trees_d, graph, terminals, distances), "\tDW GPU:");
+    fill_steiner_tree_cuda_table(costs_d, roots_d, trees_d, graph, terminals, distances);
 
     // Initialize steiner result structure
 
