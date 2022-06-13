@@ -27,7 +27,7 @@
          *  
          * @param [out] graph A pointer to a graph_t pointer to initialize.
          */
-        __host__ void make(graph_t** graph);
+         void make(graph_t** graph);
 
 
         /**
@@ -40,7 +40,7 @@
          * @param [in] graph A pointer to the graph to insert a vertex in.
          * @return The id of the vertex that was inserted.
          */
-        __host__ int32_t insert_vertex(graph_t* graph);
+         int32_t insert_vertex(graph_t* graph);
 
 
         /**
@@ -54,9 +54,9 @@
          * @param [in] dst The id of the destination node of the edge to insert.
          * @param [in] wgt The weight of the edge to insert. 
          */
-        __host__ void insert_edge(graph_t* graph, int32_t src, int32_t dst, float wgt);
+         void insert_edge(graph_t* graph, int32_t src, int32_t dst, float wgt);
 
-        __host__ float weight(graph_t* graph, int32_t src, int32_t dst);
+         float weight(graph_t* graph, int32_t src, int32_t dst);
 
         /** 
          * @brief Prints the specified graph_t to a file in the graphviz format.
@@ -64,7 +64,7 @@
          * @param [in] graph The graph to print.
          * @param [in] graph The file name to output the graphviz representation to.
          */
-        __host__ void to_graphviz(graph_t* graph, char* filename);
+         void to_graphviz(graph_t* graph, char* filename);
 
 
         /**
@@ -72,7 +72,7 @@
          * 
          * @param [in] graph a pointer to the graph_t to destroy.
          */
-        __host__ void destroy(graph_t* graph);
+         void destroy(graph_t* graph);
 
 
     }
@@ -92,7 +92,7 @@
          *
          * @param [in] graph A pointer to a graph_t on the CPU.
          */
-        __host__ void transfer_to_gpu(graph_t** graph_d, graph::graph_t* graph);
+         void transfer_to_gpu(graph_t** graph_d, graph::graph_t* graph);
         
 
         /**
@@ -100,7 +100,7 @@
          *
          * @param [in] graph A pointer to a cudagraph_t on the GPU.
          */
-        __host__ void destroy(graph_t* graph);
+         void destroy(graph_t* graph);
 
     }
 

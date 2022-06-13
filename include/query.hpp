@@ -26,7 +26,7 @@
          *
          * @return set_t* the created set.
          */
-        __host__ void make(query_t** q);
+         void make(query_t** q);
 
 
         /**
@@ -37,7 +37,7 @@
          * @param [in] set A pointer to the set to insert in.
          * @param [in] x The element to insert in the set.
          */
-        __host__ void insert(query_t* set, int32_t x);
+         void insert(query_t* set, int32_t x);
 
 
         /**
@@ -67,7 +67,7 @@
          *
          * @param [in] X A pointer to a set_t.
          */
-        __device__ __host__ void print(query_t* X);
+         void print(query_t* X);
 
 
         /**
@@ -75,7 +75,7 @@
          *
          * @param [in] set A pointer to a set_t.
          */
-        __host__ void destroy(query_t* set);
+         void destroy(query_t* set);
 
     }
 
@@ -94,16 +94,16 @@
          * @param [in] set A pointer to the set_t to copy to the GPU.
          * @return A pointer to cudaset_t on the GPU.
          */
-        __host__ void transfer_to_gpu(query_t** set_d, query::query_t* set);
+         void transfer_to_gpu(query_t** set_d, query::query_t* set);
 
-        __host__ void transfer_from_gpu(query::query_t** query, query_t* query_d);
+         void transfer_from_gpu(query::query_t** query, query_t* query_d);
 
         /**
          * @brief Frees a given cudaset_t from the GPU memory.
          *
          * @param [in] set A pointer to a cudaset_t on the GPU.
          */
-        __host__ void destroy(query_t* set);
+         void destroy(query_t* set);
 
 
     }   
