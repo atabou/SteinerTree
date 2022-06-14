@@ -63,7 +63,7 @@ make
 
 ### Use:
 
-```
+```python
 from pysteiner import pygraph
 from pysteiner import pyquery
 from pysteiner import pysteiner
