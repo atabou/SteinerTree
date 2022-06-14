@@ -1,6 +1,6 @@
 
 CC=nvcc
-COMMON= -g -G -rdc=true -lcudadevrt -O3 -I./include --compiler-options -fPIC
+COMMON= -g -G -rdc=true -O3 -I./include --compiler-options -fPIC
 SRC=./src
 INC=./include
 OBJ=./obj
@@ -37,13 +37,13 @@ pre-build:
 	@mkdir -p "${OBJ}" "${BIN}" "${LIB}"
 
 ${BIN}/main: ./main.cu $(patsubst %,${OBJ}/%,${COMPILE})
-	${CC} ./main.cu ${COMMON} -I/opt/cuda/include -o ${BIN}/main $(patsubst %,${OBJ}/%,${COMPILE}) ${LNK}
+	${CC} ./main.cu ${COMMON} -o ${BIN}/main $(patsubst %,${OBJ}/%,${COMPILE}) ${LNK}
 
 ${BIN}/test: ./test.cu ${LIB}/libsteiner.so
-	${CC} ./test.cu ${COMMON} -I/opt/cuda/include -o ${BIN}/test -L./lib -lsteiner
+	${CC} ./test.cu ${COMMON} -o ${BIN}/test -L./lib -lsteiner
 
 ${LIB}/libsteiner.so: $(patsubst %,${OBJ}/%,${COMPILE})
-	${CC} --shared ${COMMON} -I/opt/cuda/include -o ${LIB}/libsteiner.so $(patsubst %,${OBJ}/%,${COMPILE}) ${LNK}
+	${CC} --shared ${COMMON} -o ${LIB}/libsteiner.so $(patsubst %,${OBJ}/%,${COMPILE}) ${LNK}
 
 ${OBJ}/combination.o: ${SRC}/combination.cu ${INC}/combination.hpp
 	${CC} ${COMMON} -c $< -o $@
@@ -73,4 +73,4 @@ ${OBJ}/util.o: ${SRC}/util.cu ${INC}/util.hpp
 	${CC} ${COMMON} -c $< -o $@
 
 clean:
-	rm -rf ${OBJ} ${BIN}
+	rm -rf ${OBJ} ${BIN} ${LIB}
