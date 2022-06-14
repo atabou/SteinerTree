@@ -6,3 +6,8 @@ doc/
 .ccls
 .ccls-cache
 *.gr
+./lib/
+build/
+dist/
+*.egg-info
+.venv
